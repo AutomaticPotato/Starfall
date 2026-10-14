@@ -81,6 +81,19 @@ describe("turns", () => {
     expect([nextTurn(second).turn, nextTurn(second).round]).toEqual(["g", 2]);
   });
 
+  it("starts a monster's turn with its legendary actions back and its recharges rolled", () => {
+    const fight: Fight = {
+      revision: 0, active: true, round: 1, turn: "p", shareStats: false,
+      combatants: [
+        { id: "p", kind: "pc", name: "Vorin", initiative: 20, conditions: [] },
+        { id: "d", kind: "monster", name: "Dragon", initiative: 10, conditions: [], recharging: { "Fire Breath": 5 }, legendarySpent: 3 },
+      ],
+    };
+    const dragon = nextTurn(fight, () => 0.9).combatants[1]; // a 6
+    expect(dragon).toMatchObject({ recharging: undefined, legendarySpent: 0, turnNotes: ["Fire Breath: 6, back"] });
+    expect(nextTurn(fight, () => 0.1).combatants[1]).toMatchObject({ recharging: { "Fire Breath": 5 }, turnNotes: ["Fire Breath: 1, not yet"] });
+  });
+
   it("health in words", () => {
     expect([health(7, 7), health(4, 7), health(3, 7), health(0, 7)]).toEqual(["unhurt", "hurt", "bloodied", "down"]);
   });

@@ -11,6 +11,7 @@
  * Advantage and disadvantage do not add up: one or more of each and the roll is normal.
  */
 import type { Advantage } from "@/lib/rules/battle";
+import { startTurn, type MonsterState } from "@/lib/rules/monster-actions";
 
 export interface FightCondition {
   name: string;
@@ -20,7 +21,8 @@ export interface FightCondition {
   fromSheet?: boolean;
 }
 
-export interface Combatant {
+/** A monster's uses, recharges and legendary actions are kept with it (the DM's only: players never get them). */
+export interface Combatant extends MonsterState {
   id: string;
   kind: "pc" | "monster" | "npc";
   name: string;
@@ -43,6 +45,8 @@ export interface Combatant {
   /** what players see of a monster: unhurt, hurt, bloodied, down */
   health?: "unhurt" | "hurt" | "bloodied" | "down";
   conditions: FightCondition[];
+  /** what the start of its last turn rolled: its recharges ("Fire Breath: 6, back") */
+  turnNotes?: string[];
 }
 
 export interface Fight {
@@ -175,8 +179,11 @@ export function inOrder(combatants: Combatant[]): Combatant[] {
     .map((x) => x.c);
 }
 
-/** The next creature's turn (a new round after the last); creatures at 0 hit points are still in the order. */
-export function nextTurn(fight: Fight): Fight {
+/**
+ * The next creature's turn (a new round after the last); creatures at 0 hit points are still in the order. A monster's
+ * turn starts with its legendary actions back and a d6 for each recharge it spent.
+ */
+export function nextTurn(fight: Fight, random: () => number = Math.random): Fight {
   const order = inOrder(fight.combatants);
   if (order.length === 0) return fight;
   const at = order.findIndex((c) => c.id === fight.turn);
@@ -184,7 +191,13 @@ export function nextTurn(fight: Fight): Fight {
   const round = at >= 0 && next === 0 ? fight.round + 1 : fight.round;
   const id = order[next].id;
   // what lasts until the start of a creature's next turn ends now: its Dodge, its Reckless Attack
-  const combatants = fight.combatants.map((c) => (c.id === id ? { ...c, conditions: c.conditions.filter((k) => k.name !== "Dodging" && k.name !== "Reckless") } : c));
+  const combatants = fight.combatants.map((c) => {
+    if (c.id !== id) return c;
+    const next = { ...c, conditions: c.conditions.filter((k) => k.name !== "Dodging" && k.name !== "Reckless") };
+    if (c.kind === "pc" || (!c.recharging && !c.legendarySpent)) return next;
+    const { state, rolls } = startTurn(c, random);
+    return { ...next, recharging: state.recharging, legendarySpent: state.legendarySpent, turnNotes: rolls.length ? rolls : undefined };
+  });
   return { ...fight, combatants, turn: id, round };
 }
 

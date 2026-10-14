@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { actionLimits, canUse, homebrewKit, monsterKit, readAction, spendAction, startTurn } from "./monster-actions";
+import { actionLimits, areaDamage, canUse, homebrewKit, monsterKit, readAction, rollAttack, rollSaveDamage, spendAction, startTurn } from "./monster-actions";
 import { EMPTY_MONSTER } from "./homebrew";
 
 // shaped like 5etools' bestiary entries (2014 and 2024 books); the texts are cut down to what is read
@@ -65,6 +65,11 @@ describe("a monster's actions", () => {
     ]);
     expect(escape).toMatchObject({ section: "bonus", name: "Nimble Escape", damage: [] });
     expect(monsterKit(mage2024).actions[0].attack?.kind).toBe("melee or ranged");
+  });
+
+  it("keeps an \"if\" about something else off the damage", () => {
+    const bite = readAction("{@atk mw} {@hit 8} to hit, reach 5 ft., one target. {@h}22 ({@damage 5d8}) piercing damage, and the target is {@condition grappled} (escape {@dc 15}) if it is a Large or smaller creature.");
+    expect(bite.damage).toEqual([{ dice: [{ count: 5, sides: 8 }], bonus: 0, type: "piercing" }]);
   });
 
   it("reads several damage types on one hit", () => {
@@ -165,5 +170,43 @@ describe("a monster's uses in a fight", () => {
     const venom = { ...monsterKit(goblin2014).actions[0], name: "Spit Venom", perDay: 2 };
     const state = spendAction(venom, spendAction(venom, {}));
     expect(canUse(venom, state, 0)).toMatchObject({ ok: false, why: "no uses left today" });
+  });
+});
+
+// a die that rolls the given faces in turn (a d20's 17 is 16/20, a d6's 4 is 3/6, …)
+const dice = (...faces: [number, number][]) => {
+  let i = 0;
+  return () => {
+    const [face, sides] = faces[i++ % faces.length];
+    return (face - 1) / sides + 0.001;
+  };
+};
+
+describe("rolling a monster's actions", () => {
+  const [, bite, breath] = monsterKit(dragon2014).actions;
+
+  it("hits an armor class and rolls each damage type", () => {
+    // d20 17 + 14 = 31; bite 2d10 (5, 5) + 8 piercing, 2d6 (3, 3) fire
+    const r = rollAttack(bite, 18, "normal", dice([17, 20], [5, 10], [5, 10], [3, 6], [3, 6]))!;
+    expect(r).toMatchObject({ kept: 17, total: 31, hit: true, crit: false, totalDamage: 24 });
+    expect(r.damage.map((d) => [d.amount, d.type])).toEqual([[18, "piercing"], [6, "fire"]]);
+  });
+
+  it("rolls the dice twice on a 20, misses on a 1, and keeps the better d20 with advantage", () => {
+    expect(rollAttack(bite, 40, "normal", dice([20, 20], [1, 10]))!).toMatchObject({ hit: true, crit: true });
+    expect(rollAttack(bite, 40, "normal", dice([20, 20], [1, 10]))!.damage[0].dice).toBe("4d10+8");
+    expect(rollAttack(bite, 5, "normal", dice([1, 20]))!).toMatchObject({ hit: false, damage: [], totalDamage: 0 });
+    expect(rollAttack(bite, 18, "advantage", dice([3, 20], [15, 20], [1, 10]))!).toMatchObject({ rolls: [3, 15], kept: 15, hit: true });
+  });
+
+  it("rolls a breath weapon once: the full damage and half on a success", () => {
+    const r = rollSaveDamage(breath, () => 0.5); // every d6 a 4
+    expect(r).toMatchObject({ full: 72, half: 36 });
+  });
+
+  it("rolls each creature's save against an area, with its own bonus", () => {
+    const out = areaDamage([{ id: "a", name: "Goblin 1", bonus: 2 }, { id: "b", name: "Goblin 2", bonus: 2 }], 28, { dc: 15, halfOnSuccess: true }, dice([15, 20], [3, 20]));
+    expect(out.map((o) => [o.name, o.roll, o.saved, o.damage])).toEqual([["Goblin 1", 17, true, 14], ["Goblin 2", 5, false, 28]]);
+    expect(areaDamage([{ id: "a", name: "Goblin 1", bonus: 2 }], 10, null)[0].damage).toBe(10);
   });
 });

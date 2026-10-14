@@ -5,7 +5,7 @@
  * conditions on creatures from their Battle Action Simulator, where the conditions then give advantage or
  * disadvantage on their attacks by themselves.
  */
-import { ArrowLeftIcon, DicesIcon, EyeIcon, EyeOffIcon, HeartIcon, PlayIcon, PlusIcon, ShieldIcon, SkipForwardIcon, SquareIcon, SwordsIcon, Trash2Icon, XIcon } from "lucide-react";
+import { ArrowLeftIcon, DicesIcon, EyeIcon, EyeOffIcon, FlameIcon, HeartIcon, PlayIcon, PlusIcon, ShieldIcon, SkipForwardIcon, SquareIcon, SwordsIcon, Trash2Icon, XIcon } from "lucide-react";
 import { lazy, Suspense, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { toast } from "sonner";
@@ -22,8 +22,10 @@ import { creatureStats, type CompendiumLink } from "@/lib/lore/campaign-links";
 import { useLoreMeta } from "@/lib/lore/data";
 import { health, inOrder, MARKS, nextTurn, type Combatant, type Fight } from "@/lib/rules/encounter";
 import { modifier, saveBonuses, type HomebrewMonster } from "@/lib/rules/homebrew";
+import { areaDamage } from "@/lib/rules/monster-actions";
 import { cn } from "@/lib/utils";
 import { UnlockCampaign } from "./campaign-dialogs";
+import { MonsterPanel } from "./monster-panel";
 
 const CompendiumPicker = lazy(() => import("@/components/lore/compendium-picker").then((m) => ({ default: m.CompendiumPicker })));
 
@@ -38,6 +40,8 @@ export function EncounterPage() {
   const lore = useLoreMeta();
   const [picking, setPicking] = useState(false);
   const [adding, setAdding] = useState(false);
+  // creatures the DM ticked, for damage to several at once (a fireball on the goblins)
+  const [selected, setSelected] = useState<Set<string>>(new Set());
   const homebrew = useHomebrewMonsters(!!campaign.data?.campaign.useHomebrew && !!campaign.data.dm);
 
   if (campaign.error instanceof CampaignLockedError) {
@@ -164,7 +168,9 @@ export function EncounterPage() {
       </header>
 
       {dm && (
-        <section className="space-y-3 rounded-lg border p-3">
+        <details open={!f.active} className="group rounded-lg border p-3 [&[open]>summary]:mb-3">
+          <summary className="cursor-pointer select-none text-sm font-medium text-muted-foreground">Set up: add the party, creatures, initiative</summary>
+        <section className="space-y-3">
           <div className="flex flex-wrap items-center gap-2">
             <Button size="sm" variant="outline" onClick={addParty} disabled={view.party.every((p) => p.missing || f.combatants.some((c) => c.characterId === p.characterId))}>
               <PlusIcon /> The party
@@ -203,8 +209,10 @@ export function EncounterPage() {
           )}
           <p className="text-xs text-muted-foreground">
             Type the players' initiative rolls in the order below. Players never see a monster's hit points, its notes or what it really is; hide a creature (the eye) until it shows itself.
+            Point at (or tap) a creature's name for its stat block, and open its Actions to roll them; tick creatures to damage several at once.
           </p>
         </section>
+        </details>
       )}
 
       {order.length === 0 ? (
@@ -212,11 +220,32 @@ export function EncounterPage() {
       ) : (
         <ol className="space-y-2">
           {order.map((c) => (
-            <Row key={c.id} c={c} stats={dm ? homebrewOf(c) : undefined} dm={dm} current={f.active && f.turn === c.id} shareStats={f.shareStats} update={(patch) => update(c.id, patch)} remove={() => apply((x) => ({ ...x, combatants: x.combatants.filter((y) => y.id !== c.id), turn: x.turn === c.id ? null : x.turn }))} />
+            <Row
+              key={c.id}
+              c={c}
+              stats={dm ? homebrewOf(c) : undefined}
+              dm={dm}
+              party={f.combatants}
+              current={f.active && f.turn === c.id}
+              shareStats={f.shareStats}
+              selected={selected.has(c.id)}
+              onSelect={(on) => setSelected((s) => { const n = new Set(s); if (on) n.add(c.id); else n.delete(c.id); return n; })}
+              update={(patch) => update(c.id, patch)}
+              remove={() => apply((x) => ({ ...x, combatants: x.combatants.filter((y) => y.id !== c.id), turn: x.turn === c.id ? null : x.turn }))}
+            />
           ))}
         </ol>
       )}
       {!dm && <p className="text-xs text-muted-foreground">Mark conditions on creatures from your Battle Action Simulator: pick the creature as your target there.</p>}
+      {dm && selected.size > 0 && (
+        <AreaDamage
+          targets={f.combatants.filter((c) => selected.has(c.id) && c.kind !== "pc")}
+          onClear={() => setSelected(new Set())}
+          onApply={(hits) =>
+            apply((x) => ({ ...x, combatants: x.combatants.map((c) => (hits.has(c.id) && c.hp !== undefined ? { ...c, hp: Math.max(0, c.hp - hits.get(c.id)!) } : c)) }))
+          }
+        />
+      )}
 
       {picking && (
         <Suspense fallback={null}>
@@ -312,14 +341,19 @@ function OwnCreature({ onAdd }: { onAdd: (c: Combatant) => void }) {
 
 const HEALTH_TONE: Record<string, string> = { unhurt: "text-emerald-600", hurt: "text-amber-600", bloodied: "text-red-600", down: "text-muted-foreground line-through" };
 
-function Row({ c, stats, dm, current, shareStats, update, remove }: { c: Combatant; stats?: HomebrewMonster; dm: boolean; current: boolean; shareStats: boolean; update: (p: Partial<Combatant>) => void; remove: () => void }) {
+function Row({ c, stats, dm, party, current, shareStats, selected, onSelect, update, remove }: { c: Combatant; stats?: HomebrewMonster; dm: boolean; party: Combatant[]; current: boolean; shareStats: boolean; selected: boolean; onSelect: (on: boolean) => void; update: (p: Partial<Combatant>) => void; remove: () => void }) {
   const [amount, setAmount] = useState("");
   const [showStats, setShowStats] = useState(false);
+  const [showActions, setShowActions] = useState(false);
+  const runnable = dm && c.kind !== "pc" && (c.link?.category === "bestiary" || !!stats);
   const looks = c.kind === "pc" ? null : dm && c.hp !== undefined && c.maxHp !== undefined ? health(c.hp, c.maxHp) : c.health;
   const n = Number(amount) || 0;
   return (
     <li className={cn("rounded-lg border p-2.5", current && "border-amber-500 bg-amber-500/5 ring-1 ring-amber-500", c.hidden && "border-dashed opacity-70")}>
       <div className="flex flex-wrap items-center gap-2">
+        {dm && c.kind !== "pc" && (
+          <input type="checkbox" aria-label={`Select ${c.name} for damage to several`} checked={selected} onChange={(e) => onSelect(e.target.checked)} className="size-5 accent-amber-500" />
+        )}
         {dm ? (
           <Input aria-label={`${c.name}'s initiative`} inputMode="numeric" value={c.initiative ?? ""} placeholder="init" onChange={(e) => update({ initiative: e.target.value === "" ? null : Number(e.target.value.replace(/[^\d-]/g, "")) || 0 })} className="h-8 w-14 text-center" />
         ) : (
@@ -363,6 +397,11 @@ function Row({ c, stats, dm, current, shareStats, update, remove }: { c: Combata
               Heal
             </Button>
           </span>
+        )}
+        {runnable && (
+          <Button size="sm" variant={showActions ? "default" : "outline"} className="h-8" onClick={() => setShowActions((v) => !v)} aria-expanded={showActions}>
+            <SwordsIcon /> Actions
+          </Button>
         )}
         {stats && (
           <Button size="sm" variant="ghost" className="h-7" onClick={() => setShowStats((v) => !v)}>
@@ -408,6 +447,7 @@ function Row({ c, stats, dm, current, shareStats, update, remove }: { c: Combata
         )}
         {dm && c.notes !== undefined && <span className="text-xs text-muted-foreground">{c.notes}</span>}
       </div>
+      {runnable && showActions && <MonsterPanel c={c} homebrew={stats} party={party} update={update} />}
       {stats && showStats && (
         <div className="mt-2 rounded-md border bg-background/60 p-2">
           <HomebrewStatBlock monster={stats} />
@@ -443,5 +483,82 @@ function PartyHp({ c }: { c: Combatant }) {
         </span>
       )}
     </span>
+  );
+}
+
+/**
+ * Damage to several creatures at once (a fireball, a breath weapon): the amount, and a saving throw each creature rolls
+ * with its own bonus (full damage on a failure, half or none on a success). The rolls show before the DM applies them.
+ */
+function AreaDamage({ targets, onClear, onApply }: { targets: Combatant[]; onClear: () => void; onApply: (hits: Map<string, number>) => void }) {
+  const [amount, setAmount] = useState("");
+  const [dc, setDc] = useState("");
+  const [ability, setAbility] = useState("dex");
+  const [half, setHalf] = useState(true);
+  const [rolled, setRolled] = useState<ReturnType<typeof areaDamage> | null>(null);
+  const n = Number(amount) || 0;
+  const roll = () =>
+    setRolled(areaDamage(targets.map((t) => ({ id: t.id, name: t.name, bonus: t.saves?.[ability] ?? 0 })), n, dc ? { dc: Number(dc), halfOnSuccess: half } : null));
+  return (
+    <section className="sticky bottom-2 z-10 space-y-2 rounded-lg border border-amber-500/60 bg-background/95 p-3 shadow-lg backdrop-blur" aria-label="Damage to several creatures">
+      <div className="flex flex-wrap items-center gap-2 text-sm">
+        <FlameIcon className="size-4 text-amber-500" />
+        <span className="font-medium">{targets.length} selected</span>
+        <label className="flex flex-col text-[11px] text-muted-foreground">
+          Damage
+          <Input aria-label="Damage" inputMode="numeric" placeholder="20" value={amount} onChange={(e) => { setAmount(e.target.value.replace(/\D/g, "")); setRolled(null); }} className="h-9 w-20 text-sm text-foreground" />
+        </label>
+        <label className="flex flex-col text-[11px] text-muted-foreground">
+          Save DC (or none)
+          <Input aria-label="Save DC (empty: no save)" inputMode="numeric" placeholder="none" value={dc} onChange={(e) => { setDc(e.target.value.replace(/\D/g, "")); setRolled(null); }} className="h-9 w-24 text-sm text-foreground" />
+        </label>
+        {dc && (
+          <>
+            <select aria-label="Saving throw" value={ability} onChange={(e) => { setAbility(e.target.value); setRolled(null); }} className="h-9 rounded-md border bg-transparent px-2 text-sm">
+              {["str", "dex", "con", "int", "wis", "cha"].map((a) => (
+                <option key={a} value={a}>
+                  {a.toUpperCase()}
+                </option>
+              ))}
+            </select>
+            <label className="flex items-center gap-1.5 text-xs">
+              <input type="checkbox" checked={half} onChange={(e) => { setHalf(e.target.checked); setRolled(null); }} className="size-4" /> half on a success
+            </label>
+          </>
+        )}
+        <Button size="sm" variant="outline" className="h-9" disabled={!n} onClick={roll}>
+          <DicesIcon /> {dc ? "Roll their saves" : "Work it out"}
+        </Button>
+        <Button size="sm" variant="ghost" className="h-9" onClick={onClear}>
+          Clear
+        </Button>
+      </div>
+      {rolled && (
+        <div className="space-y-2">
+          <ul className="grid gap-1 text-xs sm:grid-cols-2">
+            {rolled.map((r) => (
+              <li key={r.id} className="flex justify-between gap-2 rounded bg-muted/60 px-2 py-1">
+                <span>{r.name}</span>
+                <span>
+                  {r.roll !== null ? `${r.saved ? "saved" : "failed"} (${r.roll}) · ` : ""}
+                  <span className="font-semibold">{r.damage}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+          <Button
+            size="sm"
+            className="h-9 bg-amber-500 text-black hover:bg-amber-400"
+            onClick={() => {
+              onApply(new Map(rolled.map((r) => [r.id, r.damage])));
+              toast.success(`Damage applied to ${rolled.length} creatures`);
+              setRolled(null);
+            }}
+          >
+            Apply the damage
+          </Button>
+        </div>
+      )}
+    </section>
   );
 }

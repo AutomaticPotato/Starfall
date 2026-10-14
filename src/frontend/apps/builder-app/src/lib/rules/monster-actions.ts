@@ -5,7 +5,7 @@
  * hit chances against the party's armor class, recharges at the start of its turn, uses spent.
  */
 import { stripTags } from "@/lib/lore/tags";
-import { parseRoll, type Roll } from "@/lib/rules/battle";
+import { critical, formatRoll, parseRoll, rollDice, type Advantage, type Roll } from "@/lib/rules/battle";
 import type { HomebrewMonster } from "@/lib/rules/homebrew";
 
 type Obj = Record<string, unknown>;
@@ -117,7 +117,9 @@ export function readAction(raw: string): Pick<MonsterAction, "attack" | "damage"
     if (!roll) return;
     // what follows it, up to the next damage or the end of the sentence: ", plus …", " if the attack roll had Advantage"
     const after = raw.slice(m.index! + m[0].length, hits[i + 1]?.index ?? raw.length).split(/[.;]\s/)[0];
-    const condition = stripTags(after).match(/\bif\b[^,.;]*/i)?.[0]?.trim();
+    // only an "if" right after the damage is its own ("… Slashing damage if the attack roll had Advantage"); a later
+    // one is about something else ("…, and the target is Grappled … if it is Large or smaller")
+    const condition = stripTags(after).match(/^\s*,?\s*(if\b[^,.;]*)/i)?.[1]?.trim();
     out.damage.push(condition ? { ...roll, condition } : roll);
   });
   // written out without tags (homebrew): "7 (1d8 + 3) piercing damage"
@@ -255,4 +257,69 @@ export function startTurn(state: MonsterState, random: () => number = Math.rando
   }
   const next: MonsterState = { ...state, legendarySpent: 0, recharging: Object.keys(recharging).length ? recharging : undefined };
   return { state: next, rolls };
+}
+
+// ---- rolling it
+
+const d20 = (random: () => number) => 1 + Math.floor(random() * 20);
+
+export interface DamagePart {
+  amount: number;
+  /** "2d10+6 piercing" */
+  dice: string;
+  type: string;
+  condition?: string;
+}
+
+export interface AttackResult {
+  /** the d20s rolled (two with advantage or disadvantage) and the one kept */
+  rolls: number[];
+  kept: number;
+  total: number;
+  hit: boolean;
+  crit: boolean;
+  /** the damage of a hit (the dice twice on a critical hit); extra damage "if …" is rolled but not added */
+  damage: DamagePart[];
+  totalDamage: number;
+}
+
+function rollParts(damage: MonsterDamage[], crit: boolean, random: () => number): DamagePart[] {
+  return damage.map((d) => {
+    const roll = crit ? critical(d) : d;
+    return { amount: rollDice(roll, random), dice: formatRoll(roll, false), type: d.type, condition: d.condition };
+  });
+}
+
+/** An attack against an armor class: a 20 always hits (critical), a 1 always misses. */
+export function rollAttack(action: MonsterAction, ac: number, advantage: Advantage = "normal", random: () => number = Math.random): AttackResult | null {
+  if (!action.attack) return null;
+  const rolls = advantage === "normal" ? [d20(random)] : [d20(random), d20(random)];
+  const kept = advantage === "advantage" ? Math.max(...rolls) : advantage === "disadvantage" ? Math.min(...rolls) : rolls[0];
+  const total = kept + action.attack.bonus;
+  const crit = kept === 20;
+  const hit = crit || (kept !== 1 && total >= ac);
+  const damage = hit ? rollParts(action.damage, crit, random) : [];
+  return { rolls, kept, total, hit, crit, damage, totalDamage: damage.filter((p) => !p.condition).reduce((n, p) => n + p.amount, 0) };
+}
+
+/** A saving-throw ability's damage, rolled once for everyone in it: the full amount, and half on a success. */
+export function rollSaveDamage(action: MonsterAction, random: () => number = Math.random): { parts: DamagePart[]; full: number; half: number } {
+  const parts = rollParts(action.damage, false, random);
+  const full = parts.filter((p) => !p.condition).reduce((n, p) => n + p.amount, 0);
+  return { parts, full, half: action.save?.halfOnSuccess ? Math.floor(full / 2) : 0 };
+}
+
+/** Each creature's save against an area effect, with its own bonus: who saved and the damage each takes. */
+export function areaDamage(
+  targets: { id: string; name: string; bonus: number }[],
+  amount: number,
+  save: { dc: number; halfOnSuccess: boolean } | null,
+  random: () => number = Math.random,
+): { id: string; name: string; roll: number | null; saved: boolean; damage: number }[] {
+  return targets.map((t) => {
+    if (!save) return { id: t.id, name: t.name, roll: null, saved: false, damage: amount };
+    const roll = d20(random) + t.bonus;
+    const saved = roll >= save.dc;
+    return { id: t.id, name: t.name, roll, saved, damage: saved ? (save.halfOnSuccess ? Math.floor(amount / 2) : 0) : amount };
+  });
 }
