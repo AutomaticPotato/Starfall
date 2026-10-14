@@ -202,6 +202,7 @@ internal sealed class AuroraImporter : IAuroraImporter
         }
 
         int alreadyImported = 0, skippedConditional = 0, skippedUnresolved = 0;
+        ILookup<(string, string), string>? sameName = null;
         var importedByType = new SortedDictionary<string, int>();
 
         foreach (var aurora in toImport.Values)
@@ -257,7 +258,12 @@ internal sealed class AuroraImporter : IAuroraImporter
             {
                 prerequisite = prerequisite[..256]; // the column's size; Aurora's longest is about 80
             }
-            var check = Convert(((string?)aurora.Xml.Element("requirements"))?.Trim(), byId);
+            var ownRequirements = ((string?)aurora.Xml.Element("requirements"))?.Trim();
+            if (aurora.Type == "Feat")
+            {
+                ownRequirements = AnyEdition(ownRequirements, byId, sameName ??= SameName(byId));
+            }
+            var check = Convert(ownRequirements, byId);
             if (!string.IsNullOrEmpty(prerequisite) || check is not null)
             {
                 Attach("prerequisites", id =>
@@ -454,6 +460,18 @@ internal sealed class AuroraImporter : IAuroraImporter
         // appends first, so every element is read with what other files add to it (Starlights' corrections among them)
         documents.Add((BuiltIn.BuiltInContent.Prefix + "fixes.xml", BuiltIn.BuiltInContent.FixesDocument()));
         var (appended, unmatched) = ApplyAppends(documents);
+
+        // feats whose prerequisite Aurora only describes are checked with what 5etools records for them
+        if (_fiveETools.Available)
+        {
+            var elements = documents.SelectMany(d => d.Document.Descendants("element")).Where(e => e.Attribute("id") is not null && e.Attribute("name") is not null && e.Attribute("type") is not null).ToList();
+            _fiveETools.FillFeatRequirements(
+                // no requirements, or requirements but no prerequisite at all (the 2014 War Caster's spellcasting)
+                elements.Where(e => (string?)e.Attribute("type") == "Feat"
+                    && (e.Element("requirements") is null || e.Element("prerequisite") is null && e.Element("prerequisites") is null)),
+                elements.Select(e => new FiveETools.AuroraCatalogElement((string)e.Attribute("id")!, (string)e.Attribute("name")!, (string)e.Attribute("type")!,
+                    (string?)e.Attribute("source"), ((string?)e.Element("supports"))?.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries) ?? [], e)));
+        }
         foreach (var (file, document) in documents)
         {
             AddDocument(file, document);
@@ -678,6 +696,20 @@ internal sealed class AuroraImporter : IAuroraImporter
             _ => $"({converted}),({equipped})",
         };
     }
+
+    // the classes and species by type and name, for AnyEdition
+    private static ILookup<(string, string), string> SameName(Dictionary<string, AuroraElement> catalog) =>
+        catalog.Values.Where(e => e.Type is "Class" or "Race").ToLookup(e => (e.Type, e.Name), e => e.Id);
+
+    /// <summary>
+    /// A feat's prerequisite of a class or species ("ID_PHB_CLASS_WIZARD", "ID_RACE_ELF") as that class or species of
+    /// any edition: Initiate of High Sorcery asks for the Wizard, the 2024 Wizard too; Elven Accuracy for an Elf.
+    /// </summary>
+    private static string? AnyEdition(string? expression, Dictionary<string, AuroraElement> catalog, ILookup<(string, string), string> sameName) =>
+        string.IsNullOrEmpty(expression) ? expression : AuroraId.Replace(expression, m =>
+            catalog.TryGetValue(m.Value, out var element) && element.Type is "Class" or "Race" && sameName[(element.Type, element.Name)].Distinct().ToList() is { Count: > 1 } all
+                ? $"({string.Join("||", all.Order(StringComparer.Ordinal))})"
+                : m.Value);
 
     // Aurora ids of imported elements as their element ids, the others left as they are
     private static string? Convert(string? expression, Dictionary<string, AuroraElement> catalog) =>

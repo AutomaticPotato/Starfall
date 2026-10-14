@@ -128,6 +128,19 @@ internal sealed class FiveEToolsData : IFiveEToolsLore
         return content.Generate();
     }
 
+    /// <summary>See <see cref="FiveEToolsContent.FillFeatRequirements"/>: requirements for Aurora feats that only describe theirs.</summary>
+    public int FillFeatRequirements(IEnumerable<XElement> feats, IEnumerable<AuroraCatalogElement> aurora)
+    {
+        if (!Available)
+        {
+            return 0;
+        }
+        var content = new FiveEToolsContent(new FiveEToolsJson(_options.DataPath), new FiveEToolsAuroraIndex(aurora), Books(), _logger);
+        var filled = content.FillFeatRequirements(feats);
+        _logger.LogInformation("gave {Count} Aurora feats the requirements 5etools records for them", filled);
+        return filled;
+    }
+
     public IReadOnlyList<LoreEntry> GetOrganizations() => Cached("book/book-frhof.json", () =>
     {
         using var document = Read("book/book-frhof.json");

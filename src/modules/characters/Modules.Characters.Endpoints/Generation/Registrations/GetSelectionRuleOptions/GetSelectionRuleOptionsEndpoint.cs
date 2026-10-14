@@ -78,7 +78,10 @@ public sealed class GetSelectionRuleOptionsEndpoint : EndpointWithoutRequest<Get
         // a choice only one edition's books fill stays open for the other edition: when none of the ticked books
         // offer anything, every book counts. Gods are setting lore, not rules (the 2024 Player's Handbook has no
         // pantheons), so a deity can come from any book.
-        var allowed = elements.Where(e => e.Id == current || e.AllowDuplicate || !owned.Contains(e.Id)).ToList();
+        // a spell or language the character has from one edition's book rules out the other edition's copy (Acid Splash twice)
+        var ownedNames = characterRegistrations.Where(r => r.AssociatedElementType is "Spell" or "Language" && r.AssociatedElementId.Value != current)
+            .Select(r => (r.AssociatedElementType, r.AssociatedElementName)).ToHashSet();
+        var allowed = elements.Where(e => e.Id == current || e.AllowDuplicate || !owned.Contains(e.Id) && !ownedNames.Contains((selectionRule.ElementType, e.Name))).ToList();
         if (selectionRule.ElementType != "Deity" && allowed.Any(e => !character.RestrictedSources.Contains(e.Source)))
         {
             allowed = allowed.Where(e => e.Id == current || !character.RestrictedSources.Contains(e.Source)).ToList();

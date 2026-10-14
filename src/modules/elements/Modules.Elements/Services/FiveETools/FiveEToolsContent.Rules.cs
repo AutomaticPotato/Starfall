@@ -101,7 +101,13 @@ internal sealed partial class FiveEToolsContent
                         words.Add($"{string.Join(" or ", campaigns.Select(c => c?.ToString()))} Campaign");
                         break;
                     case "background" when value is JsonArray backgrounds:
-                        words.Add($"{string.Join(" or ", backgrounds.OfType<JsonObject>().Select(b => FiveEToolsJson.Str(b, "name")))} Background");
+                        var backgroundNames = backgrounds.OfType<JsonObject>().Select(b => FiveEToolsJson.Str(b, "name") ?? "").ToList();
+                        words.Add($"{string.Join(" or ", backgroundNames.Select(Title))} Background");
+                        var backgroundIds = backgroundNames.SelectMany(n => _aurora.Find("Background", n).Select(b => b.Id)).Distinct().ToList();
+                        if (backgroundIds.Count > 0)
+                        {
+                            terms.Add($"({string.Join("||", backgroundIds)})");
+                        }
                         break;
                     case "otherSummary" when value is JsonObject summary:
                         words.Add(FiveEToolsRenderer.PlainText(FiveEToolsJson.Str(summary, "entrySummary") ?? FiveEToolsJson.Str(summary, "entry") ?? ""));

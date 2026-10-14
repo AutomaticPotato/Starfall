@@ -79,6 +79,52 @@ internal sealed partial class FiveEToolsContent
         }
     }
 
+    /// <summary>
+    /// Aurora feats whose prerequisite is only words (Eldritch Adept, Fighting Initiate) or missing (the 2014 War Caster)
+    /// get the requirements 5etools records for the same feat of the same book, so the builder can tell who qualifies;
+    /// with requirements of Aurora's own (a feat's "not with its other edition"), both have to hold. Returns how many.
+    /// </summary>
+    public int FillFeatRequirements(IEnumerable<XElement> feats)
+    {
+        var byName = _json.Load("feats.json", "feat").GroupBy(f => FiveEToolsAuroraIndex.Words(Name(f))).ToDictionary(g => g.Key, g => g.ToList());
+        var filled = 0;
+        foreach (var feat in feats)
+        {
+            if (!byName.TryGetValue(FiveEToolsAuroraIndex.Words((string?)feat.Attribute("name") ?? ""), out var candidates))
+            {
+                continue;
+            }
+            var book = (string?)feat.Attribute("source");
+            var modern = FiveEToolsAuroraIndex.IsModern(new AuroraCatalogElement((string?)feat.Attribute("id") ?? "", "", "Feat", book, [], feat));
+            var match = candidates.FirstOrDefault(c => string.Equals(SourceName(SourceOf(c)), book, StringComparison.OrdinalIgnoreCase))
+                ?? (candidates.Count == 1 ? candidates[0] : candidates.FirstOrDefault(c => IsModern(c) == modern));
+            if (match?["prerequisite"] is null)
+            {
+                continue;
+            }
+            var matchModern = IsModern(match);
+            var (text, requirements) = Prerequisite(match["prerequisite"], matchModern, matchModern ? "ID_WOTC_PHB24_GRANTS_FEAT_UNLOCKER" : "ID_WOTC_PHB_GRANTS_FEAT_UNLOCKER");
+            if (requirements is null)
+            {
+                continue;
+            }
+            if (feat.Element("requirements") is { } own)
+            {
+                own.Value = $"({own.Value.Trim()}),({requirements})";
+            }
+            else
+            {
+                feat.Add(new XElement("requirements", requirements));
+            }
+            if (feat.Element("prerequisite") is null && feat.Element("prerequisites") is null && text is not null)
+            {
+                feat.Add(new XElement("prerequisite", text));
+            }
+            filled++;
+        }
+        return filled;
+    }
+
     // 5etools feat categories as the supports Aurora's choices ask for (Origin feats for a background, …)
     private static readonly Dictionary<string, string> FeatCategories = new()
     {
