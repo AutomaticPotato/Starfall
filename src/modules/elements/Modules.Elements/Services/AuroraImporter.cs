@@ -131,9 +131,11 @@ internal sealed class AuroraImporter : IAuroraImporter
             }
         }
 
+        // the copy of each id that counts (see Precedence), whichever file of the index repeats it, so every index
+        // imports the same copy and an update does not swap it back and forth
         foreach (var file in files)
         {
-            byFile.GetValueOrDefault(file, []).ForEach(Add);
+            byFile.GetValueOrDefault(file, []).ForEach(e => Add(byId.GetValueOrDefault(e.Id, e)));
         }
         var requestedCount = toImport.Count;
 
@@ -368,7 +370,7 @@ internal sealed class AuroraImporter : IAuroraImporter
         {
             folders.Add((Path.GetFullPath(homebrew), HomebrewPrefix));
         }
-        // last, so the merged content wins wherever a pull request repeats an id: only what is new comes from them
+        // where a pull request or homebrew repeats an id, its copy counts (see Precedence)
         if (_options.PullRequestsPath is { } pulls && Directory.Exists(pulls))
         {
             folders.Add((Path.GetFullPath(pulls), PullRequestsPrefix));
@@ -390,9 +392,17 @@ internal sealed class AuroraImporter : IAuroraImporter
                 xml.SetAttributeValue("starlights-import", ImportVersion);
                 var element = new AuroraElement(id, name, type, (string?)xml.Attribute("source"), file, xml);
                 elements.Add(element);
-                if (!byId.TryAdd(id, element))
+                if (byId.TryGetValue(id, out var other))
                 {
                     duplicates++;
+                    if (Precedence(file) > Precedence(other.File))
+                    {
+                        byId[id] = element;
+                    }
+                }
+                else
+                {
+                    byId[id] = element;
                 }
 
                 // a class taken as an additional class: its <multiclass> becomes an element of its own ("Fighter
@@ -408,7 +418,10 @@ internal sealed class AuroraImporter : IAuroraImporter
                     var synthetic = Multiclass(multiclass, multiclassId, id, name, (string?)xml.Attribute("source"));
                     var multiclassElement = new AuroraElement(multiclassId, (string)synthetic.Attribute("name")!, "Multiclass", (string?)xml.Attribute("source"), file, synthetic);
                     elements.Add(multiclassElement);
-                    byId.TryAdd(multiclassId, multiclassElement);
+                    if (!byId.TryGetValue(multiclassId, out var otherMulticlass) || Precedence(file) > Precedence(otherMulticlass.File))
+                    {
+                        byId[multiclassId] = multiclassElement;
+                    }
                 }
             }
             byFile[file] = elements;
@@ -478,6 +491,26 @@ internal sealed class AuroraImporter : IAuroraImporter
         _logger.LogInformation("aurora catalog: {Elements} elements in {Files} files ({Duplicates} duplicate ids ignored, {Appended} appends applied, {Unmatched} appends for elements not loaded)",
             byId.Count, byFile.Count, duplicates, appended, unmatched);
         return (byId, byFile);
+    }
+
+    /// <summary>
+    /// Which copy of an id counts when files repeat it: homebrew (the user's own) over an open pull request (the newest
+    /// first: a pull request repeating merged elements changes them, as the TCoE Artificer's spellcasting fix does) over
+    /// the merged content; among equals the first. When a pull request is merged or closed its copies go, and the merged
+    /// ones count again.
+    /// </summary>
+    private static double Precedence(string file)
+    {
+        if (file.StartsWith(HomebrewPrefix, StringComparison.Ordinal))
+        {
+            return 2;
+        }
+        if (file.StartsWith(PullRequestsPrefix, StringComparison.Ordinal))
+        {
+            var folder = file[PullRequestsPrefix.Length..].Split('/')[0];
+            return 1 + (int.TryParse(folder.Replace("pr-", "", StringComparison.Ordinal), out var number) ? number / 1_000_000.0 : 0);
+        }
+        return 0;
     }
 
     /// <summary>

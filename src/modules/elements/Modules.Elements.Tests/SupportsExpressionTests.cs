@@ -22,6 +22,8 @@ public class SupportsExpressionTests
     [DataRow("Skill,(Tool||PHB24 Rogue)", true)]
     [DataRow("ID_OTHER|ID_PROFICIENCY_SKILL_ATHLETICS", true)]
     [DataRow("ID_OTHER|ID_ANOTHER", false)]
+    [DataRow("Skill&&Strength", true)]
+    [DataRow("Skill&&Tool", false)]
     public void MatchesSupportsAndIds(string expression, bool expected)
     {
         var matches = SupportsExpression.Compile(expression);
