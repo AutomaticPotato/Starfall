@@ -17,7 +17,7 @@ export function PortraitDrop({ characterId, name, hasPortrait, children }: { cha
     <div {...handlers} className={cn("relative rounded-xl", over && "ring-4 ring-primary")}>
       {children}
       {!hasPortrait && !over && (
-        <div className="pointer-events-none absolute inset-x-0 top-1/4 flex flex-col items-center gap-1 text-center text-[11px] text-muted-foreground">
+        <div className="pointer-events-none absolute inset-x-0 top-1/4 flex flex-col items-center gap-1 text-center text-xs text-muted-foreground">
           <ImagePlusIcon className="size-5" />
           drop a portrait here
         </div>

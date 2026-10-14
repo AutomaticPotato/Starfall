@@ -93,9 +93,9 @@ function Details({ s }: { s: SheetData }) {
           const save = s.saves.find((x) => x.abilityScoreAbbreviation === a.abbreviation);
           return (
             <div key={a.abbreviation} className="rounded-md bg-muted/50 px-1 py-1">
-              <div className="text-[10px] font-medium uppercase text-muted-foreground">{a.abbreviation}</div>
+              <div className="text-[11px] font-medium uppercase text-muted-foreground">{a.abbreviation}</div>
               <div className="font-medium">{a.calculatedScore}</div>
-              <div className={cn("text-[10px]", save?.proficiency && save.proficiency !== "none" ? "font-semibold text-foreground" : "text-muted-foreground")} title="Saving throw">
+              <div className={cn("text-[11px]", save?.proficiency && save.proficiency !== "none" ? "font-semibold text-foreground" : "text-muted-foreground")} title="Saving throw">
                 save {signed(save?.calculatedBonus ?? a.calculatedModifier)}
               </div>
             </div>
@@ -135,7 +135,7 @@ function Details({ s }: { s: SheetData }) {
 function Stat({ label, value }: { label: string; value: string | number }) {
   return (
     <div className="rounded-md border px-2 py-1 text-center">
-      <dt className="truncate text-[10px] uppercase leading-tight text-muted-foreground">{label}</dt>
+      <dt className="truncate text-[11px] uppercase leading-tight text-muted-foreground">{label}</dt>
       <dd className="text-lg font-semibold leading-tight">{value}</dd>
     </div>
   );

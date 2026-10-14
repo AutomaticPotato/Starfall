@@ -69,7 +69,7 @@ export function BattleIndexPage() {
                     <span className="block truncate text-xs text-white/70">
                       Level {c.level} {c.build}
                     </span>
-                    {everyone && <span className="block truncate text-xs text-white/50">{c.playerName}</span>}
+                    {everyone && <span className="block truncate text-xs text-white/70">{c.playerName}</span>}
                   </span>
                 </Link>
               </li>

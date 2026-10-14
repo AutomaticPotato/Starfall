@@ -114,7 +114,7 @@ export function StartingEquipment({ characterId, choices }: { characterId: strin
                       {options.length > 1 || goldText ? (
                         <input type="radio" name={key} className="mt-1" checked={chosen === o.label} onChange={() => setPicks({ ...picks, [key]: o.label })} />
                       ) : (
-                        <CheckIcon className="mt-0.5 size-4 shrink-0 text-primary" />
+                        <CheckIcon className="mt-0.5 size-4 shrink-0 text-primary-text" />
                       )}
                       <span className="min-w-0 flex-1 space-y-1 text-sm">
                         {o.label && <span className="font-medium">Option {o.label}</span>}

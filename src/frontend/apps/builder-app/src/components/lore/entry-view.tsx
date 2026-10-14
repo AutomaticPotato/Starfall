@@ -28,9 +28,9 @@ export function SourceLine({ meta, entry, className }: { meta: LoreMeta; entry: 
         {source?.name ?? entry.source}
         {entry.page ? `, p. ${entry.page}` : ""}
       </span>
-      {source && <Badge variant="outline" className="h-5 px-1.5 text-[10px]">{source.edition}</Badge>}
+      {source && <Badge variant="outline" className="h-5 px-1.5 text-[11px]">{source.edition}</Badge>}
       {Boolean(entry.srd || entry.srd52 || entry.basicRules || entry.basicRules2024) && (
-        <Badge variant="secondary" className="h-5 px-1.5 text-[10px]" title="In the free rules (SRD or Basic Rules)">
+        <Badge variant="secondary" className="h-5 px-1.5 text-[11px]" title="In the free rules (SRD or Basic Rules)">
           Free rules
         </Badge>
       )}

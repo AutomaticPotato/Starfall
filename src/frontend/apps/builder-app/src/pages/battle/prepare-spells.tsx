@@ -16,7 +16,7 @@ export function PrepareSpells({ casters, magic, onChange }: { casters: Caster[];
   const { byId } = useSpellIndex();
   const [query, setQuery] = useState("");
   const preparing = casters.filter((c) => c.prepares);
-  if (preparing.length === 0) return <p className="text-sm text-white/60">Your spells are known, not prepared: they are always ready.</p>;
+  if (preparing.length === 0) return <p className="text-sm text-white/75">Your spells are known, not prepared: they are always ready.</p>;
   const q = normalizeText(query);
   return (
     <div className="space-y-4">
@@ -24,7 +24,7 @@ export function PrepareSpells({ casters, magic, onChange }: { casters: Caster[];
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder="Find a spell…"
-        className="h-8 w-full rounded-md border border-white/15 bg-black/40 px-2 text-sm text-white placeholder:text-white/40"
+        className="h-8 w-full rounded-md border border-white/15 bg-black/40 px-2 text-sm text-white placeholder:text-white/70"
       />
       {preparing.map((c) => {
         const { count, max } = preparedCount(c, magic);
@@ -45,11 +45,11 @@ export function PrepareSpells({ casters, magic, onChange }: { casters: Caster[];
               {c.name}: {count}
               {max !== null ? ` of ${max}` : ""} prepared
               {max !== null && count > max && <span className="ml-1 text-amber-300">(over the limit)</span>}
-              <span className="ml-2 text-xs font-normal text-white/50">{c.spellbook ? "from your spellbook" : "from your whole class list"}; always-prepared spells don't count</span>
+              <span className="ml-2 text-xs font-normal text-white/70">{c.spellbook ? "from your spellbook" : "from your whole class list"}; always-prepared spells don't count</span>
             </p>
             {levels.map((level) => (
               <div key={level}>
-                <p className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-white/45">{ORDINAL[level]}</p>
+                <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-white/70">{ORDINAL[level]}</p>
                 <div className="flex flex-wrap gap-1.5">
                   {rows
                     .filter((r) => r.level === level)
@@ -76,7 +76,7 @@ export function PrepareSpells({ casters, magic, onChange }: { casters: Caster[];
                       >
                         {r.on && <CheckIcon className="size-3" />}
                         {r.name}
-                        {r.always && <span className="text-[10px] opacity-70">always</span>}
+                        {r.always && <span className="text-[11px] opacity-80">always</span>}
                       </button>
                     ))}
                 </div>

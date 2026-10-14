@@ -203,7 +203,7 @@ function CharacterCreation() {
                     <>
                       <UploadIcon className="size-5" />
                       Upload your own
-                      <span className="text-[10px] leading-tight">or drop it here</span>
+                      <span className="text-[11px] leading-tight">or drop it here</span>
                     </>
                   )}
                   <input

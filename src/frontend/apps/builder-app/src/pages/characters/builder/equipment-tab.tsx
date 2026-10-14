@@ -289,7 +289,7 @@ function Group({ title, icon, note, items, empty, ...row }: RowProps & { title: 
 function AttackModes({ modes }: { modes: AttackMode[] }) {
   const sorted = [...modes].sort((a, b) => Number(b.current) - Number(a.current));
   return (
-    <ul className="flex flex-wrap gap-1.5 text-[11px]" aria-label="Ways to attack with it">
+    <ul className="flex flex-wrap gap-1.5 text-xs" aria-label="Ways to attack with it">
       {sorted.map((m) => (
         <li
           key={m.mode}
@@ -394,7 +394,7 @@ function Row({ r, containers, nextAttack, attackOf, modesOf, onChange, onRemove,
               aria-label={`Equip ${r.name}`}
               value={entry.equipped ?? ""}
               onChange={(e) => onChange(entry.id, { equipped: e.target.value || null, containerId: e.target.value ? null : entry.containerId })}
-              className={cn("h-8 max-w-36 rounded-md border bg-background px-2 text-sm", entry.equipped && "border-primary text-primary")}
+              className={cn("h-8 max-w-36 rounded-md border bg-background px-2 text-sm", entry.equipped && "border-primary text-primary-text")}
             >
               <option value="">{slots[0] === "Worn" ? "Not worn" : "Not equipped"}</option>
               {slots.map((s) => (

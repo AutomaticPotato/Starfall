@@ -22,7 +22,7 @@ export function LoreLink({ category, k, children }: { category: string; k: strin
     timer.current = setTimeout(fn, ms);
   };
   const href = loreHref(category, k);
-  const linkClass = "text-primary underline decoration-primary/30 underline-offset-2 hover:decoration-primary focus-visible:outline-2 focus-visible:outline-ring rounded-sm";
+  const linkClass = "text-primary-text underline decoration-primary-text/30 underline-offset-2 hover:decoration-primary-text focus-visible:outline-2 focus-visible:outline-ring rounded-sm";
 
   if (!canHover) {
     return (
@@ -44,7 +44,7 @@ export function LoreLink({ category, k, children }: { category: string; k: strin
             </DrawerHeader>
             <div className="max-h-[70vh] overflow-y-auto px-4 pb-2">{open && <EntryPreview category={category} k={k} />}</div>
             <div className="border-t px-4 py-3">
-              <Link to={href} onClick={() => setOpen(false)} className="inline-flex items-center gap-1.5 text-sm font-medium text-primary">
+              <Link to={href} onClick={() => setOpen(false)} className="inline-flex items-center gap-1.5 text-sm font-medium text-primary-text">
                 <ExternalLinkIcon className="size-4" /> Open the full page
               </Link>
             </div>

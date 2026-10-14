@@ -41,9 +41,9 @@ function Contents({ toc, kind, id, chapter, onPick }: { toc: BookToc; kind: stri
             to={`/lore/${kind}/${id}?ch=${i}`}
             onClick={onPick}
             aria-current={i === chapter ? "page" : undefined}
-            className={cn("block rounded px-2 py-1 leading-snug hover:bg-muted", i === chapter && "bg-primary/10 font-medium text-primary")}
+            className={cn("block rounded px-2 py-1 leading-snug hover:bg-muted", i === chapter && "bg-primary/10 font-medium text-primary-text")}
           >
-            {c.ordinal && <span className="block text-[11px] uppercase tracking-wide text-muted-foreground">{c.ordinal}</span>}
+            {c.ordinal && <span className="block text-xs uppercase tracking-wide text-muted-foreground">{c.ordinal}</span>}
             {c.name}
           </Link>
           {i === chapter && c.headers.length > 0 && (
@@ -108,7 +108,7 @@ function BookSearch({ meta, kind, id, toc }: { meta: LoreMeta; kind: string; id:
                 }}
               >
                 <span className="block text-sm font-medium">{r.name}</span>
-                <span className="block text-[11px] text-muted-foreground">{toc.toc[r.ch]?.name}</span>
+                <span className="block text-xs text-muted-foreground">{toc.toc[r.ch]?.name}</span>
                 <span className="line-clamp-2 block text-xs text-muted-foreground">{snippet(r.text, query)}</span>
               </button>
             ))

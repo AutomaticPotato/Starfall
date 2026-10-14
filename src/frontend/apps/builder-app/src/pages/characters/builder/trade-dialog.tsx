@@ -87,7 +87,7 @@ export function TradeDialog({ characterId, item, purse, onClose }: { characterId
                       onChange={(e) => setCoins({ ...coins, [c]: Number(e.target.value.replace(/\D/g, "")) || 0 })}
                       className="text-center"
                     />
-                    <span className="block text-[10px]">has {purse[c] ?? 0}</span>
+                    <span className="block text-[11px]">has {purse[c] ?? 0}</span>
                   </label>
                 ))}
               </div>

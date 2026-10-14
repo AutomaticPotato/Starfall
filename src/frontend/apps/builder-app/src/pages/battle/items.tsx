@@ -36,7 +36,7 @@ export function Items({
   markUsed: (slot: "Action" | "Bonus Action") => void;
 }) {
   if (items.length === 0) {
-    return <p className="rounded-xl border border-white/10 bg-neutral-900/60 p-4 text-sm text-white/60">No magic items or potions carried. Add them in the builder's Equipment tab.</p>;
+    return <p className="rounded-xl border border-white/10 bg-neutral-900/80 p-4 text-sm text-white/75">No magic items or potions carried. Add them in the builder's Equipment tab.</p>;
   }
   const active = new Set(state.active ?? []);
   const toggle = (key: string) => update((c) => ({ ...c, active: (c.active ?? []).includes(key) ? (c.active ?? []).filter((k) => k !== key) : [...(c.active ?? []), key] }));
@@ -53,16 +53,16 @@ export function Items({
             <header className="flex flex-wrap items-center gap-2">
               {item.consumable ? <FlaskConicalIcon className="size-4 text-emerald-300" /> : <GemIcon className="size-4 text-amber-300" />}
               <h3 className="font-semibold text-white">{item.name}</h3>
-              {item.quantity > 1 && <span className="text-xs text-white/60">×{item.quantity}</span>}
+              {item.quantity > 1 && <span className="text-xs text-white/75">×{item.quantity}</span>}
               <span className="flex-1" />
-              {item.rarity && <span className="rounded-full border border-white/15 px-2 py-0.5 text-[11px] text-white/70">{item.rarity}</span>}
+              {item.rarity && <span className="rounded-full border border-white/15 px-2 py-0.5 text-xs text-white/70">{item.rarity}</span>}
               {item.requiresAttunement && (
-                <span className={cn("rounded-full border px-2 py-0.5 text-[11px]", item.attuned ? "border-emerald-300/40 text-emerald-100" : "border-red-300/40 text-red-100")}>
+                <span className={cn("rounded-full border px-2 py-0.5 text-xs", item.attuned ? "border-emerald-300/40 text-emerald-100" : "border-red-300/40 text-red-100")}>
                   {item.attuned ? "attuned" : "not attuned"}
                 </span>
               )}
             </header>
-            <p className="mt-1 text-xs text-white/60">
+            <p className="mt-1 text-xs text-white/75">
               {item.bonuses.length > 0
                 ? item.active
                   ? `Active: ${item.bonuses.join(", ")}, already in your numbers.`
@@ -119,7 +119,7 @@ export function Items({
                       <span className="text-white/75">{p.label}</span>
                       <span className="flex-1" />
                       {p.always || p.critOnly ? (
-                        <span className="text-white/50">{p.critOnly ? "added to critical hits" : "always on"}</span>
+                        <span className="text-white/70">{p.critOnly ? "added to critical hits" : "always on"}</span>
                       ) : (
                         <Button size="sm" variant={on ? "default" : "secondary"} className={cn("h-7", on && "bg-amber-500 text-black hover:bg-amber-400")} aria-pressed={on} onClick={() => toggle(key)}>
                           {on ? "On" : "Switch on"}
@@ -128,7 +128,7 @@ export function Items({
                     </li>
                   );
                 })}
-                <li className="text-[11px] text-white/45">Switched-on damage is added to this weapon's attack cards.</li>
+                <li className="text-xs text-white/70">Switched-on damage is added to this weapon's attack cards.</li>
               </ul>
             )}
 
@@ -137,7 +137,7 @@ export function Items({
                 <span className="rounded-full border border-emerald-300/40 bg-emerald-400/10 px-2 py-0.5 text-emerald-100">
                   Heals {formatRoll(heals, false)} ({average(heals)} avg)
                 </span>
-                <span className="text-white/60">{edition === "2024" ? "Drinking it is a Bonus Action." : "Drinking it is an action."}</span>
+                <span className="text-white/75">{edition === "2024" ? "Drinking it is a Bonus Action." : "Drinking it is an action."}</span>
                 <span className="flex-1" />
                 <Button
                   size="sm"
@@ -156,7 +156,7 @@ export function Items({
             )}
 
             <details className="mt-2 text-xs text-white/70">
-              <summary className="cursor-pointer text-white/50">What it does</summary>
+              <summary className="cursor-pointer text-white/70">What it does</summary>
               <p className="mt-1 whitespace-pre-line">{plainSpellText(item.html) || "No description."}</p>
             </details>
           </article>
@@ -208,7 +208,7 @@ export function ItemUses({
   if (rows.length === 0) return null;
   const props = { slot, spent, blocked, setCharges, consume, tempHp, heal, markUsed, party: applyToAlly ? party : [], applyToAlly };
   return (
-    <section className="rounded-xl border border-white/10 bg-neutral-900/75 p-3 shadow-xl backdrop-blur-md sm:p-4">
+    <section className="rounded-xl border border-white/10 bg-neutral-900/85 p-3 shadow-xl backdrop-blur-md sm:p-4">
       <h2 className="mb-2 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-white/80">
         <GemIcon className="size-4 text-violet-300" /> Magic items
       </h2>
@@ -298,17 +298,17 @@ function ItemUseRow({
         <div className="min-w-0 flex-1">
           <div className="font-semibold text-white">{item.name}</div>
           <div className="text-xs text-white/75">{target && use.consumes ? `Give it to ${target.name}: heal` : use.label}</div>
-          <div className="text-[11px] text-white/50">
+          <div className="text-xs text-white/70">
             {use.consumes ? `Used up${item.quantity > 1 ? ` (${item.quantity} left)` : ""}` : use.charges ? `${use.charges} charge${use.charges === 1 ? "" : "s"} · ${left ?? 0} left` : "No charge"}
             {use.roll ? ` · ${formatRoll(use.roll, false)} (${average(use.roll)} avg)` : ""}
           </div>
           {targets.length > 0 && (
-            <label className="mt-1.5 flex items-center gap-1.5 text-[11px] text-white/60">
+            <label className="mt-1.5 flex items-center gap-1.5 text-xs text-white/75">
               On
               <select
                 value={on}
                 onChange={(e) => setOn(e.target.value)}
-                className="h-6 max-w-[12rem] rounded border border-white/15 bg-black/60 px-1 text-[11px] text-white"
+                className="h-6 max-w-[12rem] rounded border border-white/15 bg-black/60 px-1 text-xs text-white"
                 aria-label={`Use ${item.name} on`}
               >
                 <option value="">yourself</option>
@@ -332,7 +332,7 @@ function ItemUseRow({
           Use
         </Button>
       </div>
-      {use.text && <p className="mt-1 text-[11px] text-white/50">{use.text}</p>}
+      {use.text && <p className="mt-1 text-xs text-white/70">{use.text}</p>}
     </div>
   );
 }

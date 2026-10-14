@@ -94,7 +94,7 @@ export function Wizard({
                 className={cn("flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3 py-1 text-sm", i === at ? "border-primary bg-primary text-primary-foreground" : "hover:bg-muted")}
               >
                 <span className="tabular-nums opacity-70">{i + 1}</span> {s.title}
-                {s.sections && (left === 0 ? <CheckIcon className="size-3.5" /> : <span className="rounded-full bg-amber-500/90 px-1.5 text-[10px] text-black">{left}</span>)}
+                {s.sections && (left === 0 ? <CheckIcon className="size-3.5" /> : <span className="rounded-full bg-amber-500/90 px-1.5 text-[11px] text-black">{left}</span>)}
               </button>
             </li>
           );

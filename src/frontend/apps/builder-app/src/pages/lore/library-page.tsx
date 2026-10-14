@@ -79,7 +79,7 @@ export function LibraryPage({ kind }: { kind: "books" | "adventures" }) {
           <li key={r.k}>
             <Link to={`/lore/${kind}/${r.k}`} className="group block space-y-1.5 rounded-md focus-visible:outline-2 focus-visible:outline-ring">
               <Cover path={r.cover} name={r.name} />
-              <span className="block text-sm font-medium leading-tight group-hover:text-primary">{r.name}</span>
+              <span className="block text-sm font-medium leading-tight group-hover:text-primary-text">{r.name}</span>
               <span className="block text-xs text-muted-foreground">
                 {[r.published?.slice(0, 4), r.level ? (/^(\d+)–\1$/.test(r.level) ? `level ${r.level.split("–")[0]}` : `levels ${r.level}`) : "", r.ed === "2024" ? "2024" : ""].filter(Boolean).join(" · ")}
               </span>

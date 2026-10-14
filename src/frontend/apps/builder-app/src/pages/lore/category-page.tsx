@@ -39,7 +39,7 @@ export function CategoryPage() {
     return (
       <div className="mx-auto max-w-xl px-4 py-16 text-center">
         <p className="text-muted-foreground">There is no “{category}” in this build of the compendium.</p>
-        <Link to="/lore" className="mt-3 inline-block text-primary underline-offset-2 hover:underline">
+        <Link to="/lore" className="mt-3 inline-block text-primary-text underline-offset-2 hover:underline">
           Back to the Compendium of Lore
         </Link>
       </div>
@@ -199,9 +199,9 @@ function CategoryList({ meta, category, openKey }: { meta: LoreMeta; category: s
                 >
                   <span className="flex items-baseline gap-2">
                     <span className="truncate font-medium">{row.name}</span>
-                    <span className="ml-auto shrink-0 text-[11px] text-muted-foreground" title={meta.sources[row.src]?.name}>
+                    <span className="ml-auto shrink-0 text-xs text-muted-foreground" title={meta.sources[row.src]?.name}>
                       {meta.sources[row.src]?.short ?? row.src}
-                      {row.ed === "2014" && !/['’]14/.test(meta.sources[row.src]?.short ?? "") && <span className="ml-1 opacity-70">’14</span>}
+                      {row.ed === "2014" && !/['’]14/.test(meta.sources[row.src]?.short ?? "") && <span className="ml-1">’14</span>}
                     </span>
                   </span>
                   <span className="truncate text-xs text-muted-foreground">{config.summary(row)}</span>
@@ -290,7 +290,7 @@ function FacetGroup({ rows, query, facets, facet, selection, onChange }: { rows:
       <button type="button" className="flex w-full items-center justify-between px-3 py-2 text-left text-sm font-medium" aria-expanded={open} onClick={() => setOpen(!open)}>
         <span>
           {facet.label}
-          {chosen.length > 0 && <span className="ml-1.5 text-xs text-primary">({chosen.length})</span>}
+          {chosen.length > 0 && <span className="ml-1.5 text-xs text-primary-text">({chosen.length})</span>}
         </span>
         <ChevronDownIcon className={cn("size-4 transition-transform motion-reduce:transition-none", open && "rotate-180")} />
       </button>

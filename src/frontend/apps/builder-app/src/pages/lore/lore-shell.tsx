@@ -130,7 +130,7 @@ export function LoreShell() {
       >
         <SearchIcon className="size-4" />
         <span className="hidden sm:inline">Search everything</span>
-        <kbd className="hidden rounded border px-1 text-[10px] text-muted-foreground sm:inline">Ctrl K</kbd>
+        <kbd className="hidden rounded border px-1 text-[11px] text-muted-foreground sm:inline">Ctrl K</kbd>
       </button>
       <Palette open={open} onOpenChange={setOpen} />
     </>

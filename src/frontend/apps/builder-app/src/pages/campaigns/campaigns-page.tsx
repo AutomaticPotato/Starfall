@@ -47,7 +47,7 @@ export function CampaignsPage() {
               <p className="flex items-center gap-2 font-heading text-lg">
                 {c.name}
                 {c.locked && <LockIcon className="size-4 text-muted-foreground" aria-label="Has a password" />}
-                {c.dm && <span className="ms-auto rounded-full bg-primary/15 px-2 py-0.5 font-sans text-xs text-primary">You run this</span>}
+                {c.dm && <span className="ms-auto rounded-full bg-primary/15 px-2 py-0.5 font-sans text-xs text-primary-text">You run this</span>}
               </p>
               {c.dmName && <p className="text-xs text-muted-foreground">DM: {c.dmName}</p>}
               {c.canOpen ? (

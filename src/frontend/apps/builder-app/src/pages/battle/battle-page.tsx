@@ -475,7 +475,7 @@ interface Ctx {
 
 function Shell({ children }: { children: ReactNode }) {
   return (
-    <div className="relative min-h-[calc(100vh-4rem)] overflow-hidden bg-neutral-950 text-neutral-100">
+    <div className="dark relative min-h-[calc(100vh-4rem)] overflow-hidden bg-neutral-950 text-neutral-100">
       <BattleBackdrop />
       <div className="relative mx-auto max-w-6xl space-y-4 px-3 py-6 sm:px-4">{children}</div>
     </div>
@@ -492,7 +492,7 @@ function Loading() {
 
 function Panel({ title, icon, children, className, action }: { title?: string; icon?: ReactNode; children: ReactNode; className?: string; action?: ReactNode }) {
   return (
-    <section className={cn("rounded-xl border border-white/10 bg-neutral-900/75 p-3 shadow-xl backdrop-blur-md sm:p-4", className)}>
+    <section className={cn("rounded-xl border border-white/10 bg-neutral-900/85 p-3 shadow-xl backdrop-blur-md sm:p-4", className)}>
       {title && (
         <header className="mb-2 flex items-center gap-2">
           {icon}
@@ -509,9 +509,9 @@ function Panel({ title, icon, children, className, action }: { title?: string; i
 function Stat({ label, value, sub, className }: { label: string; value: ReactNode; sub?: ReactNode; className?: string }) {
   return (
     <div className={cn("flex min-w-0 flex-col items-center justify-center rounded-lg border border-white/10 bg-black/30 px-1 py-1.5 text-center sm:px-2 sm:py-2", className)}>
-      <span className="text-[9px] font-semibold uppercase leading-tight tracking-wide text-white/55 sm:text-[10px] sm:tracking-wider">{label}</span>
+      <span className="text-[11px] font-semibold uppercase leading-tight tracking-wide text-white/70 sm:text-xs sm:tracking-wider">{label}</span>
       <span className="font-heading text-xl leading-tight text-white sm:text-2xl">{value}</span>
-      {sub && <span className="line-clamp-2 break-words text-[10px] leading-tight text-white/60 sm:text-[11px]">{sub}</span>}
+      {sub && <span className="line-clamp-2 break-words text-[11px] leading-tight text-white/75 sm:text-xs">{sub}</span>}
     </div>
   );
 }
@@ -524,13 +524,13 @@ function Chip({ children, tone = "neutral", className }: { children: ReactNode; 
     blue: "border-sky-300/40 bg-sky-400/10 text-sky-100",
     green: "border-emerald-300/40 bg-emerald-400/10 text-emerald-100",
   };
-  return <span className={cn("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px]", tones[tone], className)}>{children}</span>;
+  return <span className={cn("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs", tones[tone], className)}>{children}</span>;
 }
 
 function Header({ id, data, model, onRest }: { id: string; data: SheetData; model: BattleModel; onRest: (k: "short" | "long") => void }) {
   return (
     <div className="flex flex-wrap items-end gap-4 pt-2">
-      <Link to="/battle" className="absolute left-3 top-2 inline-flex items-center gap-1 text-xs text-white/60 hover:text-white sm:left-4">
+      <Link to="/battle" className="absolute left-3 top-2 inline-flex items-center gap-1 text-xs text-white/75 hover:text-white sm:left-4">
         <ArrowLeftIcon className="size-3.5" /> All characters
       </Link>
       {data.portraitUrl ? (
@@ -541,7 +541,7 @@ function Header({ id, data, model, onRest }: { id: string; data: SheetData; mode
         </div>
       )}
       <div className="min-w-0 flex-1">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-amber-300/80">Battle Action Simulator</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-300/80 sm:tracking-[0.3em]">Battle Action Simulator</p>
         <h1 className="line-clamp-2 break-words font-heading text-3xl tracking-wide text-white drop-shadow sm:text-4xl">{data.name}</h1>
         <p className="truncate text-sm text-white/75">
           {data.classLine}
@@ -611,7 +611,7 @@ function Vitals({
         <div className="flex items-end gap-3">
           <div className="font-heading text-5xl leading-none text-white">
             {hp}
-            <span className="text-2xl text-white/50"> / {maxHp}</span>
+            <span className="text-2xl text-white/70"> / {maxHp}</span>
           </div>
           {state.temporaryHitPoints > 0 && <Chip tone="blue">+{state.temporaryHitPoints} temporary</Chip>}
         </div>
@@ -630,7 +630,7 @@ function Vitals({
             Temp HP
           </Button>
         </div>
-        <p className="mt-2 text-[11px] text-white/50">
+        <p className="mt-2 text-xs text-white/70">
           Hit dice {hitDiceLeft} of {data.hitDice || `${data.level}`} left · damage takes temporary hit points first
         </p>
       </Panel>
@@ -686,7 +686,7 @@ function Status({ data, state, edition, exhaustionText, updateCombat, hp }: { da
           );
         })}
         <span className="inline-flex items-center gap-1">
-          <span className="text-xs text-white/60">Exhaustion</span>
+          <span className="text-xs text-white/75">Exhaustion</span>
           <Button size="icon" variant="ghost" className="size-6 text-white" aria-label="Less exhaustion" onClick={() => updateCombat((c) => ({ ...c, exhaustion: Math.max(0, c.exhaustion - 1) }))}>
             <MinusIcon />
           </Button>
@@ -699,7 +699,7 @@ function Status({ data, state, edition, exhaustionText, updateCombat, hp }: { da
           type="button"
           aria-pressed={state.heroicInspiration}
           onClick={() => updateCombat((c) => ({ ...c, heroicInspiration: !c.heroicInspiration }))}
-          className={cn("rounded-full border px-2 py-0.5 text-[11px]", state.heroicInspiration ? "border-amber-300 bg-amber-300/20 text-amber-100" : "border-white/15 text-white/60")}
+          className={cn("rounded-full border px-2 py-0.5 text-xs", state.heroicInspiration ? "border-amber-300 bg-amber-300/20 text-amber-100" : "border-white/15 text-white/75")}
         >
           <SparklesIcon className="mr-1 inline size-3" />
           {edition === "2024" ? "Heroic Inspiration" : "Inspiration"}
@@ -765,7 +765,7 @@ function Effects({ ctx }: { ctx: Ctx }) {
       }
     >
       {ctx.effects.length === 0 ? (
-        <p className="text-xs text-white/55">
+        <p className="text-xs text-white/70">
           Nothing yet.<span className="hidden sm:inline"> Casting a spell or using a feature that changes your numbers (Shield, Mage Armor, Bladesong, Rage) turns it on here; so can you.</span>
         </p>
       ) : (
@@ -774,11 +774,11 @@ function Effects({ ctx }: { ctx: Ctx }) {
             <li key={e.key} className="flex flex-wrap items-center gap-2 text-sm">
               <Chip tone={e.kind === "situation" ? "neutral" : "blue"}>{e.key.replace("@", " at level ")}</Chip>
               <span className="text-xs text-white/75">{e.summary}</span>
-              {e.untilNextTurn && <span className="text-[11px] text-white/45">ends at the start of your next turn</span>}
-              {e.concentration && <span className="text-[11px] text-white/45">concentration</span>}
-              {e.notes && <span className="text-[11px] text-white/45">{e.notes}</span>}
+              {e.untilNextTurn && <span className="text-xs text-white/70">ends at the start of your next turn</span>}
+              {e.concentration && <span className="text-xs text-white/70">concentration</span>}
+              {e.notes && <span className="text-xs text-white/70">{e.notes}</span>}
               <span className="flex-1" />
-              <Button size="sm" variant="ghost" className="h-6 text-white/60" aria-label={`End ${e.name}`} onClick={() => ctx.setEffect(e.key, false)}>
+              <Button size="sm" variant="ghost" className="h-6 text-white/75" aria-label={`End ${e.name}`} onClick={() => ctx.setEffect(e.key, false)}>
                 End
               </Button>
             </li>
@@ -844,7 +844,7 @@ function TurnBar({
       onClick={() => setTurn((t) => ({ ...t, [field]: !t[field] }))}
       className={cn(
         "flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold transition",
-        disabled ? "border-white/10 text-white/30 line-through" : used ? "border-white/10 bg-white/5 text-white/40 line-through" : "border-amber-300/50 bg-amber-300/10 text-amber-50 hover:bg-amber-300/20",
+        disabled ? "border-white/10 text-white/30 line-through" : used ? "border-white/10 bg-white/5 text-white/70 line-through" : "border-amber-300/50 bg-amber-300/10 text-amber-50 hover:bg-amber-300/20",
       )}
     >
       <span className={cn("size-2.5 rotate-45", used || disabled ? "bg-white/20" : "bg-amber-300")} />
@@ -862,9 +862,9 @@ function TurnBar({
         {pip("Bonus action", turn.bonus, "bonus", incapacitated)}
         {pip("Reaction", turn.reaction, "reaction", noReactions)}
         <div className="flex items-center gap-1.5 rounded-lg border border-white/15 px-2 py-1.5 text-sm">
-          <FootprintsIcon className="size-4 text-white/60" />
+          <FootprintsIcon className="size-4 text-white/75" />
           <span className="font-semibold">{left}</span>
-          <span className="text-white/60">/ {total} ft</span>
+          <span className="text-white/75">/ {total} ft</span>
           <Button size="icon" variant="ghost" className="size-6 text-white" aria-label="Move 5 feet" onClick={() => setTurn((t) => ({ ...t, moved: Math.min(total, t.moved + 5) }))}>
             <MinusIcon />
           </Button>
@@ -929,7 +929,7 @@ function Choices({ ctx, speed }: { ctx: Ctx; speed: number }) {
           </div>
           {model.weapons.some((w) => w.equipped === false) && (
             <details className="mt-2">
-              <summary className="cursor-pointer text-xs text-white/60">Weapons in your pack ({new Set(model.weapons.filter((w) => w.equipped === false).map((w) => w.name)).size}): drawing one is your free object interaction</summary>
+              <summary className="cursor-pointer text-xs text-white/75">Weapons in your pack ({new Set(model.weapons.filter((w) => w.equipped === false).map((w) => w.name)).size}): drawing one is your free object interaction</summary>
               <div className="mt-2 grid gap-2 md:grid-cols-2">
                 {[...model.weapons, ...model.offHand].filter((w) => w.equipped === false).map((w) => (
                   <WeaponCard key={`${w.name}|${w.mode ?? ""}`} ctx={ctx} weapon={w} slot="Attack" attacks={data.attacksPerAction} />
@@ -937,7 +937,7 @@ function Choices({ ctx, speed }: { ctx: Ctx; speed: number }) {
               </div>
             </details>
           )}
-          <p className="mt-2 text-xs text-white/60">Grapple or shove: {model.grapple}</p>
+          <p className="mt-2 text-xs text-white/75">Grapple or shove: {model.grapple}</p>
           {bySlot("Attack").length > 0 && <FeatureList ctx={ctx} features={bySlot("Attack")} note="Part of the Attack action" />}
         </Panel>
         {spellsBy("Action").length > 0 && (
@@ -951,7 +951,7 @@ function Choices({ ctx, speed }: { ctx: Ctx; speed: number }) {
           </Panel>
         )}
         {itemUsesFor("Action")}
-        <Panel title="Every creature can" icon={<ShieldIcon className="size-4 text-white/60" />}>
+        <Panel title="Every creature can" icon={<ShieldIcon className="size-4 text-white/75" />}>
           <StandardList ctx={ctx} />
         </Panel>
       </TabsContent>
@@ -959,7 +959,7 @@ function Choices({ ctx, speed }: { ctx: Ctx; speed: number }) {
       <TabsContent value="bonus" className="space-y-3">
         {model.offHand.some((w) => w.equipped !== false && model.offHandAction[w.name] !== "Attack") && (
           <Panel title="Two-weapon fighting" icon={<SwordIcon className="size-4 text-amber-300" />}>
-            <p className="mb-2 text-xs text-white/60">After attacking with a light melee weapon, attack with the other one as a bonus action{model.edition === "2024" ? " (with the Nick mastery it is part of the Attack action instead)" : ""}. No ability modifier to its damage unless it is negative or you have the Two-Weapon Fighting style.</p>
+            <p className="mb-2 text-xs text-white/75">After attacking with a light melee weapon, attack with the other one as a bonus action{model.edition === "2024" ? " (with the Nick mastery it is part of the Attack action instead)" : ""}. No ability modifier to its damage unless it is negative or you have the Two-Weapon Fighting style.</p>
             <div className="grid gap-2 md:grid-cols-2">
               {model.offHand.filter((w) => w.equipped !== false && model.offHandAction[w.name] !== "Attack").map((w) => (
                 <WeaponCard key={`${w.name}|off`} ctx={ctx} weapon={w} slot="Bonus Action" attacks={1} />
@@ -973,7 +973,7 @@ function Choices({ ctx, speed }: { ctx: Ctx; speed: number }) {
 
       <TabsContent value="reaction" className="space-y-3">
         <Panel title="Opportunity attack" icon={<SwordIcon className="size-4 text-amber-300" />}>
-          <p className="mb-2 text-xs text-white/60">When a creature you can see leaves your reach, make one melee attack against it.</p>
+          <p className="mb-2 text-xs text-white/75">When a creature you can see leaves your reach, make one melee attack against it.</p>
           {model.opportunity && <WeaponCard ctx={ctx} weapon={model.opportunity} slot="Reaction" attacks={1} />}
         </Panel>
         <SlotSection ctx={ctx} features={bySlot("Reaction")} spells={spellsBy("Reaction")} empty="" />
@@ -1006,7 +1006,7 @@ function Choices({ ctx, speed }: { ctx: Ctx; speed: number }) {
       <TabsContent value="resources" className="space-y-3">
         <SlotsPanel ctx={ctx} />
         <Panel title="Limited uses" icon={<SparklesIcon className="size-4 text-amber-300" />}>
-          {limited.length === 0 ? <p className="text-sm text-white/60">No features with limited uses.</p> : <FeatureList ctx={ctx} features={limited} />}
+          {limited.length === 0 ? <p className="text-sm text-white/75">No features with limited uses.</p> : <FeatureList ctx={ctx} features={limited} />}
         </Panel>
       </TabsContent>
 
@@ -1055,7 +1055,7 @@ function Choices({ ctx, speed }: { ctx: Ctx; speed: number }) {
 }
 
 function SlotSection({ ctx, features, spells, empty }: { ctx: Ctx; features: BattleFeature[]; spells: BattleSpell[]; empty: string }) {
-  if (features.length === 0 && spells.length === 0) return empty ? <Panel><p className="text-sm text-white/60">{empty}</p></Panel> : null;
+  if (features.length === 0 && spells.length === 0) return empty ? <Panel><p className="text-sm text-white/75">{empty}</p></Panel> : null;
   return (
     <>
       {features.length > 0 && (
@@ -1112,7 +1112,7 @@ function WeaponCard({ ctx, weapon, slot, attacks }: { ctx: Ctx; weapon: WeaponAt
             <span className="truncate font-semibold text-white">{itemKey ? <LoreLink category="items" k={itemKey}>{weapon.name}</LoreLink> : weapon.name}</span>
             {weapon.mode && <Chip tone={weapon.current ? "gold" : "neutral"}>{weapon.mode}{weapon.current ? " · held now" : ""}</Chip>}
           </div>
-          <div className="text-xs text-white/60">{weapon.range}{weapon.properties.length ? ` · ${weapon.properties.join(", ")}` : ""}</div>
+          <div className="text-xs text-white/75">{weapon.range}{weapon.properties.length ? ` · ${weapon.properties.join(", ")}` : ""}</div>
         </div>
         <Button size="sm" variant="secondary" className="h-7" disabled={(ctx.incapacitated && slot !== "Reaction") || spent} onClick={() => ctx.use(slot)}>
           Use
@@ -1125,23 +1125,23 @@ function WeaponCard({ ctx, weapon, slot, attacks }: { ctx: Ctx; weapon: WeaponAt
         <Mini label={`vs AC ${ctx.targetAc}`} value={percent(hit)} sub={`${expected.toFixed(1)} dmg/attack`} />
       </div>
       <RollNote roll={roll} />
-      <p className="mt-1.5 text-[11px] text-white/50">
+      <p className="mt-1.5 text-xs text-white/70">
         {weapon.roll.type}
         {attacks > 1 ? ` · ${attacks} attacks: about ${(expected * attacks).toFixed(1)} damage per Attack action` : ""}
         {crit > 0.05 ? ` · critical ${percent(crit)}` : ""}
       </p>
       {on.map((p) => (
-        <p key={p.id} className="mt-1 text-[11px] text-red-100/90">
+        <p key={p.id} className="mt-1 text-xs text-red-100/90">
           +{formatRoll(p.roll)} ({p.label.toLowerCase()})
         </p>
       ))}
       {(weapon.notes ?? []).map((n) => (
-        <p key={n} className="mt-1 text-[11px] text-sky-100/80">
+        <p key={n} className="mt-1 text-xs text-sky-100/80">
           {n}
         </p>
       ))}
       {(weapon.masteryKnown ?? ctx.model.hasWeaponMastery) && weapon.properties.filter((p) => MASTERY[p]).map((p) => (
-        <p key={p} className="mt-1 text-[11px] text-amber-100/80">
+        <p key={p} className="mt-1 text-xs text-amber-100/80">
           <span className="font-semibold">Mastery: {p}.</span> {MASTERY[p]}
         </p>
       ))}
@@ -1152,9 +1152,9 @@ function WeaponCard({ ctx, weapon, slot, attacks }: { ctx: Ctx; weapon: WeaponAt
 function Mini({ label, value, sub }: { label: string; value: ReactNode; sub?: ReactNode }) {
   return (
     <div className="rounded-md bg-white/5 px-1 py-1">
-      <div className="text-[9px] uppercase tracking-wider text-white/45">{label}</div>
+      <div className="text-[11px] uppercase tracking-wider text-white/70">{label}</div>
       <div className="truncate text-sm font-semibold text-white">{value}</div>
-      {sub && <div className="truncate text-[10px] text-white/50">{sub}</div>}
+      {sub && <div className="truncate text-[11px] text-white/70">{sub}</div>}
     </div>
   );
 }
@@ -1174,7 +1174,7 @@ const RECHARGE: Record<string, string> = { turn: "per turn", short: "per short r
 function FeatureList({ ctx, features, note }: { ctx: Ctx; features: BattleFeature[]; note?: string }) {
   return (
     <ul className="mt-1 space-y-2">
-      {note && <li className="text-[11px] uppercase tracking-wider text-white/45">{note}</li>}
+      {note && <li className="text-xs uppercase tracking-wider text-white/70">{note}</li>}
       {features.map((f) => (
         <FeatureItem key={f.title} ctx={ctx} f={f} />
       ))}
@@ -1219,7 +1219,7 @@ function FeatureItem({ ctx, f }: { ctx: Ctx; f: BattleFeature }) {
           </Button>
         )}
         {counted && spent > 0 && owner && (
-          <Button size="sm" variant="ghost" className="h-7 text-white/60" onClick={() => ctx.updateCombat((c) => ({ ...c, uses: { ...c.uses, [owner]: Math.max(0, (c.uses[owner] ?? 0) - (many ? n : 1)) } }))}>
+          <Button size="sm" variant="ghost" className="h-7 text-white/75" onClick={() => ctx.updateCombat((c) => ({ ...c, uses: { ...c.uses, [owner]: Math.max(0, (c.uses[owner] ?? 0) - (many ? n : 1)) } }))}>
             Undo
           </Button>
         )}
@@ -1262,7 +1262,7 @@ function SlotsPanel({ ctx }: { ctx: Ctx }) {
           const left = ctx.slotsLeft(level);
           return (
             <div key={level} className="rounded-lg border border-white/10 bg-black/30 px-2.5 py-1.5">
-              <div className="text-[10px] uppercase tracking-wider text-white/55">{ordinal(level)} level</div>
+              <div className="text-[11px] uppercase tracking-wider text-white/70">{ordinal(level)} level</div>
               <div className="mt-1 flex gap-1">
                 {Array.from({ length: total }, (_, i) => (
                   <button
@@ -1279,7 +1279,7 @@ function SlotsPanel({ ctx }: { ctx: Ctx }) {
         })}
         {ctx.pact && (
           <div className="rounded-lg border border-violet-300/30 bg-black/30 px-2.5 py-1.5">
-            <div className="text-[10px] uppercase tracking-wider text-white/55">Pact slots · {ordinal(ctx.pact.level)} level · short rest</div>
+            <div className="text-[11px] uppercase tracking-wider text-white/70">Pact slots · {ordinal(ctx.pact.level)} level · short rest</div>
             <div className="mt-1 flex gap-1">
               {Array.from({ length: ctx.pact.count }, (_, i) => (
                 <button
@@ -1294,7 +1294,7 @@ function SlotsPanel({ ctx }: { ctx: Ctx }) {
           </div>
         )}
       </div>
-      <p className="mt-2 text-[11px] text-white/50">The same slots as the Magic tab: spending one here spends it there.</p>
+      <p className="mt-2 text-xs text-white/70">The same slots as the Magic tab: spending one here spends it there.</p>
     </Panel>
   );
 }
@@ -1312,7 +1312,7 @@ function SpellList({ ctx, spells, grouped }: { ctx: Ctx; spells: BattleSpell[]; 
     <div className="flex flex-col gap-4">
       {resting.length > 0 && (
         <details className="order-last rounded-lg border border-dashed border-white/10 p-2">
-          <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wider text-white/55">Not prepared ({resting.length}): prepare them above, or cast one anyway</summary>
+          <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wider text-white/70">Not prepared ({resting.length}): prepare them above, or cast one anyway</summary>
           <div className="mt-2 grid gap-2 md:grid-cols-2">
             {resting.map((s) => (
               <SpellCard key={`${s.name}|${s.level}|${s.origin}|${s.item?.entryId ?? ""}`} ctx={ctx} spell={s} />
@@ -1322,7 +1322,7 @@ function SpellList({ ctx, spells, grouped }: { ctx: Ctx; spells: BattleSpell[]; 
       )}
       {levels.map((level) => (
         <div key={level}>
-          <h3 className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-white/55">{level === 0 ? "Cantrips" : `${ordinal(level)} level`}</h3>
+          <h3 className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-white/70">{level === 0 ? "Cantrips" : `${ordinal(level)} level`}</h3>
           <div className="grid gap-2 md:grid-cols-2">
             {sorted.filter((s) => s.level === level).map((s) => (
               <SpellCard key={`${s.name}|${s.level}|${s.origin}|${s.item?.entryId ?? ""}`} ctx={ctx} spell={s} />
@@ -1376,21 +1376,21 @@ function SpellCard({ ctx, spell }: { ctx: Ctx; spell: BattleSpell }) {
         <div className="min-w-0 flex-1">
           <div className="font-semibold text-white">
             {key ? <LoreLink category="spells" k={key}>{spell.name}</LoreLink> : spell.name}
-            {spell.concentration && <span title="Concentration" className="ml-1.5 rounded bg-amber-300/20 px-1 text-[10px] text-amber-100">C</span>}
-            {spell.ritual && <span title="Ritual" className="ml-1 rounded bg-white/10 px-1 text-[10px] text-white/70">R</span>}
+            {spell.concentration && <span title="Concentration" className="ml-1.5 rounded bg-amber-300/20 px-1 text-[11px] text-amber-100">C</span>}
+            {spell.ritual && <span title="Ritual" className="ml-1 rounded bg-white/10 px-1 text-[11px] text-white/70">R</span>}
           </div>
-          <div className="text-[11px] text-white/55">
+          <div className="text-xs text-white/70">
             {[spell.time, spell.range, spell.duration, spell.components].filter(Boolean).join(" · ")}
           </div>
           {!ready && (
-            <div className="text-[11px] text-amber-200/80">
+            <div className="text-xs text-amber-200/80">
               Not prepared.{" "}
               <button type="button" className="underline hover:text-amber-100" onClick={() => ctx.castAnyway(spell.name)}>
                 Forgot to prepare it? Cast anyway
               </button>
             </div>
           )}
-          {needsAttunement && <div className="text-[11px] text-amber-200/80">Attune to {item!.name} first (Equipment tab)</div>}
+          {needsAttunement && <div className="text-xs text-amber-200/80">Attune to {item!.name} first (Equipment tab)</div>}
         </div>
         {spell.item && levels.length > 1 ? (
           <select aria-label="Charges" value={choice} onChange={(e) => setChoice(e.target.value)} className="h-7 rounded-md border border-violet-300/40 bg-black/60 px-1 text-xs text-violet-100">
@@ -1401,11 +1401,11 @@ function SpellCard({ ctx, spell }: { ctx: Ctx; spell: BattleSpell }) {
             ))}
           </select>
         ) : spell.item ? (
-          <span className="rounded-md border border-violet-300/40 px-1.5 py-1 text-[11px] text-violet-100">
+          <span className="rounded-md border border-violet-300/40 px-1.5 py-1 text-xs text-violet-100">
             {chargesFor(spell, castAt) ? `${chargesFor(spell, castAt)} of ${chargesLeft} charges` : "no charge"}
           </span>
         ) : item && (
-          <span className="rounded-md border border-violet-300/40 px-1.5 py-1 text-[11px] text-violet-100">
+          <span className="rounded-md border border-violet-300/40 px-1.5 py-1 text-xs text-violet-100">
             {item.name}: {Math.max(0, (item.charges ?? 0) - item.chargesUsed)} charges
           </span>
         )}
@@ -1447,9 +1447,9 @@ function SpellCard({ ctx, spell }: { ctx: Ctx; spell: BattleSpell }) {
         <Chip>{spell.castingName ? `${spell.castingName} · ` : ""}{spell.slot === "Other" ? spell.time : spell.slot}</Chip>
       </div>
       {effect.attack && <RollNote roll={attackRollOf} />}
-      {effect.upcastNote && <p className="mt-1.5 text-[11px] text-sky-100/70">Higher slot: {effect.upcastNote}</p>}
+      {effect.upcastNote && <p className="mt-1.5 text-xs text-sky-100/85">Higher slot: {effect.upcastNote}</p>}
       <details className="mt-1.5 text-xs text-white/65">
-        <summary className="cursor-pointer text-white/50">Description</summary>
+        <summary className="cursor-pointer text-white/70">Description</summary>
         <p className="mt-1 whitespace-pre-line">{plainSpellText(spell.description)}</p>
       </details>
     </div>
@@ -1678,7 +1678,7 @@ function RollNote({ roll }: { roll: AttackRoll }) {
   if (roll.advantage === "normal" && !roll.for.length && !roll.against.length && !roll.autoCrit && !roll.notes.length) return null;
   const word = roll.advantage === "advantage" ? "Advantage" : roll.advantage === "disadvantage" ? "Disadvantage" : "Normal roll";
   return (
-    <p className={cn("mt-1.5 text-[11px]", roll.advantage === "advantage" ? "text-emerald-200" : roll.advantage === "disadvantage" ? "text-red-200" : "text-white/60")}>
+    <p className={cn("mt-1.5 text-xs", roll.advantage === "advantage" ? "text-emerald-200" : roll.advantage === "disadvantage" ? "text-red-200" : "text-white/75")}>
       <span className="font-semibold">{word}</span>
       {roll.for.length > 0 && ` · for: ${roll.for.join(", ")}`}
       {roll.against.length > 0 && ` · against: ${roll.against.join(", ")}`}
@@ -1767,10 +1767,10 @@ function TargetPanel(p: {
           <input type="checkbox" checked={p.within5} onChange={(e) => p.setWithin5(e.target.checked)} /> within 5 ft of you (for ranged attacks)
         </label>
         <span className="flex-1" />
-        <span className="text-white/55">Your own:</span>
+        <span className="text-white/70">Your own:</span>
         <div className="flex overflow-hidden rounded-md border border-white/15" role="group" aria-label="Attack rolls">
           {(["disadvantage", "normal", "advantage"] as const).map((a) => (
-            <button key={a} type="button" aria-pressed={p.advantage === a} onClick={() => p.setAdvantage(a)} className={cn("px-2 py-1 capitalize", p.advantage === a ? "bg-white/20 text-white" : "text-white/60 hover:bg-white/10")}>
+            <button key={a} type="button" aria-pressed={p.advantage === a} onClick={() => p.setAdvantage(a)} className={cn("px-2 py-1 capitalize", p.advantage === a ? "bg-white/20 text-white" : "text-white/75 hover:bg-white/10")}>
               {a === "normal" ? "Normal" : a === "advantage" ? "Adv." : "Disadv."}
             </button>
           ))}
@@ -1788,7 +1788,7 @@ function TargetPanel(p: {
               disabled={p.busy}
               title={`${m.note}${by ? ` · marked by ${by}` : ""}`}
               onClick={() => p.toggle(m.name, !on)}
-              className={cn("rounded-full border px-2 py-0.5 text-[11px]", on ? "border-violet-300/70 bg-violet-500/30 text-violet-50" : "border-white/15 text-white/55 hover:bg-white/10")}
+              className={cn("rounded-full border px-2 py-0.5 text-xs", on ? "border-violet-300/70 bg-violet-500/30 text-violet-50" : "border-white/15 text-white/70 hover:bg-white/10")}
             >
               {m.name}
             </button>

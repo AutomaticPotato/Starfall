@@ -37,7 +37,7 @@ function Line({ label, children }: { label: string; children: ReactNode }) {
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="space-y-1">
-      <h4 className="border-b border-primary/30 pb-0.5 font-heading text-base tracking-wide text-primary">{title}</h4>
+      <h4 className="border-b border-primary/30 pb-0.5 font-heading text-base tracking-wide text-primary-text">{title}</h4>
       {children}
     </section>
   );

@@ -56,12 +56,14 @@
   --popover-foreground: var(--base-800);
   --primary: var(--primary-700);
   --primary-foreground: var(--base-100);
+  /* the primary colour for links and highlighted text on the page (readable on the background) */
+  --primary-text: var(--primary-700);
   --secondary: var(--secondary-600);
   --secondary-foreground: var(--base-100);
   --tertiary: var(--tertiary-500);
   --tertiary-foreground: var(--base-100);
   --muted: var(--base-100);
-  --muted-foreground: var(--base-500);
+  --muted-foreground: var(--base-600);
   --accent: var(--base-150);
   --accent-foreground: var(--base-800);
   --destructive: oklch(0.577 0.245 27.325);
@@ -106,6 +108,7 @@
   --popover-foreground: var(--base-200);
   --primary: var(--primary-700);
   --primary-foreground: var(--color-white);
+  --primary-text: var(--primary-400);
   --secondary: var(--secondary-600);
   --secondary-foreground: var(--color-white);
   --tertiary: var(--tertiary-600);
@@ -185,7 +188,10 @@
   --color-tertiary-900: var(--tertiary-900);
   --color-tertiary-950: var(--tertiary-950);
   --color-tertiary-1000: var(--tertiary-1000);
+}
 
+/* the theme's colours, read where they are used, so a part of a page can be dark on its own (the battle page) */
+@theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-sidebar-ring: var(--sidebar-ring);
@@ -213,12 +219,16 @@
   --color-secondary: var(--secondary);
   --color-primary-foreground: var(--primary-foreground);
   --color-primary: var(--primary);
+  --color-primary-text: var(--primary-text);
   --color-tertiary-foreground: var(--tertiary-foreground);
   --color-tertiary: var(--tertiary);
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+}
+
+@theme {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);

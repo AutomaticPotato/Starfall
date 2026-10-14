@@ -62,7 +62,7 @@ function Entry({ entry }: { entry: ProficiencyEntry }) {
     <li className="flex flex-wrap items-baseline gap-x-2">
       <InfoCard id={entry.elementId}>{entry.name}</InfoCard>
       {entry.expertise && (
-        <span title="Expertise: twice your proficiency bonus" className="rounded border px-1 text-[10px] font-medium uppercase leading-4 tracking-wide text-muted-foreground">
+        <span title="Expertise: twice your proficiency bonus" className="rounded border px-1 text-[11px] font-medium uppercase leading-4 tracking-wide text-muted-foreground">
           expertise
         </span>
       )}

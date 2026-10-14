@@ -555,7 +555,7 @@ function PortraitEditor({ characterId, url }: { characterId: string; url?: strin
         >
           <ImageIcon className="size-6" />
           Add portrait
-          <span className="text-[10px] leading-tight">drop a picture or click</span>
+          <span className="text-[11px] leading-tight">drop a picture or click</span>
         </button>
       )}
       {url && (

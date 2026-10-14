@@ -48,7 +48,7 @@ export function ImageDrop({
           <span className="flex flex-col items-center gap-1 px-2 text-center text-xs text-muted-foreground">
             <ImagePlusIcon className="size-5" />
             {label}
-            <span className="text-[10px]">drop it here or click</span>
+            <span className="text-[11px]">drop it here or click</span>
           </span>
         )}
         {busy && (

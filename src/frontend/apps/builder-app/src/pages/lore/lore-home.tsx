@@ -110,7 +110,7 @@ export function LoreHome() {
         {built.map((c) => (
           <Link key={c.id} to={`/lore/${c.id}`} className="group rounded-lg border bg-background/60 p-4 transition-colors hover:border-primary/50 hover:bg-muted/40 motion-reduce:transition-none">
             <div className="flex items-baseline justify-between gap-2">
-              <span className="font-heading text-lg tracking-wide group-hover:text-primary">{c.label}</span>
+              <span className="font-heading text-lg tracking-wide group-hover:text-primary-text">{c.label}</span>
               <span className="text-sm text-muted-foreground">{meta.data.categories[c.id].count.toLocaleString()}</span>
             </div>
             <p className="mt-1 text-sm text-muted-foreground">{c.blurb}</p>

@@ -174,7 +174,7 @@ function SlotRow({ label, note, total, spent, onSpent }: { label: string; note?:
 function Figure({ label, value, children, warn }: { label: string; value: ReactNode; children?: ReactNode; warn?: boolean }) {
   const body = (
     <span className={cn("inline-block rounded-md border px-2 py-1 text-left", warn && "border-destructive/60", children && "hover:bg-muted/60")}>
-      <span className="block text-[11px] leading-tight text-muted-foreground">{label}</span>
+      <span className="block text-xs leading-tight text-muted-foreground">{label}</span>
       <span className="font-semibold tabular-nums">{value}</span>
     </span>
   );
@@ -413,7 +413,7 @@ function SpellRow({
         </button>
       ) : (
         <span className="flex size-6 shrink-0 items-center justify-center" aria-hidden>
-          {always && <CheckIcon className="size-4 text-primary" />}
+          {always && <CheckIcon className="size-4 text-primary-text" />}
         </span>
       )}
       <span className="min-w-0 flex-1">
@@ -438,7 +438,7 @@ function SpellRow({
 
 function Tag({ children, title }: { children: ReactNode; title: string }) {
   return (
-    <span title={title} className="ms-1.5 inline-block rounded border px-1 text-[10px] font-medium uppercase leading-4 tracking-wide text-muted-foreground">
+    <span title={title} className="ms-1.5 inline-block rounded border px-1 text-[11px] font-medium uppercase leading-4 tracking-wide text-muted-foreground">
       {children}
     </span>
   );

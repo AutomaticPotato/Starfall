@@ -38,7 +38,7 @@ function DiceTag({ expression, label, title }: { expression: string; label: Reac
   return (
     <button
       type="button"
-      className="rounded-sm font-medium text-primary underline decoration-primary/40 decoration-dotted underline-offset-2 hover:decoration-solid focus-visible:outline-2 focus-visible:outline-ring"
+      className="rounded-sm font-medium text-primary-text underline decoration-primary-text/40 decoration-dotted underline-offset-2 hover:decoration-solid focus-visible:outline-2 focus-visible:outline-ring"
       title={`Roll ${expression}`}
       onClick={() => {
         const r = roll(parsed);
@@ -128,7 +128,7 @@ function Tag({ node }: { node: TagNode }) {
       return <DiceTag expression="1d6" label={plainTagText(node)} title={`Recharge (${a || 6}${a && a !== "6" ? "–6" : ""})`} />;
     case "link":
       return (
-        <a href={b} target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-2">
+        <a href={b} target="_blank" rel="noopener noreferrer" className="text-primary-text underline underline-offset-2">
           {a}
         </a>
       );
@@ -138,14 +138,14 @@ function Tag({ node }: { node: TagNode }) {
       const chapter = node.args[2];
       const header = node.args[3];
       const to = `/lore/${node.tag === "book" ? "books" : "adventures"}/${encodeURIComponent(id.toLowerCase())}${chapter ? `?ch=${chapter}` : ""}${header ? `#${encodeURIComponent(header)}` : ""}`;
-      return id ? <Link to={to} className="text-primary underline-offset-2 hover:underline"><RichText text={a} /></Link> : <RichText text={a} />;
+      return id ? <Link to={to} className="text-primary-text underline-offset-2 hover:underline"><RichText text={a} /></Link> : <RichText text={a} />;
     }
     case "area": {
       const id = b;
       const chapter = book && id ? book.chapterOf?.(id) : undefined;
       if (!book || chapter === undefined) return <span className="font-medium"><RichText text={a} /></span>;
       return (
-        <Link to={`/lore/${book.kind}/${encodeURIComponent(book.id)}?ch=${chapter}#e-${encodeURIComponent(id)}`} className="text-primary underline-offset-2 hover:underline">
+        <Link to={`/lore/${book.kind}/${encodeURIComponent(book.id)}?ch=${chapter}#e-${encodeURIComponent(id)}`} className="text-primary-text underline-offset-2 hover:underline">
           <RichText text={a} />
         </Link>
       );
@@ -364,7 +364,7 @@ function InlineEntry({ entry }: { entry: unknown }) {
       const href = entry.href as Obj | undefined;
       const url = href?.type === "external" ? str(href.url) : undefined;
       return url ? (
-        <a href={url} target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-2">
+        <a href={url} target="_blank" rel="noopener noreferrer" className="text-primary-text underline underline-offset-2">
           {str(entry.text)}
         </a>
       ) : (

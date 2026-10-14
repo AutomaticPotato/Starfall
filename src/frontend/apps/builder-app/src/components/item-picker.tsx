@@ -334,7 +334,7 @@ function ItemRow({ item, index, active, onClick }: { item: ItemInfo; index?: num
         <span className="flex items-center gap-1.5">
           {item.magic && <SparklesIcon className={cn("size-3.5 shrink-0", rarityColor(rarity))} />}
           <span className="truncate font-medium">{item.name}</span>
-          {item.magic?.attunement && <span className="shrink-0 text-[10px] text-muted-foreground" title="Needs attunement">A</span>}
+          {item.magic?.attunement && <span className="shrink-0 text-[11px] text-muted-foreground" title="Needs attunement">A</span>}
         </span>
         <span className="block truncate text-xs text-muted-foreground">
           {[item.categories.slice(0, 2).join(", "), item.magic?.rarity, item.source].filter(Boolean).join(" · ")}

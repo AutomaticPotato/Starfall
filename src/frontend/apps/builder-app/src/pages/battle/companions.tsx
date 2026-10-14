@@ -81,7 +81,7 @@ export function Companions({
 
   return (
     <div className="space-y-3">
-      <section className="rounded-xl border border-white/10 bg-neutral-900/75 p-3 shadow-xl backdrop-blur-md sm:p-4">
+      <section className="rounded-xl border border-white/10 bg-neutral-900/85 p-3 shadow-xl backdrop-blur-md sm:p-4">
         <header className="mb-2 flex items-center gap-2">
           <PawPrintIcon className="size-4 text-amber-300" />
           <h2 className="font-heading text-sm uppercase tracking-[0.2em] text-amber-200/90">Add a familiar or companion</h2>
@@ -104,7 +104,7 @@ export function Companions({
           <Button size="sm" variant="secondary" onClick={() => setPicking(true)}>
             <CatIcon /> Any creature from the bestiary
           </Button>
-          <span className="text-xs text-white/50">or</span>
+          <span className="text-xs text-white/70">or</span>
           <Input value={custom} onChange={(e) => setCustom(e.target.value)} placeholder="A name of your own" aria-label="Companion name" className="h-8 w-48 border-white/20 bg-black/40 text-white" />
           <Button
             size="sm"
@@ -123,7 +123,7 @@ export function Companions({
       </section>
 
       {companions.length === 0 ? (
-        <p className="rounded-xl border border-white/10 bg-neutral-900/60 p-4 text-sm text-white/60">No familiar or companion in this fight yet.</p>
+        <p className="rounded-xl border border-white/10 bg-neutral-900/80 p-4 text-sm text-white/75">No familiar or companion in this fight yet.</p>
       ) : (
         <div className="grid gap-3 lg:grid-cols-2">
           {companions.map((c) => (
@@ -132,7 +132,7 @@ export function Companions({
         </div>
       )}
       {hasFamiliar && (
-        <p className="text-xs text-white/55">
+        <p className="text-xs text-white/70">
           {edition === "2024"
             ? "A familiar acts on its own initiative and can't attack (with Pact of the Chain, when you take the Attack action you can give up one attack so it attacks with its Reaction). It can deliver your touch spells, and you can see and hear through it."
             : "A familiar acts independently and can't attack (with Pact of the Chain, you can give up one of your attacks so it attacks with its reaction). It can deliver your touch spells, and you can see through its eyes as an action."}
@@ -172,11 +172,11 @@ function CompanionCard({ companion: c, onChange, onRemove }: { companion: Compan
               onChange={(e) => onChange((x) => ({ ...x, maxHitPoints: Math.min(10_000, Number(e.target.value.replace(/\D/g, "")) || 0) }))}
               className="h-7 w-16 border-white/20 bg-black/40 px-1 text-center text-white"
             />
-            <span className="text-xs text-white/50">hit points</span>
+            <span className="text-xs text-white/70">hit points</span>
             {c.temporaryHitPoints > 0 && <span className="text-xs text-sky-200">+{c.temporaryHitPoints} temp</span>}
           </div>
         </div>
-        <Button size="icon" variant="ghost" className="size-7 text-white/60" aria-label={`Remove ${c.name}`} onClick={onRemove}>
+        <Button size="icon" variant="ghost" className="size-7 text-white/75" aria-label={`Remove ${c.name}`} onClick={onRemove}>
           <Trash2Icon />
         </Button>
       </div>
@@ -205,7 +205,7 @@ function CompanionCard({ companion: c, onChange, onRemove }: { companion: Compan
       />
       {c.key && (
         <details className="mt-2">
-          <summary className="cursor-pointer text-xs text-white/60">Stat block</summary>
+          <summary className="cursor-pointer text-xs text-white/75">Stat block</summary>
           <div className="mt-2 max-h-[28rem] overflow-y-auto rounded-lg bg-background p-3 text-foreground">
             <EntryPreview category="bestiary" k={c.key} />
           </div>

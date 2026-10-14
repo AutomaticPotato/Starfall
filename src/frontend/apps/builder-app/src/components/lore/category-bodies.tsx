@@ -172,7 +172,7 @@ function ClassBody({ entry }: { entry: LoreEntry }) {
           <ul className="flex flex-wrap gap-x-3 gap-y-1 text-sm">
             {subs.map((s) => (
               <li key={String(s.key)}>
-                <Link to={`/lore/classes/${String(s.key)}`} className="text-primary underline-offset-2 hover:underline">
+                <Link to={`/lore/classes/${String(s.key)}`} className="text-primary-text underline-offset-2 hover:underline">
                   {String(s.name)}
                 </Link>{" "}
                 <span className="text-xs text-muted-foreground">({String(s.source)})</span>

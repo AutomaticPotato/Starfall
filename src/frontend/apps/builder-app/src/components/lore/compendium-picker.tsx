@@ -158,7 +158,7 @@ export function CompendiumLinks({
         <li key={i} className={cn("inline-flex items-center gap-1 rounded-full border bg-muted/40 px-2 py-0.5", l.dmOnly && "border-dashed border-amber-500/60")}>
           {l.dmOnly && !onToggleDmOnly && <EyeOffIcon className="size-3 text-amber-600 dark:text-amber-400" aria-label="Only the DM sees this link" />}
           {l.category === "books" || l.category === "adventures" ? (
-            <Link to={sectionHref(l)} className="inline-flex items-center gap-1 text-primary underline-offset-2 hover:underline">
+            <Link to={sectionHref(l)} className="inline-flex items-center gap-1 text-primary-text underline-offset-2 hover:underline">
               {l.ch != null && l.anchor == null ? <MapIcon className="size-3" /> : <BookOpenIcon className="size-3" />}
               {l.name}
             </Link>
