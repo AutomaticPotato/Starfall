@@ -9,6 +9,7 @@ import { ArrowLeftIcon, DicesIcon, EyeIcon, EyeOffIcon, HeartIcon, PlayIcon, Plu
 import { lazy, Suspense, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { toast } from "sonner";
+import { CreaturePeek } from "@/components/creature-peek";
 import { HomebrewStatBlock } from "@/components/homebrew-stat-block";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -324,7 +325,14 @@ function Row({ c, stats, dm, current, shareStats, update, remove }: { c: Combata
         ) : (
           <span className="w-10 text-center font-mono text-sm">{c.initiative ?? "–"}</span>
         )}
-        <span className={cn("font-medium", c.kind === "pc" && "text-sky-700 dark:text-sky-300")}>{c.name}</span>
+        {dm && c.kind !== "pc" ? (
+          // the DM points at (or taps) a creature's name for its stat block; players never get what it really is
+          <CreaturePeek bestiaryKey={c.link?.category === "bestiary" ? c.link.key : null} homebrew={stats} className="font-medium">
+            {c.name}
+          </CreaturePeek>
+        ) : (
+          <span className={cn("font-medium", c.kind === "pc" && "text-sky-700 dark:text-sky-300")}>{c.name}</span>
+        )}
         {current && <Badge className="bg-amber-500 text-black">Their turn</Badge>}
         {looks && <span className={cn("text-xs font-medium", HEALTH_TONE[looks])}>{looks}</span>}
         {(dm || shareStats) && c.ac != null && (
