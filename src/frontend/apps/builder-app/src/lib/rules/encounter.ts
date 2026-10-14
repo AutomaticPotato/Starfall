@@ -194,7 +194,9 @@ export function nextTurn(fight: Fight, random: () => number = Math.random): Figh
   const combatants = fight.combatants.map((c) => {
     if (c.id !== id) return c;
     const next = { ...c, conditions: c.conditions.filter((k) => k.name !== "Dodging" && k.name !== "Reckless") };
-    if (c.kind === "pc" || (!c.recharging && !c.legendarySpent)) return next;
+    if (c.kind === "pc") return next;
+    // last turn's recharge rolls are old news
+    if (!c.recharging && !c.legendarySpent) return { ...next, turnNotes: undefined };
     const { state, rolls } = startTurn(c, random);
     return { ...next, recharging: state.recharging, legendarySpent: state.legendarySpent, turnNotes: rolls.length ? rolls : undefined };
   });

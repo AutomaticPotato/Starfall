@@ -92,6 +92,9 @@ describe("turns", () => {
     const dragon = nextTurn(fight, () => 0.9).combatants[1]; // a 6
     expect(dragon).toMatchObject({ recharging: undefined, legendarySpent: 0, turnNotes: ["Fire Breath: 6, back"] });
     expect(nextTurn(fight, () => 0.1).combatants[1]).toMatchObject({ recharging: { "Fire Breath": 5 }, turnNotes: ["Fire Breath: 1, not yet"] });
+    // with nothing left to recharge, the old roll does not stay on its row
+    const later = { ...fight, combatants: [fight.combatants[0], { ...fight.combatants[1], recharging: undefined, legendarySpent: 0, turnNotes: ["Fire Breath: 6, back"] }] };
+    expect(nextTurn(later).combatants[1].turnNotes).toBeUndefined();
   });
 
   it("health in words", () => {
