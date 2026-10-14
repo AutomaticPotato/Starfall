@@ -69,13 +69,10 @@ services:
       Aurora__ContentPath: /data/content/aurora-elements
       FiveETools__Path: /data/content/5etools/data
       Aurora__HomebrewPath: /data/homebrew
-      Sheets__TemplatesPath: /data/aurora-sheets
     volumes:
       # the downloaded content and the Compendium of Lore built from it (written by the app)
       - ./data/content:/data/content
       - ./data/lore:/data/lore
-      # optional: Aurora Builder's sheet templates and fonts, for PDF sheets laid out like Aurora's
-      - ./data/aurora-sheets:/data/aurora-sheets:ro
       # your group's portraits, campaign pictures and homebrew (written by the app)
       - ./data/portraits:/data/portraits
       - ./data/homebrew:/data/homebrew

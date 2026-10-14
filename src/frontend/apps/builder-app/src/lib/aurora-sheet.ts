@@ -6,22 +6,26 @@ import { canvasJpeg, loadPicture, renderFramed } from "@/lib/portrait-render";
 import { parseFrame } from "@/lib/rules/portrait-frame";
 
 /*
- * The character sheet as Aurora Builder makes it: Aurora's own sheet templates (taken from its installer, served by
- * /api/sheet-templates) are placed page by page and the character is written into their boxes, at the positions
+ * The character sheet as Aurora Builder makes it: Aurora's own sheet templates (taken from its installer, built into
+ * the app from assets/sheet) are placed page by page and the character is written into their boxes, at the positions
  * and sizes of the templates' form fields. Long texts (features, traits, spell descriptions) are laid out like
  * Aurora does, with bold-italic run-in headings; spellcasting pages are stacked from Aurora's strips and spells
  * get Aurora's cards, nine to a page.
  */
 
-const TEMPLATE_BASE = `${import.meta.env.VITE_API_BASE ?? ""}/api/sheet-templates/`;
+/** The templates and fonts by file name, as the URLs the build gives them; fetched on first use. */
+const ASSET_URLS = Object.fromEntries(
+  Object.entries(import.meta.glob<string>("../assets/sheet/*.{pdf,ttf}", { query: "?url", import: "default", eager: true })).map(([path, url]) => [path.split("/").pop()!, url]),
+);
 const assets = new Map<string, Promise<ArrayBuffer>>();
 
 function asset(name: string): Promise<ArrayBuffer> {
   if (!assets.has(name)) {
+    const url = ASSET_URLS[name];
     assets.set(
       name,
-      fetch(TEMPLATE_BASE + encodeURIComponent(name)).then((r) => {
-        if (!r.ok) throw new Error(`The sheet template "${name}" is not installed on the server.`);
+      (url ? fetch(url) : Promise.reject(new Error(`The sheet template "${name}" is not part of this build.`))).then((r) => {
+        if (!r.ok) throw new Error(`The sheet template "${name}" could not be loaded.`);
         return r.arrayBuffer();
       }),
     );
@@ -88,10 +92,11 @@ class SheetBuilder {
     doc.setTitle("Character Sheet");
     doc.setCreator("Starlights");
     const [field, regular, bold, italic, boldItalic] = await Promise.all(
-      ["MyriadPro-Regular.ttf", "Carlito-Regular-Latin.ttf", "Carlito-Bold-Latin.ttf", "Carlito-Italic-Latin.ttf", "Carlito-BoldItalic-Latin.ttf"].map(asset),
+      ["sheet-fields-regular.ttf", "sheet-text-regular.ttf", "sheet-text-bold.ttf", "sheet-text-italic.ttf", "sheet-text-bold-italic.ttf"].map(asset),
     );
-    // Carlito (Calibri's metric twin) cut down to Latin without ligatures beforehand (fonttools): pdf-lib's own
-    // subsetting garbles it, and its "ti" ligature came out as a gap
+    // Source Sans 3 for the form boxes and Carlito (Calibri's metric twin) for the texts, cut down to Latin without
+    // ligatures beforehand (fonttools; see assets/sheet/README.md): pdf-lib's own subsetting garbles them, and
+    // Carlito's "ti" ligature came out as a gap
     const plain = { features: { liga: false, clig: false, dlig: false, calt: false, rlig: false } };
     const fonts: Fonts = {
       field: await doc.embedFont(field, plain),
@@ -202,7 +207,8 @@ function drawField(page: PDFPage, box: FieldBox, value: string | number | null |
   while (size > 4 && widthOf(text, font, size) > box.w - 4) size -= 0.25;
   const width = widthOf(text, font, size);
   const x = box.align === 1 ? box.x + (box.w - width) / 2 : box.align === 2 ? box.x + box.w - 2 - width : box.x + 2;
-  const capHeight = font.heightAtSize(size, { descender: false }) * 0.9;
+  // the field font's capital height (Source Sans 3: 660 of 1000 units), so the capitals sit centred in the box
+  const capHeight = size * 0.66;
   const y = box.y + (box.h - capHeight) / 2;
   page.drawText(text, { x, y, size, font, color: box.color });
 }

@@ -19,8 +19,8 @@
   imports and wires everything: the builder's rules, the Compendium of Lore, and every character updated.
 - **Character wizard** for new players: class, species, background, ability scores, the books' starting equipment
   (packages or gold) and spells, one step at a time, with a skip to the full builder.
-- **Character sheets like Aurora's**, on screen and as PDF, with the portrait sized and placed as you like and a last
-  page showing the whole picture; bring in players' Aurora character files.
+- **Character sheets like Aurora's**, on screen and as PDF, built in (nothing to copy from Aurora), with the portrait
+  sized and placed as you like and a last page showing the whole picture; bring in players' Aurora character files.
 - **Builder**: multiclassing, 2014 and 2024 rules (or both), Save / Discard, items that cast spells, extra feats,
   languages and proficiencies.
 - **Battle Action Simulator**: attacks, spells, slots and charges, familiars, conditions; magic items under the action
@@ -165,12 +165,12 @@ database change is applied, and how many characters, campaigns, elements and hom
 they change, 5etools' new release and its notes, and what **Update now** would download. Nothing updates by itself.
 
 Only GitHub links are accepted. The downloads live in `deploy/data/content`, the Compendium in `deploy/data/lore`, and
-your homebrew (`deploy/data/homebrew`) is never touched. Optional extras:
+your homebrew (`deploy/data/homebrew`) is never touched. The character sheet needs nothing extra: its templates and
+fonts are part of the app. An optional extra:
 
-- **Aurora's PDF sheets**: if you own Aurora Builder, copy the sheet templates and fonts from its install folder into
-  `deploy/data/aurora-sheets` for PDF sheets laid out like Aurora's. Without them the on-screen sheet still works,
-  but the PDF download doesn't.
 - **Background pictures**: put `home-1.webp` … `home-5.webp`, `lore.webp` and `battle.webp` in `deploy/data/art`.
+
+Installed before the sheet was built in? The `deploy/data/aurora-sheets` folder is no longer used and can be deleted.
 
 ## Updating
 
@@ -258,6 +258,9 @@ docker rmi starlights/backend starlights/web
   [LICENSE](./LICENSE)).
 - [Aurora Legacy](https://github.com/AuroraLegacy/elements): the community's content files.
 - [5etools](https://github.com/5etools-mirror-3/5etools-src): the data behind the Compendium of Lore.
+- The PDF sheet: Aurora Builder's sheet templates, and the fonts [Carlito](https://github.com/googlefonts/carlito) and
+  Adobe's [Source Sans 3](https://github.com/adobe-fonts/source-sans) (SIL Open Font License); see
+  [the sheet's folder](./src/frontend/apps/builder-app/src/assets/sheet/README.md).
 - This fork (Docker packaging and the features listed above) by C Hassapis.
 
 Dungeons & Dragons and its books belong to Wizards of the Coast. This is an unofficial fan project, not approved or

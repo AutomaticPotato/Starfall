@@ -19,7 +19,7 @@ if [ ! -f .env ]; then
   echo "wrote .env (your admin password is in it: STARLIGHTS_MASTER_PASSWORD)"
 fi
 
-mkdir -p data/portraits data/homebrew data/aurora-sheets data/art data/lore data/content data/mssql
+mkdir -p data/portraits data/homebrew data/art data/lore data/content data/mssql
 # the API runs as user 1654 and SQL Server as 10001: give them their folders
 docker run --rm -v "$PWD/data:/d" alpine sh -c 'chown -R 1654:1654 /d/portraits /d/homebrew /d/content /d/lore && chown -R 10001:0 /d/mssql'
 
