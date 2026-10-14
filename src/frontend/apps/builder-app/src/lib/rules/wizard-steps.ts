@@ -14,14 +14,14 @@ export function stepChoices(step: StepAsks, choices: BuilderChoice[]): BuilderCh
 }
 
 export interface SpellChoiceGroup {
-  /** what gives these picks: "Your class", "Your species", "Your background and feats" */
+  /** what gives these picks: "Your class", "Your species", "Your background and feats", "Your extra options" */
   title: string;
   choices: BuilderChoice[];
   /** picks still to make */
   open: number;
 }
 
-const GROUP_TITLES: Record<string, string> = { Class: "Your class", Species: "Your species", Background: "Your background and feats" };
+const GROUP_TITLES: Record<string, string> = { Class: "Your class", Species: "Your species", Background: "Your background and feats", Extras: "Your extra options" };
 
 /** The character's spell choices by what gives them (class, species, background and feats), for the Magic tab. */
 export function spellChoiceGroups(choices: BuilderChoice[]): SpellChoiceGroup[] {

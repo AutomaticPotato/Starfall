@@ -55,11 +55,13 @@ describe("the Magic tab's spell picks", () => {
       choice("Skill Proficiency (Wizard)", "Class", "Proficiency", "Wizard"),
       choice("Wizard Cantrip (High Elf)", "Species", "Spell", "Intelligence"),
       choice("Spellbook (Wizard)", "Class", "Spell", "Level 1: Spellcasting"),
+      choice("Spell (Additional Spell)", "Extras", "Spell", "Additional Spell"),
     ];
     expect(spellChoiceGroups(list).map((g) => [g.title, g.choices.length, g.open])).toEqual([
       ["Your class", 3, 2],
       ["Your species", 1, 1],
       ["Your background and feats", 1, 1],
+      ["Your extra options", 1, 1],
     ]);
   });
 
