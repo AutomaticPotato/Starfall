@@ -499,37 +499,20 @@ public class RegistrationProcessor : IRegistrationProcessor
         }
 
         var character = context.Character;
-        var level = character.GetRequiredComponent<ProgressionComponent>().CharacterLevel;
 
-        int? Value(string name)
+        List<Registration> Registrations() =>
+            context.Items.TryGetValue(RegistrationsKey, out var list) && list is IEnumerable<Registration> known ? known.ToList() : [];
+
+        // any statistic a term asks for, worked out once for this pass from the rules as they stand
+        var values = CharacterRequirementValues.For(character, Registrations, () =>
         {
-            if (name is "level" or "character")
-            {
-                return level;
-            }
-            if (name.StartsWith("level:", StringComparison.Ordinal))
-            {
-                // a class the character does not have is level 0
-                var className = name[6..].Replace('-', ' ');
-                return character.GetRequiredComponent<ClassComponent>().Classes
-                    .FirstOrDefault(c => string.Equals(c.Name, className, StringComparison.OrdinalIgnoreCase))?.Level ?? 0;
-            }
-            if (AbilityNames.TryGetValue(name, out var ability))
-            {
-                return character.GetRequiredComponent<AbilitiesComponent>().AbilityScores
-                    .FirstOrDefault(a => string.Equals(a.Name, ability, StringComparison.OrdinalIgnoreCase))?.CalculatedScore;
-            }
-
-            // any other statistic, worked out once for this pass from the rules as they stand
             if (context.Items.TryGetValue(StatisticsKey, out var stored) is false || stored is not StatisticValuesGroupCollection statistics)
             {
-                var registrations = context.Items.TryGetValue(RegistrationsKey, out var list) && list is IEnumerable<Registration> known ? known.ToList() : [];
-                statistics = _statisticsCalculator.Calculate(character, registrations).Statistics;
+                statistics = _statisticsCalculator.Calculate(character, Registrations()).Statistics;
                 context.Items[StatisticsKey] = statistics;
             }
-            var statisticName = AuroraSave.Replace(name, "$1-saving-throw").Replace(' ', '-');
-            return statistics.TryGetGroup(statisticName, out var group) ? group.Sum() : null;
-        }
+            return statistics;
+        });
 
         // equipment terms ("[equipped:armor:none]") from what the character wears and holds, read once per pass
         if (context.Items.TryGetValue(EquippedKey, out var held) is false || held is not EquippedState equipment)
@@ -539,25 +522,13 @@ public class RegistrationProcessor : IRegistrationProcessor
             context.Items[EquippedKey] = equipment;
         }
 
-        return RequirementsExpression.Evaluate(requirements, registered.Contains, Value, equipment.Holds);
+        return RequirementsExpression.Evaluate(requirements, registered.Contains, values, equipment.Holds);
     }
 
     private const string RegisteredElementsKey = "RegisteredElements";
     private const string RegistrationsKey = "Registrations";
     private const string StatisticsKey = "RequirementStatistics";
     private const string EquippedKey = "Equipped";
-
-    private static readonly Dictionary<string, string> AbilityNames = new()
-    {
-        ["str"] = "Strength", ["strength"] = "Strength",
-        ["dex"] = "Dexterity", ["dexterity"] = "Dexterity",
-        ["con"] = "Constitution", ["constitution"] = "Constitution",
-        ["int"] = "Intelligence", ["intelligence"] = "Intelligence",
-        ["wis"] = "Wisdom", ["wisdom"] = "Wisdom",
-        ["cha"] = "Charisma", ["charisma"] = "Charisma",
-    };
-
-    private static readonly System.Text.RegularExpressions.Regex AuroraSave = new(@"^(strength|dexterity|constitution|intelligence|wisdom|charisma):save\b");
 
     /// <summary>
     /// Initializes a new processing context for the specified registration by retrieving all required domain entities.

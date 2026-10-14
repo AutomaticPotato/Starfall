@@ -5,7 +5,8 @@ namespace Starlights.Modules.Characters.Services.Processing;
 /// <c>,</c> is AND, <c>|</c> or <c>||</c> is OR, <c>!</c> is NOT, parentheses group. An element id term holds when
 /// the character has that element registered; a bracket term <c>[name:N]</c> when that value is at least N:
 /// <c>[level:5]</c> and <c>[character:5]</c> the character level, <c>[level:warlock:3]</c> a class level,
-/// <c>[str:13]</c> an ability score, anything else a statistic (<c>[innate speed:fly:1]</c>); an equipment term
+/// <c>[str:13]</c> an ability score, anything else a statistic (<c>[innate speed:fly:1]</c>); a type term <c>[type:spell]</c>
+/// when the character has an element of that type (a feat's "the ability to cast at least one spell"); an equipment term
 /// <c>[equipped:armor:none]</c> (Aurora's equipped conditions) when the character's equipment matches it.
 /// Anything unknown (a value the character does not have, ids of elements that were not imported) does not hold,
 /// so "!ID_SOMETHING_UNKNOWN" is met.
@@ -41,6 +42,10 @@ public static class RequirementsExpression
                 if (cut > 0 && int.TryParse(inner[(cut + 1)..].Trim(), out var least))
                 {
                     return value(inner[..cut].Trim().ToLowerInvariant()) is { } actual && actual >= least;
+                }
+                if (inner.StartsWith("type:", StringComparison.OrdinalIgnoreCase))
+                {
+                    return value(inner.Trim().ToLowerInvariant()) is > 0;
                 }
             }
 

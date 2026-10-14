@@ -12,6 +12,10 @@ export type SelectionRuleOptionDataModel = {
   elementId: string;
   name: string;
   source?: string | null;
+  /** What it asks of the character, in words ("Artificer Level 6+"). */
+  prerequisite?: string | null;
+  /** False when the character does not meet its requirements yet (a plan for a higher level). */
+  eligible?: boolean;
 };
 
 // --- Registrations ---

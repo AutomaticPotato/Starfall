@@ -45,6 +45,17 @@ public class RequirementsExpressionTests
     }
 
     [TestMethod]
+    [DataRow(0, false)]
+    [DataRow(2, true)]
+    public void TypeTermsHoldWhenTheCharacterHasSuchAnElement(int spells, bool expected)
+    {
+        // Spell Sniper: "the ability to cast at least one spell"
+        int? Value(string name) => name == "type:spell" ? spells : null;
+
+        RequirementsExpression.Evaluate($"[type:spell],!{Fighter}", _ => false, Value).Should().Be(expected);
+    }
+
+    [TestMethod]
     public void UnknownTermsDoNotHold()
     {
         Evaluate("ID_NOT_IMPORTED").Should().BeFalse();

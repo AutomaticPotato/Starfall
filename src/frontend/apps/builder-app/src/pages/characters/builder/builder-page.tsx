@@ -439,7 +439,15 @@ function ChoiceRow({
   const busy = pickChoice.isPending || clearChoice.isPending;
 
   const options = useMemo(
-    () => optionsQuery.data?.options.map((o) => ({ id: o.elementId, name: o.name, hint: o.source })),
+    // an option the character does not qualify for yet (a plan for a higher level) stays listed, greyed out, with
+    // what it needs, so the player sees what later levels bring
+    () =>
+      optionsQuery.data?.options.map((o) => ({
+        id: o.elementId,
+        name: o.name,
+        hint: [o.eligible === false ? `Needs ${o.prerequisite || "something you don't have yet"}` : o.prerequisite, o.source].filter(Boolean).join(" · "),
+        disabled: o.eligible === false,
+      })),
     [optionsQuery.data],
   );
 

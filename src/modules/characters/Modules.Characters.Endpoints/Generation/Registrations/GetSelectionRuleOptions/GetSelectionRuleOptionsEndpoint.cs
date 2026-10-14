@@ -6,6 +6,7 @@ using Starlights.Modules.Characters.Domain.Registrations;
 using Starlights.Modules.Characters.Endpoints.Models;
 using Starlights.Modules.Elements.Integration;
 using Starlights.Modules.Elements.Integration.Models;
+using Starlights.Modules.Characters.Services.Processing;
 using Starlights.Modules.Characters.Services.Statistics;
 using Starlights.Platform.Data;
 
@@ -83,17 +84,34 @@ public sealed class GetSelectionRuleOptionsEndpoint : EndpointWithoutRequest<Get
             allowed = allowed.Where(e => e.Id == current || !character.RestrictedSources.Contains(e.Source)).ToList();
         }
 
+        // like Aurora: an option's own requirements ("[level:artificer:6]" on a magic item plan, a feat's Strength 13)
+        // decide whether the character can take it now; the others are listed after it, marked, so the player sees
+        // what a later level brings
+        StatisticValuesGroupCollection? statistics = null;
+        var values = CharacterRequirementValues.For(character, () => characterRegistrations, () => statistics ??= _statistics.Calculate(character, [.. characterRegistrations]).Statistics);
+        bool Eligible(ElementDataModel e) =>
+            string.IsNullOrWhiteSpace(e.PrerequisiteRequirements) || RequirementsExpression.Evaluate(e.PrerequisiteRequirements, owned.Contains, values);
+
         var seen = new HashSet<(string, string?)>();
         var options = allowed
             .OrderByDescending(e => e.Id == current)
             .Where(e => seen.Add((e.Name, e.Source)))
-            .OrderBy(e => e.Name, StringComparer.OrdinalIgnoreCase)
-            .ThenBy(e => e.Source)
+            .Select(e => (Element: e, Eligible: Eligible(e)))
+            .OrderByDescending(o => o.Eligible)
+            .ThenBy(o => o.Element.Name, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(o => o.Element.Source)
             .ToList();
 
         var response = new GetSelectionRuleOptionsResponse
         {
-            Options = options.ConvertAll(e => new SelectionRuleOptionModel { ElementId = e.Id, Name = e.Name, Source = e.Source == "Internal" ? null : e.Source })
+            Options = options.ConvertAll(o => new SelectionRuleOptionModel
+            {
+                ElementId = o.Element.Id,
+                Name = o.Element.Name,
+                Source = o.Element.Source == "Internal" ? null : o.Element.Source,
+                Prerequisite = string.IsNullOrWhiteSpace(o.Element.Prerequisite) ? null : o.Element.Prerequisite,
+                Eligible = o.Eligible,
+            })
         };
 
         await Send.OkAsync(response, ct);

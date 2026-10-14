@@ -243,13 +243,19 @@ internal sealed class AuroraImporter : IAuroraImporter
                 Attach("repeatable", id => new RepeatableComponent(id, isRepeatable: true));
             }
 
-            // a multiclass's prerequisite ("Strength 13 or Dexterity 13") and the expression that checks it
-            if (aurora.Type == "Multiclass" && aurora.Xml.Element("prerequisite") is { } prerequisite)
+            // what the element asks of the character, in words ("Strength 13 or Dexterity 13", "Artificer Level 6+")
+            // and as the expression that checks it, so a choice can tell which of its options the character qualifies for
+            var prerequisite = ((string?)(aurora.Xml.Element("prerequisite") ?? aurora.Xml.Element("prerequisites")))?.Trim();
+            if (prerequisite?.Length > 256)
             {
-                var check = Convert(((string?)aurora.Xml.Element("requirements"))?.Trim(), byId);
+                prerequisite = prerequisite[..256]; // the column's size; Aurora's longest is about 80
+            }
+            var check = Convert(((string?)aurora.Xml.Element("requirements"))?.Trim(), byId);
+            if (!string.IsNullOrEmpty(prerequisite) || check is not null)
+            {
                 Attach("prerequisites", id =>
                 {
-                    var component = new PrerequisitesComponent(id, prerequisite.Value);
+                    var component = new PrerequisitesComponent(id, prerequisite ?? string.Empty);
                     component.UpdateRequirements(check ?? string.Empty);
                     return component;
                 });
@@ -402,6 +408,7 @@ internal sealed class AuroraImporter : IAuroraImporter
             byFile[file] = elements;
         }
 
+        var documents = new List<(string File, XDocument Document)>();
         foreach (var (folder, prefix) in folders)
         foreach (var path in Directory.EnumerateFiles(folder, "*.xml", SearchOption.AllDirectories))
         {
@@ -422,6 +429,13 @@ internal sealed class AuroraImporter : IAuroraImporter
                 continue;
             }
 
+            documents.Add((file, document));
+        }
+
+        // appends first, so every element is read with what other files add to it
+        var (appended, unmatched) = ApplyAppends(documents);
+        foreach (var (file, document) in documents)
+        {
             AddDocument(file, document);
         }
 
@@ -446,9 +460,78 @@ internal sealed class AuroraImporter : IAuroraImporter
             AddDocument(BuiltIn.BuiltInContent.Prefix + "improvement-options.xml", improvements);
         }
 
-        _logger.LogInformation("aurora catalog: {Elements} elements in {Files} files ({Duplicates} duplicate ids ignored)", byId.Count, byFile.Count, duplicates);
+        _logger.LogInformation("aurora catalog: {Elements} elements in {Files} files ({Duplicates} duplicate ids ignored, {Appended} appends applied, {Unmatched} appends for elements not loaded)",
+            byId.Count, byFile.Count, duplicates, appended, unmatched);
         return (byId, byFile);
     }
+
+    /// <summary>
+    /// Aurora's &lt;append id="…"&gt;: a file adds to an element that another file defines. The 2024 Artificer puts
+    /// "Artificer" on the skills it may choose and the spells on its list; a subclass adds a choice to a class feature
+    /// (the Armorer's extra plan, the Thief's Cunning Strike option). Supports are merged into every copy of the
+    /// element, and of the rules only the selects, which sit behind their own requirements; appended grants (ability
+    /// score maximums on every character, firearms under martial weapons) would change existing characters and are
+    /// left out. Applied in file order, so the merged XML, which an update compares, is the same on every run.
+    /// </summary>
+    private static (int Applied, int Unmatched) ApplyAppends(List<(string File, XDocument Document)> documents)
+    {
+        var elements = documents
+            .SelectMany(d => d.Document.Descendants("element"))
+            .Where(e => e.Attribute("id") is not null)
+            .ToLookup(e => (string)e.Attribute("id")!, StringComparer.Ordinal);
+
+        int applied = 0, unmatched = 0;
+        foreach (var append in documents.OrderBy(d => d.File, StringComparer.Ordinal).SelectMany(d => d.Document.Descendants("append")))
+        {
+            var targets = elements[(string?)append.Attribute("id") ?? string.Empty].ToList();
+            if (targets.Count == 0)
+            {
+                unmatched++;
+                continue;
+            }
+
+            var supports = SupportsTokens((string?)append.Element("supports"));
+            var selects = append.Element("rules")?.Elements("select").ToList() ?? [];
+            foreach (var target in targets)
+            {
+                if (supports.Count > 0)
+                {
+                    if (target.Element("supports") is { } existing)
+                    {
+                        var have = SupportsTokens(existing.Value);
+                        var missing = supports.Where(t => !have.Contains(t, StringComparer.OrdinalIgnoreCase)).ToList();
+                        if (missing.Count > 0)
+                        {
+                            existing.Value = string.Join(",", have.Concat(missing));
+                        }
+                    }
+                    else
+                    {
+                        target.Add(new XElement("supports", string.Join(",", supports)));
+                    }
+                }
+
+                if (selects.Count > 0)
+                {
+                    var rules = target.Element("rules");
+                    if (rules is null)
+                    {
+                        target.Add(rules = new XElement("rules"));
+                    }
+                    // the same append can come twice (a pull request repeating a merged file)
+                    foreach (var select in selects.Where(s => !rules.Elements().Any(r => XNode.DeepEquals(r, s))))
+                    {
+                        rules.Add(new XElement(select));
+                    }
+                }
+            }
+            applied++;
+        }
+        return (applied, unmatched);
+    }
+
+    private static List<string> SupportsTokens(string? supports) =>
+        supports?.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Distinct(StringComparer.OrdinalIgnoreCase).ToList() ?? [];
 
     /// <summary>
     /// Walks an .index file and the .index files it lists, collecting the element files (relative to the root).

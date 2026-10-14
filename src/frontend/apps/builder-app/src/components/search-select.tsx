@@ -4,7 +4,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
 
-export type SearchSelectOption = { id: string; name: string; hint?: string | null };
+export type SearchSelectOption = { id: string; name: string; hint?: string | null; disabled?: boolean };
 
 // long lists (all spells, all feats) render the first matches only; typing narrows them down
 const MAX_SHOWN = 200;
@@ -75,6 +75,7 @@ export function SearchSelect({
   }
 
   function pick(option: SearchSelectOption) {
+    if (option.disabled && option.id !== value) return;
     changeOpen(false);
     if (option.id !== value) onSelect(option.id);
   }
@@ -146,9 +147,14 @@ export function SearchSelect({
                 data-index={i}
                 role="option"
                 aria-selected={option.id === value}
+                aria-disabled={option.disabled || undefined}
                 onMouseEnter={() => setActive(i)}
                 onClick={() => pick(option)}
-                className={cn("flex cursor-pointer items-start gap-2 px-3 py-1.5 text-sm", i === active && "bg-muted")}
+                className={cn(
+                  "flex cursor-pointer items-start gap-2 px-3 py-1.5 text-sm",
+                  i === active && "bg-muted",
+                  option.disabled && "cursor-not-allowed text-muted-foreground",
+                )}
               >
                 <CheckIcon className={cn("mt-0.5 size-4 shrink-0", option.id === value ? "opacity-100" : "opacity-0")} />
                 <span className="min-w-0">
