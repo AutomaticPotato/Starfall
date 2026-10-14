@@ -430,7 +430,7 @@ public sealed partial class ContentSync
         }
 
         var imported = 0;
-        foreach (var (index, changed, what) in new[] { ("AuroraLegacy.index", auroraChanged, "Aurora Legacy"), ("5etools", fiveEChanged, "the 5etools deities"), ("starlights", auroraChanged || fiveEChanged, "the built-in extras") })
+        foreach (var (index, changed, what) in new[] { ("AuroraLegacy.index", auroraChanged, "Aurora Legacy"), ("5etools", auroraChanged || fiveEChanged, "what 5etools has and Aurora Legacy lacks"), ("starlights", auroraChanged || fiveEChanged, "the built-in extras") })
         {
             if (!changed)
             {

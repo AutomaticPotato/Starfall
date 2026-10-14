@@ -58,6 +58,11 @@ internal sealed class AuroraImporter : IAuroraImporter
     // across files resolve to the same element and re-running an import does not duplicate anything
     private static readonly Guid IdNamespace = new("8a4c4f1e-2b7d-4d52-9d0e-6f3b2a9c7e11");
 
+    // written on every element's stored XML: an update re-creates an element whose XML changed, so raising this when
+    // the importer makes something new of the same XML (2: appends and every element's prerequisites) re-creates them
+    // all once, with no --replace needed
+    private const string ImportVersion = "2";
+
     private readonly ILogger<AuroraImporter> _logger;
     private readonly IPersistence _persistence;
     private readonly AuroraImporterOptions _options;
@@ -382,6 +387,7 @@ internal sealed class AuroraImporter : IAuroraImporter
                     continue;
                 }
 
+                xml.SetAttributeValue("starlights-import", ImportVersion);
                 var element = new AuroraElement(id, name, type, (string?)xml.Attribute("source"), file, xml);
                 elements.Add(element);
                 if (!byId.TryAdd(id, element))
@@ -451,6 +457,13 @@ internal sealed class AuroraImporter : IAuroraImporter
             {
                 AddDocument(FiveEToolsData.Prefix + "deities.xml", deities);
             }
+        }
+
+        // what the 5etools data has and all of the above lacks (a book Aurora Legacy has not added yet), translated
+        if (_fiveETools.Available
+            && _fiveETools.ContentAsAurora(byId.Values.Select(e => new FiveETools.AuroraCatalogElement(e.Id, e.Name, e.Type, e.Source, e.Supports, e.Xml))) is { } content)
+        {
+            AddDocument(FiveEToolsData.Prefix + "content.xml", content);
         }
 
         // a class's Ability Score Improvement levels ask for an "Improvement Option" (2014 classes): the Aurora app makes
