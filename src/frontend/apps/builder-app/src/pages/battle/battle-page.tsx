@@ -6,6 +6,7 @@
  */
 import {
   ArrowLeftIcon,
+  BackpackIcon,
   BedDoubleIcon,
   BrainIcon,
   CoffeeIcon,
@@ -22,11 +23,14 @@ import {
   TimerIcon,
   ZapIcon,
   ListChecksIcon,
+  PawPrintIcon,
+  Undo2Icon,
 } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { LoreLink } from "@/components/lore/lore-link";
+import { Peek } from "@/components/peek";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -386,6 +390,7 @@ export function CharacterBattlePage() {
       )}
       <KeepStats maxHp={maxHp} ac={ac.total} passive={data.passivePerception} state={state} ready={!!combat.data} update={updateCombat} />
       <Header id={id} data={data} model={model} onRest={setRest} />
+      <Hud hp={hp} maxHp={maxHp} temp={state.temporaryHitPoints} ac={ac.total} speed={speed} turn={turn} setTurn={setTurn} incapacitated={incapacitated} noReactions={noReactions} onNextTurn={nextTurn} conditions={state.conditions} />
       <Vitals data={data} model={model} state={state} hp={hp} maxHp={maxHp} speed={speed} ac={ac} onDamage={damage} onHeal={(n) => updateCombat((c) => heal(c, n))} onTemp={(n) => updateCombat((c) => gainTemporary(c, n))} />
       <Status data={data} state={state} edition={edition} exhaustionText={exhaustion.text} updateCombat={updateCombat} hp={hp} />
       <Effects ctx={ctx} />
@@ -475,7 +480,7 @@ interface Ctx {
 
 function Shell({ children }: { children: ReactNode }) {
   return (
-    <div className="dark relative min-h-[calc(100vh-4rem)] overflow-hidden bg-neutral-950 text-neutral-100">
+    <div className="dark relative min-h-[calc(100vh-4rem)] overflow-clip bg-neutral-950 text-neutral-100">
       <BattleBackdrop />
       <div className="relative mx-auto max-w-6xl space-y-4 px-3 py-6 sm:px-4">{children}</div>
     </div>
@@ -596,8 +601,11 @@ function Vitals({
   onTemp: (n: number) => void;
 }) {
   const [amount, setAmount] = useState("");
+  const [more, setMore] = useState(false);
   const n = Math.max(0, Math.floor(Number(amount) || 0));
   const ratio = maxHp > 0 ? hp / maxHp : 0;
+  // on a phone the first four tiles; the rest when asked for
+  const extra = cn(!more && "max-sm:hidden");
   const caster = data.spellcasting[0];
   const dicePools = hitDiceOf(data, state, data.level);
   const hitDiceLeft = dicePools.pools.reduce((n, p) => n + dicePools.leftOf(p.sides), 0);
@@ -640,14 +648,18 @@ function Vitals({
         <Stat label="Initiative" value={signed(data.initiative)} />
         <Stat label="Speed" value={`${speed} ft`} sub={[data.speeds.fly && `fly ${data.speeds.fly}`, data.speeds.climb && `climb ${data.speeds.climb}`, data.speeds.swim && `swim ${data.speeds.swim}`].filter(Boolean).join(" · ") || undefined} />
         <Stat label="Proficiency" value={signed(data.proficiencyBonus)} />
-        <Stat label="Passive Perception" value={data.passivePerception} sub={data.vision.join(", ") || undefined} />
-        {caster ? <Stat label="Spell save DC" value={caster.saveDc} sub={`${signed(caster.attackBonus)} to hit · ${caster.ability}`} /> : <Stat label="Attacks per action" value={data.attacksPerAction} />}
+        <Stat label="Passive Perception" value={data.passivePerception} sub={data.vision.join(", ") || undefined} className={extra} />
+        {caster ? <Stat label="Spell save DC" value={caster.saveDc} sub={`${signed(caster.attackBonus)} to hit · ${caster.ability}`} className={extra} /> : <Stat label="Attacks per action" value={data.attacksPerAction} className={extra} />}
         <Stat
+          className={extra}
           label="Hit dice"
           value={hitDiceLeft}
           sub={dicePools.multi ? dicePools.pools.map((p) => `${dicePools.leftOf(p.sides)} d${p.sides}`).join(" · ") : data.hitDie ? `d${data.hitDie} + ${model.mod("CON")} each` : undefined}
         />
-        <Stat label="Saves" value={<span className="text-sm leading-6">{data.saves.filter((s) => s.proficiency !== "none").map((s) => s.abilityScoreAbbreviation).join(" ") || "—"}</span>} sub="proficient" />
+        <Stat label="Saves" value={<span className="text-sm leading-6">{data.saves.filter((s) => s.proficiency !== "none").map((s) => s.abilityScoreAbbreviation).join(" ") || "—"}</span>} sub="proficient" className={extra} />
+        <button type="button" onClick={() => setMore((m) => !m)} className="col-span-4 py-1 text-xs text-white/70 underline sm:hidden">
+          {more ? "Fewer" : "More: passive Perception, spell DC, hit dice, saves"}
+        </button>
       </div>
     </div>
   );
@@ -815,6 +827,224 @@ function DeathSaves({ label, value, tone, onChange }: { label: string; value: nu
   );
 }
 
+/**
+ * The fight at a glance, kept on screen while the page scrolls (a game's status bar): hit points and temporary hit
+ * points, armor class, movement left, this turn's action, bonus action and reaction (tap one to mark it used), the round
+ * and the next turn, and the character's conditions.
+ */
+function Hud({
+  hp,
+  maxHp,
+  temp,
+  ac,
+  speed,
+  turn,
+  setTurn,
+  incapacitated,
+  noReactions,
+  onNextTurn,
+  conditions,
+}: {
+  hp: number;
+  maxHp: number;
+  temp: number;
+  ac: number;
+  speed: number;
+  turn: Turn;
+  setTurn: (c: (t: Turn) => Turn) => void;
+  incapacitated: boolean;
+  noReactions: boolean;
+  onNextTurn: () => void;
+  conditions: string[];
+}) {
+  const ratio = maxHp > 0 ? Math.min(1, hp / maxHp) : 0;
+  const total = speed * (1 + turn.dashes);
+  const left = Math.max(0, total - turn.moved);
+  const gem = (label: string, short: string, field: "action" | "bonus" | "reaction", disabled: boolean) => {
+    const used = turn[field];
+    return (
+      <button
+        type="button"
+        aria-pressed={used}
+        aria-label={`${label}: ${disabled ? "not possible" : used ? "used" : "ready"}`}
+        disabled={disabled}
+        onClick={() => setTurn((t) => ({ ...t, [field]: !t[field] }))}
+        className={cn(
+          "flex h-9 shrink-0 items-center gap-1.5 rounded-lg border px-2 text-xs font-semibold transition sm:px-2.5 sm:text-sm",
+          disabled ? "border-white/10 text-white/30 line-through" : used ? "border-white/10 bg-white/5 text-white/60 line-through" : "border-amber-300/60 bg-amber-300/15 text-amber-50 hover:bg-amber-300/25",
+        )}
+      >
+        <span className={cn("size-2.5 rotate-45", used || disabled ? "bg-white/25" : "bg-amber-300 shadow-[0_0_8px] shadow-amber-300/70")} />
+        <span className="sm:hidden">{short}</span>
+        <span className="hidden sm:inline">{label}</span>
+      </button>
+    );
+  };
+  return (
+    <div className="sticky top-16 z-30 -mx-3 border-y border-white/10 bg-neutral-950/90 px-3 py-2 shadow-lg backdrop-blur-md sm:-mx-4 sm:rounded-xl sm:border sm:px-4">
+      <div className="flex items-center gap-3">
+        <HeartIcon className="size-4 shrink-0 text-red-400" />
+        <div className="min-w-0 flex-1">
+          <div className="flex items-baseline gap-1.5 text-sm">
+            <span className="font-heading text-xl leading-none text-white">{hp}</span>
+            <span className="text-white/60">/ {maxHp}</span>
+            {temp > 0 && <span className="rounded bg-sky-400/20 px-1.5 text-xs text-sky-100">+{temp} temp</span>}
+          </div>
+          <div className="mt-1 h-2 overflow-hidden rounded-full bg-white/10" role="meter" aria-label="Hit points" aria-valuemin={0} aria-valuemax={maxHp} aria-valuenow={hp}>
+            <div className={cn("h-full rounded-full transition-all", ratio > 0.5 ? "bg-emerald-400" : ratio > 0.25 ? "bg-amber-400" : "bg-red-500")} style={{ width: `${Math.round(ratio * 100)}%` }} />
+          </div>
+        </div>
+        <span className="flex shrink-0 items-center gap-1 text-sm text-white" title="Armor class">
+          <ShieldIcon className="size-4 text-sky-300" />
+          <span className="font-heading text-lg">{ac}</span>
+        </span>
+        <span className="flex shrink-0 items-center gap-1 text-sm text-white" title="Movement left this turn">
+          <FootprintsIcon className="size-4 text-white/70" />
+          {left}
+          <span className="text-white/50">ft</span>
+        </span>
+      </div>
+      <div className="mt-2 flex items-center gap-1.5">
+        {gem("Action", "Action", "action", incapacitated)}
+        {gem("Bonus action", "Bonus", "bonus", incapacitated)}
+        {gem("Reaction", "React", "reaction", noReactions)}
+        <span className="flex-1" />
+        <span className="hidden text-xs text-white/60 sm:inline">Round {turn.round}</span>
+        <Button size="sm" onClick={onNextTurn} className="h-9 shrink-0 bg-amber-500 px-2.5 text-black hover:bg-amber-400" aria-label="Next turn">
+          <RotateCcwIcon />
+          <span className="sm:hidden">Next</span>
+          <span className="hidden sm:inline">Next turn</span>
+        </Button>
+      </div>
+      {conditions.length > 0 && (
+        <div className="mt-1.5 flex flex-wrap gap-1">
+          {conditions.map((c) => (
+            <span key={c} className="rounded-full border border-violet-300/40 bg-violet-400/15 px-2 py-0.5 text-[11px] text-violet-100">
+              {c}
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** A tab of the actions: its icon and name, and a glowing dot while that action is still yours this turn. */
+function ActionTab({ value, icon, label, ready }: { value: string; icon: ReactNode; label: string; ready?: boolean }) {
+  return (
+    <TabsTrigger value={value} className="h-9 shrink-0 gap-1.5 text-white/70 data-[state=active]:bg-amber-400 data-[state=active]:text-black [&_svg]:size-4">
+      {icon}
+      {label}
+      {ready !== undefined && <span aria-hidden className={cn("size-2 rotate-45", ready ? "bg-amber-300 shadow-[0_0_6px] shadow-amber-300/80" : "bg-white/20")} />}
+    </TabsTrigger>
+  );
+}
+
+/** What a spell does, for its name's tooltip: level, casting time, range, duration, what the simulator reads from it, its text. */
+function SpellInfo({ spell, effect, spellKey }: { spell: BattleSpell; effect: ReturnType<typeof spellEffect>; spellKey: string | null }) {
+  const reads = [
+    effect.attack && `${effect.attack} spell attack`,
+    effect.save && `${effect.save} saving throw${effect.halfOnSave ? ", half damage on a success" : ""}`,
+    ...effect.damage.map((r) => `${effect.beams > 1 ? `${effect.beams} × ` : ""}${formatRoll(r)} (${average(r)} on average)`),
+    effect.healing && `heals ${formatRoll(effect.healing, false)} (${average(effect.healing)} on average)`,
+    effect.temporary && `${formatRoll(effect.temporary, false)} temporary hit points`,
+  ].filter(Boolean);
+  return (
+    <div className="space-y-2">
+      <div>
+        <p className="font-heading text-base font-semibold">{spell.name}</p>
+        <p className="text-xs text-muted-foreground">
+          {spell.level === 0 ? "Cantrip" : `Level ${spell.level}`}
+          {spell.concentration ? " · Concentration" : ""}
+          {spell.ritual ? " · Ritual" : ""}
+        </p>
+      </div>
+      <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-xs">
+        {(
+          [
+            ["Casting time", spell.time],
+            ["Range", spell.range],
+            ["Duration", spell.duration],
+            ["Components", spell.components],
+          ] as const
+        )
+          .filter(([, v]) => v)
+          .map(([k, v]) => (
+            <div key={k} className="contents">
+              <dt className="text-muted-foreground">{k}</dt>
+              <dd>{v}</dd>
+            </div>
+          ))}
+      </dl>
+      {reads.length > 0 && <p className="rounded-md bg-muted px-2 py-1 text-xs">In a fight: {reads.join(" · ")}</p>}
+      <p className="whitespace-pre-line text-xs leading-relaxed">{plainSpellText(spell.description)}</p>
+      {spellKey && (
+        <p className="text-xs">
+          <LoreLink category="spells" k={spellKey}>
+            Open it in the Compendium
+          </LoreLink>
+        </p>
+      )}
+    </div>
+  );
+}
+
+/** The weapon properties, in plain words (the same in both rules editions unless it says so). */
+const PROPERTY_TEXT: Record<string, string> = {
+  Finesse: "Uses your Strength or your Dexterity, whichever you choose, for its attack and damage rolls.",
+  Light: "Good for two-weapon fighting: after attacking with it, you can attack with a light weapon in your other hand.",
+  Heavy: "Hard to wield: disadvantage on its attacks for a Small creature (2014 rules), or without Strength 13 (Dexterity 13 for a ranged one) under the 2024 rules.",
+  "Two-Handed": "Needs both hands to attack with it.",
+  Versatile: "One hand or two; with two hands it deals the bigger damage.",
+  Thrown: "Can be thrown for a ranged attack, with the same ability as a melee attack with it.",
+  Reach: "Adds 5 feet to your reach when you attack with it, opportunity attacks included.",
+  Ammunition: "Needs a piece of ammunition for each attack; drawing it is part of the attack.",
+  Loading: "Fires only once when you use an action, bonus action or reaction to fire it, however many attacks you have.",
+  Special: "Has a rule of its own: see its description.",
+};
+
+/** What a weapon does, for its name's tooltip: range, each property and its mastery in plain words. */
+function WeaponInfo({ weapon, itemKey, mastery }: { weapon: WeaponAttack; itemKey: string | null; mastery: boolean }) {
+  return (
+    <div className="space-y-2 text-xs">
+      <p className="font-heading text-base font-semibold">{weapon.name}</p>
+      <p>
+        {weapon.melee ? "Melee" : "Ranged"} · {weapon.range} · {formatRoll(weapon.roll)}
+      </p>
+      {weapon.properties.length > 0 && (
+        <ul className="space-y-1">
+          {weapon.properties.map((p) => {
+            const name = p.replace(/\s*\(.*\)$/, "");
+            const text = MASTERY[p] ? (mastery ? `Mastery: ${MASTERY[p]}` : `Its mastery (yours once you can use weapon masteries): ${MASTERY[p]}`) : PROPERTY_TEXT[name];
+            return (
+              <li key={p}>
+                <span className="font-semibold">{p}.</span> {text ?? ""}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+      {!weapon.melee && <p className="text-muted-foreground">Beyond the first range number your attacks have disadvantage; beyond the second you cannot attack.</p>}
+      {itemKey && (
+        <LoreLink category="items" k={itemKey}>
+          Open it in the Compendium
+        </LoreLink>
+      )}
+    </div>
+  );
+}
+
+/** A feature's whole text, for its name's tooltip. */
+function FeatureInfo({ f }: { f: BattleFeature }) {
+  return (
+    <div className="space-y-1.5 text-xs">
+      <p className="font-heading text-base font-semibold">{f.title}</p>
+      <p className="text-muted-foreground">{[f.slot !== "Other" ? f.slot : null, f.usage].filter(Boolean).join(" · ")}</p>
+      <p className="whitespace-pre-line leading-relaxed">{f.text}</p>
+    </div>
+  );
+}
+
 function TurnBar({
   turn,
   setTurn,
@@ -909,15 +1139,15 @@ function Choices({ ctx, speed }: { ctx: Ctx; speed: number }) {
   const limited = model.features.filter((f) => f.parsedUsage);
   return (
     <Tabs defaultValue="action" className="gap-3">
-      <TabsList className="h-auto w-full flex-wrap justify-start gap-1 border border-white/10 bg-neutral-900/80 p-1 backdrop-blur">
-        <TabsTrigger value="action" className="text-white/70 data-[state=active]:bg-amber-400 data-[state=active]:text-black">Action</TabsTrigger>
-        <TabsTrigger value="bonus" className="text-white/70 data-[state=active]:bg-amber-400 data-[state=active]:text-black">Bonus action</TabsTrigger>
-        <TabsTrigger value="reaction" className="text-white/70 data-[state=active]:bg-amber-400 data-[state=active]:text-black">Reaction</TabsTrigger>
-        <TabsTrigger value="spells" className="text-white/70 data-[state=active]:bg-amber-400 data-[state=active]:text-black">Spells</TabsTrigger>
-        <TabsTrigger value="resources" className="text-white/70 data-[state=active]:bg-amber-400 data-[state=active]:text-black">Resources</TabsTrigger>
-        <TabsTrigger value="items" className="text-white/70 data-[state=active]:bg-amber-400 data-[state=active]:text-black">Items</TabsTrigger>
-        <TabsTrigger value="companions" className="text-white/70 data-[state=active]:bg-amber-400 data-[state=active]:text-black">Familiars & companions{(ctx.state.companions ?? []).length ? ` (${ctx.state.companions.length})` : ""}</TabsTrigger>
-        <TabsTrigger value="move" className="text-white/70 data-[state=active]:bg-amber-400 data-[state=active]:text-black">Movement & free</TabsTrigger>
+      <TabsList className="h-auto w-full justify-start gap-1 overflow-x-auto border border-white/10 bg-neutral-900/80 p-1 backdrop-blur [scrollbar-width:none] sm:flex-wrap">
+        <ActionTab value="action" icon={<SwordIcon />} label="Action" ready={!ctx.turn.action && !ctx.incapacitated} />
+        <ActionTab value="bonus" icon={<ZapIcon />} label="Bonus action" ready={!ctx.turn.bonus && !ctx.incapacitated} />
+        <ActionTab value="reaction" icon={<ShieldIcon />} label="Reaction" ready={!ctx.turn.reaction && !ctx.noReactions} />
+        <ActionTab value="spells" icon={<SparklesIcon />} label="Spells" />
+        <ActionTab value="resources" icon={<ListChecksIcon />} label="Resources" />
+        <ActionTab value="items" icon={<BackpackIcon />} label="Items" />
+        <ActionTab value="companions" icon={<PawPrintIcon />} label={`Familiars & companions${(ctx.state.companions ?? []).length ? ` (${ctx.state.companions.length})` : ""}`} />
+        <ActionTab value="move" icon={<FootprintsIcon />} label="Movement & free" />
       </TabsList>
 
       <TabsContent value="action" className="space-y-3">
@@ -1109,12 +1339,14 @@ function WeaponCard({ ctx, weapon, slot, attacks }: { ctx: Ctx; weapon: WeaponAt
       <div className="flex items-start gap-2">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-1.5">
-            <span className="truncate font-semibold text-white">{itemKey ? <LoreLink category="items" k={itemKey}>{weapon.name}</LoreLink> : weapon.name}</span>
+            <Peek label={`${weapon.name}: what it does`} className="truncate font-semibold text-white" content={() => <WeaponInfo weapon={weapon} itemKey={itemKey} mastery={weapon.masteryKnown ?? ctx.model.hasWeaponMastery} />}>
+              {weapon.name}
+            </Peek>
             {weapon.mode && <Chip tone={weapon.current ? "gold" : "neutral"}>{weapon.mode}{weapon.current ? " · held now" : ""}</Chip>}
           </div>
           <div className="text-xs text-white/75">{weapon.range}{weapon.properties.length ? ` · ${weapon.properties.join(", ")}` : ""}</div>
         </div>
-        <Button size="sm" variant="secondary" className="h-7" disabled={(ctx.incapacitated && slot !== "Reaction") || spent} onClick={() => ctx.use(slot)}>
+        <Button size="sm" variant="secondary" className="h-9 min-w-16 sm:h-7" disabled={(ctx.incapacitated && slot !== "Reaction") || spent} onClick={() => ctx.use(slot)}>
           Use
         </Button>
       </div>
@@ -1199,7 +1431,9 @@ function FeatureItem({ ctx, f }: { ctx: Ctx; f: BattleFeature }) {
   return (
     <li className="rounded-lg border border-white/10 bg-black/30 p-2.5">
       <div className="flex flex-wrap items-center gap-2">
-        <span className="font-semibold text-white">{f.title}</span>
+        <Peek label={`${f.title}: what it does`} className="font-semibold text-white" content={() => <FeatureInfo f={f} />}>
+          {f.title}
+        </Peek>
         {f.slot !== "Other" && <Chip>{f.slot}</Chip>}
         {u?.kind === "pool" && <Chip tone="gold">uses {f.cost > 1 ? `${f.cost} ` : ""}{u.pool}</Chip>}
         {f.dice && <Chip tone="blue">{f.dice}</Chip>}
@@ -1211,20 +1445,20 @@ function FeatureItem({ ctx, f }: { ctx: Ctx; f: BattleFeature }) {
         )}
         <span className="flex-1" />
         {many && (
-          <Input inputMode="numeric" aria-label={`How much ${f.title} spends`} value={amount} onChange={(e) => setAmount(e.target.value.replace(/\D/g, ""))} className="h-7 w-14 border-white/20 bg-black/40 text-center text-white" />
+          <Input inputMode="numeric" aria-label={`How much ${f.title} spends`} value={amount} onChange={(e) => setAmount(e.target.value.replace(/\D/g, ""))} className="h-9 w-14 border-white/20 bg-black/40 text-center text-white sm:h-7" />
         )}
         {(counted || f.slot !== "Other") && (
-          <Button size="sm" variant="secondary" className="h-7" disabled={!!blocked || (left !== null && left < (many ? n : 1))} onClick={() => ctx.spendFeature(f, many ? n : 1)}>
+          <Button size="sm" variant="secondary" className="h-9 min-w-16 sm:h-7" disabled={!!blocked || (left !== null && left < (many ? n : 1))} onClick={() => ctx.spendFeature(f, many ? n : 1)}>
             {many ? "Spend" : "Use"}
           </Button>
         )}
         {counted && spent > 0 && owner && (
-          <Button size="sm" variant="ghost" className="h-7 text-white/75" onClick={() => ctx.updateCombat((c) => ({ ...c, uses: { ...c.uses, [owner]: Math.max(0, (c.uses[owner] ?? 0) - (many ? n : 1)) } }))}>
-            Undo
+          <Button size="sm" variant="ghost" className="h-9 text-white/75 sm:h-7" onClick={() => ctx.updateCombat((c) => ({ ...c, uses: { ...c.uses, [owner]: Math.max(0, (c.uses[owner] ?? 0) - (many ? n : 1)) } }))}>
+            <Undo2Icon /> Undo
           </Button>
         )}
       </div>
-      <p className="mt-1 line-clamp-3 text-xs text-white/70 hover:line-clamp-none">{f.text}</p>
+      <p className="mt-1 line-clamp-2 text-xs text-white/70">{f.text}</p>
     </li>
   );
 }
@@ -1375,7 +1609,9 @@ function SpellCard({ ctx, spell }: { ctx: Ctx; spell: BattleSpell }) {
       <div className="flex items-start gap-2">
         <div className="min-w-0 flex-1">
           <div className="font-semibold text-white">
-            {key ? <LoreLink category="spells" k={key}>{spell.name}</LoreLink> : spell.name}
+            <Peek label={`${spell.name}: what it does`} content={() => <SpellInfo spell={spell} effect={effect} spellKey={key} />}>
+              {spell.name}
+            </Peek>
             {spell.concentration && <span title="Concentration" className="ml-1.5 rounded bg-amber-300/20 px-1 text-[11px] text-amber-100">C</span>}
             {spell.ritual && <span title="Ritual" className="ml-1 rounded bg-white/10 px-1 text-[11px] text-white/70">R</span>}
           </div>
@@ -1393,7 +1629,7 @@ function SpellCard({ ctx, spell }: { ctx: Ctx; spell: BattleSpell }) {
           {needsAttunement && <div className="text-xs text-amber-200/80">Attune to {item!.name} first (Equipment tab)</div>}
         </div>
         {spell.item && levels.length > 1 ? (
-          <select aria-label="Charges" value={choice} onChange={(e) => setChoice(e.target.value)} className="h-7 rounded-md border border-violet-300/40 bg-black/60 px-1 text-xs text-violet-100">
+          <select aria-label="Charges" value={choice} onChange={(e) => setChoice(e.target.value)} className="h-9 rounded-md sm:h-7 border border-violet-300/40 bg-black/60 px-1 text-xs text-violet-100">
             {levels.map((l) => (
               <option key={l} value={l}>
                 {ordinal(l)}: {chargesFor(spell, l)} of {chargesLeft} charges
@@ -1410,7 +1646,7 @@ function SpellCard({ ctx, spell }: { ctx: Ctx; spell: BattleSpell }) {
           </span>
         )}
         {spell.level > 0 && !item && (
-          <select aria-label="Cast with" value={choice} onChange={(e) => setChoice(e.target.value)} className="h-7 rounded-md border border-white/20 bg-black/60 px-1 text-xs text-white">
+          <select aria-label="Cast with" value={choice} onChange={(e) => setChoice(e.target.value)} className="h-9 rounded-md sm:h-7 border border-white/20 bg-black/60 px-1 text-xs text-white">
             {levels.map((l) => (
               <option key={l} value={l}>
                 {ordinal(l)} ({ctx.slotsLeft(l)} left)
@@ -1419,7 +1655,7 @@ function SpellCard({ ctx, spell }: { ctx: Ctx; spell: BattleSpell }) {
             {pactUsable && <option value="pact">Pact {ordinal(ctx.pact!.level)} ({ctx.pactLeft} left)</option>}
           </select>
         )}
-        <Button size="sm" className="h-7 bg-sky-500 text-black hover:bg-sky-400" disabled={!ready || noSlot || spent || blocked || needsAttunement} onClick={() => ctx.cast(spell, castAt, usePact)}>
+        <Button size="sm" className="h-9 min-w-16 bg-sky-500 text-black hover:bg-sky-400 sm:h-7" disabled={!ready || noSlot || spent || blocked || needsAttunement} onClick={() => ctx.cast(spell, castAt, usePact)}>
           Cast
         </Button>
       </div>
