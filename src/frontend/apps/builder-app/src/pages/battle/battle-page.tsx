@@ -68,6 +68,7 @@ import {
   longRest as restLong,
   MASTERY,
   maxHitPoints,
+  newRage,
   newTurn,
   percent,
   plainSpellText,
@@ -184,7 +185,9 @@ export function CharacterBattlePage() {
   const setEffect = (key: string, on: boolean) =>
     updateCombat((c) => {
       const others = (c.effects ?? []).filter((k) => k.split("@")[0].toLowerCase() !== key.split("@")[0].toLowerCase());
-      return { ...c, effects: on ? [...others, key] : others };
+      // a new Rage brings back what works once per Rage (Fanatical Focus)
+      const fresh = on && /^rage$/i.test(key.split("@")[0]) ? newRage(c, model.features) : c;
+      return { ...fresh, effects: on ? [...others, key] : others };
     });
   const maxHp = maxHitPoints(data.hitPoints ?? 0, state, edition) + effects.reduce((n, e) => n + (e.maxHpBonus ?? 0), 0);
   const hp = currentHitPoints(maxHp, state);
@@ -1401,7 +1404,7 @@ function UsePips({ max, spent }: { max: number; spent: number }) {
   );
 }
 
-const RECHARGE: Record<string, string> = { turn: "per turn", short: "per short rest", long: "per long rest" };
+const RECHARGE: Record<string, string> = { turn: "per turn", short: "per short rest", long: "per long rest", rage: "per Rage" };
 
 function FeatureList({ ctx, features, note }: { ctx: Ctx; features: BattleFeature[]; note?: string }) {
   return (

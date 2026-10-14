@@ -181,6 +181,14 @@ export function spellEffect(spell: { level: number; description: string }, castA
     if (roll) damage.push({ ...roll, type: (m![2] ?? "").replace(/\s+/g, " ").trim().replace(/,$/, "") || "damage" });
   }
 
+  // "The spell's base damage is 12d6" (the 2024 Delayed Blast Fireball), its type where the text names it
+  if (damage.length === 0) {
+    const base = body.match(/base damage is (\d+d\d+)/i);
+    const type = body.match(/\b(acid|bludgeoning|cold|fire|force|lightning|necrotic|piercing|poison|psychic|radiant|slashing|thunder) damage\b/i)?.[1];
+    const roll = base ? parseRoll(`${base[1]} ${type?.toLowerCase() ?? ""}`) : null;
+    if (roll) damage.push({ ...roll, type: roll.type || "damage" });
+  }
+
   // "takes Force damage equal to 1d8 plus your spellcasting ability modifier"
   for (const m of body.matchAll(/(acid|bludgeoning|cold|fire|force|lightning|necrotic|piercing|poison|psychic|radiant|slashing|thunder) damage equal to (\d+d\d+)(\s*(?:\+|plus) your spellcasting ability modifier)?/gi)) {
     const roll = parseRoll(`${m[2]} ${m[1]}`);
@@ -192,8 +200,8 @@ export function spellEffect(spell: { level: number; description: string }, castA
   let healing: Roll | null = null;
   const withModifier = "(\\s*(?:\\+|plus) your spellcasting ability modifier)?";
   const heal =
-    body.match(new RegExp(`regains? (?:a number of )?hit points equal to (\\d+d\\d+)${withModifier}`, "i")) ??
-    body.match(new RegExp(`regains? (\\d+d\\d+)${withModifier} hit points`, "i"));
+    body.match(new RegExp(`regains? (?:a number of )?hit points equal to (\\d+d\\d+(?:\\s*\\+\\s*\\d+)?)${withModifier}`, "i")) ??
+    body.match(new RegExp(`regains? (\\d+d\\d+(?:\\s*\\+\\s*\\d+)?)${withModifier} hit points`, "i"));
   if (heal) {
     const roll = parseRoll(`${heal[1]} healing`);
     if (roll) healing = heal[2] ? { ...roll, bonus: roll.bonus + modifier } : roll;
@@ -247,7 +255,8 @@ export function castingAction(time: string): "Action" | "Bonus Action" | "Reacti
 
 // ---- limited uses
 
-export type Recharge = "turn" | "short" | "long";
+/** "rage": once per Rage (Fanatical Focus), back when a new Rage starts or after a rest */
+export type Recharge = "turn" | "short" | "long" | "rage";
 
 export type Usage =
   /** `regainOnShort`: one use comes back on a short rest, all on a long one (2024's Second Wind, Channel Divinity) */
@@ -258,10 +267,11 @@ export type Usage =
 /** A feature's usage line from its sheet entry: "2/Long Rest", "1/Turn", "1/Short or Long Rest", "Channel Divinity". */
 export function parseUsage(usage: string | null | undefined): Usage | null {
   if (!usage) return null;
-  // "Focus Point — 1/Turn": spends from the pool (once a turn is the feature's own limit, in its text)
-  const u = usage.trim().replace(/\.$/, "").replace(/\s+[—–-]\s+\d+\/(?:turn|round)$/i, "");
-  // "2/Long Rest", "1/1d4 Long Rests", a pool of dice "4d6/Long Rest" (four Psionic Energy Dice), of points "30 HP/Long Rest"
-  const count = u.match(/^(\d+)(?:d\d+|\s*(?:HP|hit points|points?))?\s*\/\s*(?:\d+d\d+\s+)?(.+)$/i);
+  // "Focus Point — 1/Turn", "5 Focus Points — 1/Long Rest": spends from the pool (the other limit is the feature's own, in its text)
+  const u = usage.trim().replace(/\.$/, "").replace(/\s+[—–-]\s+\d+\/[A-Za-z ]+$/i, "");
+  // "2/Long Rest", "1/1d4 Long Rests", a pool of dice "4d6/Long Rest" (four Psionic Energy Dice), of points "30 HP/Long Rest",
+  // a named use "1 Amplify/Long Rest"
+  const count = u.match(/^(\d+)(?:d\d+|\s*(?:HP|hit points|points?)|\s+[A-Za-z]+)?\s*\/\s*(?:\d+d\d+\s+)?(.+)$/i);
   if (count) {
     const max = Number(count[1]);
     const per = count[2].toLowerCase();
@@ -269,9 +279,13 @@ export function parseUsage(usage: string | null | undefined): Usage | null {
     if (/turn|round/.test(per)) return { kind: "count", max, recharge: "turn" };
     if (/short/.test(per)) return { kind: "count", max, recharge: "short" };
     if (/long|day|dawn/.test(per)) return { kind: "count", max, recharge: "long" };
+    if (/rage/.test(per)) return { kind: "count", max, recharge: "rage" };
+    // "1/Rest": a short or a long one
+    if (/^rests?$/.test(per.trim())) return { kind: "count", max, recharge: "short" };
     return null;
   }
-  const points = u.match(/^(\d+) ([A-Za-z’' ]+?)$/);
+  // "2 Sorcery Points", "1-5 Sorcery Points" (as many as the player chooses: the least counts here)
+  const points = u.match(/^(\d+)(?:\s*[-–]\s*\d+)? ([A-Za-z’' ]+?)$/);
   if (points && Number(points[1]) > 0) return { kind: "pool", pool: points[2].replace(/s$/, ""), cost: Number(points[1]) };
   if (/^(action|bonus action|reaction)$/i.test(u) || /\{\{|\}\}/.test(u) || /^\d/.test(u)) return null;
   return { kind: "pool", pool: u };
@@ -426,6 +440,11 @@ function resetUses(uses: Record<string, number>, features: Restable[], recharges
   return next;
 }
 
+/** A new Rage: "1/Rage" features (Fanatical Focus) come back. */
+export function newRage(state: CombatState, features: Restable[]): CombatState {
+  return { ...state, uses: resetUses(state.uses, features, ["rage"]) };
+}
+
 /** A new turn: "1/Turn" features (Sneak Attack) come back. */
 export function newTurn(state: CombatState, features: Restable[]): CombatState {
   return { ...state, uses: resetUses(state.uses, features, ["turn"]) };
@@ -436,7 +455,7 @@ export function newTurn(state: CombatState, features: Restable[]): CombatState {
  * short-rest features. Pact Magic slots come back too (done by the caller, in the magic state).
  */
 export function shortRest(state: CombatState, features: Restable[], healed: number, diceSpent: number): CombatState {
-  return { ...heal({ ...state, uses: resetUses(state.uses, features, ["turn", "short"]) }, healed), hitDiceSpent: state.hitDiceSpent + diceSpent };
+  return { ...heal({ ...state, uses: resetUses(state.uses, features, ["turn", "short", "rage"]) }, healed), hitDiceSpent: state.hitDiceSpent + diceSpent };
 }
 
 /**
@@ -451,7 +470,7 @@ export function longRest(state: CombatState, features: Restable[], totalHitDice:
     damage: 0,
     temporaryHitPoints: 0,
     hitDiceSpent: Math.max(0, state.hitDiceSpent - regained),
-    uses: resetUses(state.uses, features, ["turn", "short", "long"]),
+    uses: resetUses(state.uses, features, ["turn", "short", "long", "rage"]),
     concentration: null,
     exhaustion: Math.max(0, state.exhaustion - 1),
     deathSaveSuccesses: 0,

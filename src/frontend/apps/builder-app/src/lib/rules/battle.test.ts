@@ -17,6 +17,7 @@ import {
   heal,
   hitChance,
   longRest,
+  newRage,
   newTurn,
   parseRoll,
   parseUsage,
@@ -120,6 +121,14 @@ describe("spells", () => {
   });
 });
 
+describe("spells the catalogue check found unread", () => {
+  it("reads healing with a flat bonus (Regenerate) and a base damage (the 2024 Delayed Blast Fireball)", () => {
+    expect(spellEffect({ level: 7, description: "<p>A creature you touch regains 4d8 + 15 Hit Points.</p>" }, 7, 13, 4).healing).toMatchObject({ dice: [{ count: 4, sides: 8 }], bonus: 15 });
+    const dbf = spellEffect({ level: 7, description: "<p>Each creature in the Sphere makes a Dexterity saving throw, taking Fire damage equal to the total accumulated damage on a failed save. The spell's base damage is 12d6.</p>" }, 7, 13, 4);
+    expect(dbf.damage[0]).toMatchObject({ dice: [{ count: 12, sides: 6 }], type: "fire" });
+  });
+});
+
 describe("limited uses and rests", () => {
   const features = [
     { title: "Second Wind", usage: "1/Short Rest" },
@@ -141,6 +150,25 @@ describe("limited uses and rests", () => {
     expect(parseUsage("{{unfilled}}/Long Rest")).toBeNull();
     expect(parseUsage(null)).toBeNull();
     expect(findPool(features, "Channel Divinity")?.title).toBe("Channel Divinity");
+  });
+
+  it("reads the rarer usage lines of the books and their pull requests", () => {
+    // "per rest" is a short or a long one; once per Rage
+    expect(parseUsage("1/Rest")).toEqual({ kind: "count", max: 1, recharge: "short" });
+    expect(parseUsage("1/Rage")).toEqual({ kind: "count", max: 1, recharge: "rage" });
+    // a pool's cost with the feature's own limit after it; a cost the player chooses
+    expect(parseUsage("5 Focus Points — 1/Long Rest")).toEqual({ kind: "pool", pool: "Focus Point", cost: 5 });
+    expect(parseUsage("1-5 Sorcery Points")).toEqual({ kind: "pool", pool: "Sorcery Point", cost: 1 });
+    // a named use
+    expect(parseUsage("1 Amplify/Long Rest")).toEqual({ kind: "count", max: 1, recharge: "long" });
+  });
+
+  it("gives back once-per-Rage uses with a new Rage and after a rest", () => {
+    const rage = [...features, { title: "Fanatical Focus", usage: "1/Rage" }];
+    const used = { ...EMPTY_COMBAT, uses: { "Fanatical Focus": 1, Lucky: 1 } };
+    expect(newRage(used, rage).uses).toEqual({ Lucky: 1 });
+    expect(newTurn(used, rage).uses).toEqual({ "Fanatical Focus": 1, Lucky: 1 });
+    expect(shortRest(used, rage, 0, 0).uses).toEqual({ Lucky: 1 });
   });
 
   it("damage takes temporary hit points first; healing ends death saves", () => {

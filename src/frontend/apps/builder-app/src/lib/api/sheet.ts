@@ -418,7 +418,8 @@ export function useSheetData(characterId: string): { data?: SheetData; isLoading
 
   // placeholders in sheet texts: statistics, plus the spellcasting numbers the engine does not calculate
   function fill(text: string): string {
-    return text.replace(/\{\{([^}]+)\}\}/g, (_, raw: string) => {
+    // a placeholder missing its opening braces in the book's data ("wisdom:modifier}}/Long Rest")
+    return text.replace(/^([a-z][a-z :]*)\}\}/i, "{{$1}}").replace(/\{\{([^}]+)\}\}/g, (_, raw: string) => {
       const name = statisticName(raw);
       const caster = casters.find((c) => name.startsWith(`${statisticName(c.casting.name)}:spellcasting:`));
       if (caster && name.endsWith(":dc")) return String(caster.casting.saveDc);
