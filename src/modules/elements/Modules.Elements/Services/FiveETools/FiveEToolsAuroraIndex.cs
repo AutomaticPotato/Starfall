@@ -102,6 +102,26 @@ internal sealed partial class FiveEToolsAuroraIndex
         _ => Proficiency("Weapon Proficiency", kind.TrimEnd('s')) ?? Proficiency("Weapon Proficiency", kind),
     };
 
+    /// <summary>
+    /// Proficiency with a weapon of a category, as "a martial weapon" reads: the category's own proficiency or that of
+    /// any one weapon of it (a rogue's rapier). Any other kind is the one weapon's proficiency.
+    /// </summary>
+    public IReadOnlyList<string> AnyWeaponOf(string kind)
+    {
+        var category = Compact(kind) switch { "SIMPLE" => "Simple", "MARTIAL" => "Martial", _ => null };
+        var own = Weapon(kind);
+        if (category is null)
+        {
+            return own is null ? [] : [own];
+        }
+        var single = _byId.Values
+            .Where(e => e.Type == "Proficiency" && e.Id.StartsWith("ID_PROFICIENCY_WEAPON_PROFICIENCY_", StringComparison.Ordinal)
+                && e.Supports.Contains("Weapon") && e.Supports.Contains(category))
+            .Select(e => e.Id)
+            .Order(StringComparer.Ordinal);
+        return (own is null ? single : single.Prepend(own)).Distinct().ToList();
+    }
+
     public string? Tool(string name) => Proficiency("Tool Proficiency", name);
 
     public string? Language(string name, bool edition2024) =>

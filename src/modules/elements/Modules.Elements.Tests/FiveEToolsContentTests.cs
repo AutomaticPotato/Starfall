@@ -235,6 +235,23 @@ public class FiveEToolsContentTests
     }
 
     [TestMethod]
+    public void AuroraFeats_DescribedInWordsOnly_GetRequirementsAsTheBooksMeanThem()
+    {
+        var (data, aurora) = RealData();
+        var content = new FiveEToolsContent(new FiveEToolsJson(data), new FiveEToolsAuroraIndex(aurora), BooksOf(data), NullLogger.Instance);
+        XElement Feat(string name, string source) => new(aurora.First(a => a.Type == "Feat" && a.Name == name && a.Source == source).Xml);
+        var warCaster = Feat("War Caster", "Player’s Handbook");
+        var initiate = Feat("Fighting Initiate", "Tasha’s Cauldron of Everything");
+
+        content.FillFeatRequirements([warCaster, initiate]);
+
+        // "the ability to cast at least one spell": any spell, a High Elf's cantrip too, not only a Spellcasting feature
+        warCaster.Element("requirements")!.Value.Should().Contain("[type:spell]").And.NotContain("ID_INTERNAL_GRANTS_SPELLCASTING_FEATURE");
+        // "proficiency with a martial weapon": the martial weapons, or any one of them (a rogue's rapier)
+        initiate.Element("requirements")!.Value.Should().Contain("ID_PROFICIENCY_WEAPON_PROFICIENCY_MARTIAL_WEAPONS").And.Contain("ID_PROFICIENCY_WEAPON_PROFICIENCY_RAPIER");
+    }
+
+    [TestMethod]
     public void ASpecies_TranslatesSizeSpeedAndTraits()
     {
         var (data, aurora) = RealData();

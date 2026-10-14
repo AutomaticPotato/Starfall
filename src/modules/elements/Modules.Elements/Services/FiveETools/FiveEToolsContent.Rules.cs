@@ -48,7 +48,12 @@ internal sealed partial class FiveEToolsContent
                             terms.Add(parts.Count == 1 ? parts[0] : $"({string.Join("||", parts)})");
                         }
                         break;
-                    case "spellcasting" or "spellcasting2020" or "spellcastingFeature" or "spellcastingPrepared":
+                    case "spellcasting":
+                        // the 2014 books' "the ability to cast at least one spell": any spell, a species' cantrip too
+                        words.Add("The Ability to Cast at Least One Spell");
+                        terms.Add("[type:spell]");
+                        break;
+                    case "spellcasting2020" or "spellcastingFeature" or "spellcastingPrepared":
                         words.Add("Spellcasting or Pact Magic Feature");
                         var casting = new[] { "ID_INTERNAL_GRANTS_SPELLCASTING_FEATURE", "ID_INTERNAL_GRANTS_PACT_MAGIC_FEATURE" }.Where(_aurora.Exists).ToList();
                         if (casting.Count > 0)
@@ -91,9 +96,10 @@ internal sealed partial class FiveEToolsContent
                         {
                             var kind = proficiency.Value?.ToString() ?? "";
                             words.Add($"{Title(kind)} {(proficiency.Key == "armor" ? "Armor" : "Weapon")} Training");
-                            if ((proficiency.Key == "armor" ? _aurora.Armor(kind) : _aurora.Weapon(kind)) is { } id)
+                            var ids = proficiency.Key == "armor" ? (_aurora.Armor(kind) is { } armor ? [armor] : []) : _aurora.AnyWeaponOf(kind);
+                            if (ids.Count > 0)
                             {
-                                terms.Add(id);
+                                terms.Add(ids.Count == 1 ? ids[0] : $"({string.Join("||", ids)})");
                             }
                         }
                         break;
