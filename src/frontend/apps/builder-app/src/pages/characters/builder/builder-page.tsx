@@ -1,4 +1,4 @@
-import { ArrowLeftIcon, ChurchIcon, FileTextIcon, ImageIcon, InfoIcon, MinusIcon, PlusIcon, ScaleIcon, ScrollTextIcon, SparklesIcon, SwordsIcon, UserIcon, UsersIcon } from "lucide-react";
+import { ArrowLeftIcon, ChurchIcon, FileTextIcon, ImageIcon, InfoIcon, MinusIcon, PlusIcon, ScaleIcon, ScrollTextIcon, SparklesIcon, SwordsIcon, Trash2Icon, UserIcon, UsersIcon } from "lucide-react";
 import { useMemo, useRef, useState, type ComponentType, type ReactNode } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { SaveBar } from "./save-bar";
@@ -607,12 +607,15 @@ function PortraitEditor({ characterId, url }: { characterId: string; url?: strin
         </button>
       )}
       {url && (
-        <div className="absolute inset-x-0 bottom-0 flex justify-center gap-2 bg-black/70 py-1 text-xs text-white sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100">
-          <button type="button" onClick={() => input.current?.click()} className="hover:underline">
-            Change
+        // on a phone two icons a finger can hit (the words did not fit under the picture); on a computer on hover
+        <div className="absolute inset-x-0 bottom-0 flex justify-center gap-2 bg-black/70 py-0.5 text-xs text-white sm:py-1 sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100">
+          <button type="button" aria-label="Change the portrait" onClick={() => input.current?.click()} className="flex min-h-9 min-w-9 items-center justify-center hover:underline sm:min-h-0 sm:min-w-0">
+            <ImageIcon className="size-4 sm:hidden" />
+            <span className="max-sm:sr-only">Change</span>
           </button>
-          <button type="button" onClick={() => remove.mutate()} className="hover:underline">
-            Remove
+          <button type="button" aria-label="Remove the portrait" onClick={() => remove.mutate()} className="flex min-h-9 min-w-9 items-center justify-center hover:underline sm:min-h-0 sm:min-w-0">
+            <Trash2Icon className="size-4 sm:hidden" />
+            <span className="max-sm:sr-only">Remove</span>
           </button>
         </div>
       )}

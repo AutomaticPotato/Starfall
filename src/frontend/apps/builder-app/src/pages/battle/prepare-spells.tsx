@@ -76,7 +76,7 @@ export function PrepareSpells({ casters, magic, onChange }: { casters: Caster[];
                       >
                         {r.on && <CheckIcon className="size-3" />}
                         {r.name}
-                        {r.always && <span className="text-[11px] opacity-80">always</span>}
+                        {r.always && <span className="text-xs opacity-80">always</span>}
                       </button>
                     ))}
                 </div>

@@ -284,7 +284,7 @@ function AddHomebrew({ monsters, onAdd }: { monsters: HomebrewMonster[]; onAdd: 
   const chosen = sorted.find((m) => m.id === id);
   return (
     <span className="inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-sm">
-      <select aria-label="A homebrew monster" value={id} onChange={(e) => setId(e.target.value)} className="h-7 max-w-44 rounded-md bg-transparent px-1 text-sm">
+      <select aria-label="A homebrew monster" value={id} onChange={(e) => setId(e.target.value)} className="h-9 max-w-44 rounded-md bg-transparent px-1 text-sm sm:h-7">
         <option value="">A homebrew monster…</option>
         {sorted.map((m) => (
           <option key={m.id} value={m.id ?? ""}>
@@ -435,7 +435,7 @@ function Row({ c, stats, dm, party, current, shareStats, selected, onSelect, upd
             aria-label={`Add a condition to ${c.name}`}
             value=""
             onChange={(e) => e.target.value && update({ conditions: [...c.conditions, { name: e.target.value, by: "DM" }] })}
-            className="h-7 rounded-md border bg-transparent px-1 text-xs text-muted-foreground"
+            className="h-9 rounded-md border bg-transparent px-1 text-xs text-muted-foreground sm:h-7"
           >
             <option value="">+ condition</option>
             {MARKS.filter((m) => !c.conditions.some((k) => k.name === m.name)).map((m) => (

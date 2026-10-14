@@ -517,9 +517,9 @@ function Panel({ title, icon, children, className, action }: { title?: string; i
 function Stat({ label, value, sub, className }: { label: string; value: ReactNode; sub?: ReactNode; className?: string }) {
   return (
     <div className={cn("flex min-w-0 flex-col items-center justify-center rounded-lg border border-white/10 bg-black/30 px-1 py-1.5 text-center sm:px-2 sm:py-2", className)}>
-      <span className="text-[11px] font-semibold uppercase leading-tight tracking-wide text-white/70 sm:text-xs sm:tracking-wider">{label}</span>
+      <span className="text-xs font-semibold uppercase leading-tight tracking-wide text-white/70 sm:text-xs sm:tracking-wider">{label}</span>
       <span className="font-heading text-xl leading-tight text-white sm:text-2xl">{value}</span>
-      {sub && <span className="line-clamp-2 break-words text-[11px] leading-tight text-white/75 sm:text-xs">{sub}</span>}
+      {sub && <span className="line-clamp-2 break-words text-xs leading-tight text-white/75 sm:text-xs">{sub}</span>}
     </div>
   );
 }
@@ -922,7 +922,7 @@ function Hud({
       {conditions.length > 0 && (
         <div className="mt-1.5 flex flex-wrap gap-1">
           {conditions.map((c) => (
-            <span key={c} className="rounded-full border border-violet-300/40 bg-violet-400/15 px-2 py-0.5 text-[11px] text-violet-100">
+            <span key={c} className="rounded-full border border-violet-300/40 bg-violet-400/15 px-2 py-0.5 text-xs text-violet-100">
               {c}
             </span>
           ))}
@@ -1387,9 +1387,9 @@ function WeaponCard({ ctx, weapon, slot, attacks }: { ctx: Ctx; weapon: WeaponAt
 function Mini({ label, value, sub }: { label: string; value: ReactNode; sub?: ReactNode }) {
   return (
     <div className="rounded-md bg-white/5 px-1 py-1">
-      <div className="text-[11px] uppercase tracking-wider text-white/70">{label}</div>
+      <div className="text-xs uppercase tracking-wider text-white/70">{label}</div>
       <div className="truncate text-sm font-semibold text-white">{value}</div>
-      {sub && <div className="truncate text-[11px] text-white/70">{sub}</div>}
+      {sub && <div className="truncate text-xs text-white/70">{sub}</div>}
     </div>
   );
 }
@@ -1499,7 +1499,7 @@ function SlotsPanel({ ctx }: { ctx: Ctx }) {
           const left = ctx.slotsLeft(level);
           return (
             <div key={level} className="rounded-lg border border-white/10 bg-black/30 px-2.5 py-1.5">
-              <div className="text-[11px] uppercase tracking-wider text-white/70">{ordinal(level)} level</div>
+              <div className="text-xs uppercase tracking-wider text-white/70">{ordinal(level)} level</div>
               <div className="mt-1 flex gap-1">
                 {Array.from({ length: total }, (_, i) => (
                   <button
@@ -1516,7 +1516,7 @@ function SlotsPanel({ ctx }: { ctx: Ctx }) {
         })}
         {ctx.pact && (
           <div className="rounded-lg border border-violet-300/30 bg-black/30 px-2.5 py-1.5">
-            <div className="text-[11px] uppercase tracking-wider text-white/70">Pact slots · {ordinal(ctx.pact.level)} level · short rest</div>
+            <div className="text-xs uppercase tracking-wider text-white/70">Pact slots · {ordinal(ctx.pact.level)} level · short rest</div>
             <div className="mt-1 flex gap-1">
               {Array.from({ length: ctx.pact.count }, (_, i) => (
                 <button
@@ -1615,8 +1615,8 @@ function SpellCard({ ctx, spell }: { ctx: Ctx; spell: BattleSpell }) {
             <Peek label={`${spell.name}: what it does`} content={() => <SpellInfo spell={spell} effect={effect} spellKey={key} />}>
               {spell.name}
             </Peek>
-            {spell.concentration && <span title="Concentration" className="ml-1.5 rounded bg-amber-300/20 px-1 text-[11px] text-amber-100">C</span>}
-            {spell.ritual && <span title="Ritual" className="ml-1 rounded bg-white/10 px-1 text-[11px] text-white/70">R</span>}
+            {spell.concentration && <span title="Concentration" className="ml-1.5 rounded bg-amber-300/20 px-1 text-xs text-amber-100">C</span>}
+            {spell.ritual && <span title="Ritual" className="ml-1 rounded bg-white/10 px-1 text-xs text-white/70">R</span>}
           </div>
           <div className="text-xs text-white/70">
             {[spell.time, spell.range, spell.duration, spell.components].filter(Boolean).join(" · ")}
