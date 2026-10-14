@@ -86,17 +86,20 @@ public sealed class GetSelectionRuleOptionsEndpoint : EndpointWithoutRequest<Get
 
         // like Aurora: an option's own requirements ("[level:artificer:6]" on a magic item plan, a feat's Strength 13)
         // decide whether the character can take it now; the others are listed after it, marked, so the player sees
-        // what a later level brings
+        // what a later level brings. An option never counts against itself ("not if you have Quickened Spell" is
+        // about taking it twice), and of the repeatable copies the one the character can take now is offered
         StatisticValuesGroupCollection? statistics = null;
         var values = CharacterRequirementValues.For(character, () => characterRegistrations, () => statistics ??= _statistics.Calculate(character, [.. characterRegistrations]).Statistics);
         bool Eligible(ElementDataModel e) =>
-            string.IsNullOrWhiteSpace(e.PrerequisiteRequirements) || RequirementsExpression.Evaluate(e.PrerequisiteRequirements, owned.Contains, values);
+            string.IsNullOrWhiteSpace(e.PrerequisiteRequirements)
+            || RequirementsExpression.Evaluate(e.PrerequisiteRequirements, id => id != e.Id && owned.Contains(id), values);
 
         var seen = new HashSet<(string, string?)>();
         var options = allowed
-            .OrderByDescending(e => e.Id == current)
-            .Where(e => seen.Add((e.Name, e.Source)))
             .Select(e => (Element: e, Eligible: Eligible(e)))
+            .OrderByDescending(o => o.Element.Id == current)
+            .ThenByDescending(o => o.Eligible)
+            .Where(o => seen.Add((o.Element.Name, o.Element.Source)))
             .OrderByDescending(o => o.Eligible)
             .ThenBy(o => o.Element.Name, StringComparer.OrdinalIgnoreCase)
             .ThenBy(o => o.Element.Source)

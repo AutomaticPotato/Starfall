@@ -88,13 +88,13 @@ public class AuroraImporterAppendTests
     }
 
     [TestMethod]
-    public async Task AppendedSelects_AreAddedOnce_AndAppendedGrantsAreLeftOut()
+    public async Task AppendedRules_AreAddedOnce()
     {
         var elements = await ImportAsync();
 
         var feature = elements["ID_TEST_FEATURE"];
         feature.GetComponents<SelectionRuleComponent>().Select(s => (s.Name, s.LevelRequirement)).Should().Equal(("Plans", 0), ("Extra Plan", 9));
-        feature.GetComponents<IncludeRuleComponent>().Should().BeEmpty();
+        feature.GetComponents<IncludeRuleComponent>().Should().ContainSingle();
     }
 
     [TestMethod]

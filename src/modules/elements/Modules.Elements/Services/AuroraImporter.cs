@@ -468,10 +468,9 @@ internal sealed class AuroraImporter : IAuroraImporter
     /// <summary>
     /// Aurora's &lt;append id="…"&gt;: a file adds to an element that another file defines. The 2024 Artificer puts
     /// "Artificer" on the skills it may choose and the spells on its list; a subclass adds a choice to a class feature
-    /// (the Armorer's extra plan, the Thief's Cunning Strike option). Supports are merged into every copy of the
-    /// element, and of the rules only the selects, which sit behind their own requirements; appended grants (ability
-    /// score maximums on every character, firearms under martial weapons) would change existing characters and are
-    /// left out. Applied in file order, so the merged XML, which an update compares, is the same on every run.
+    /// (the Armorer's extra plan, the Thief's Cunning Strike option); a book puts its weapons under a proficiency group
+    /// (the musket and pistol under martial ranged weapons). Supports and rules are merged into every copy of the
+    /// element, in file order, so the merged XML, which an update compares, is the same on every run.
     /// </summary>
     private static (int Applied, int Unmatched) ApplyAppends(List<(string File, XDocument Document)> documents)
     {
@@ -491,7 +490,7 @@ internal sealed class AuroraImporter : IAuroraImporter
             }
 
             var supports = SupportsTokens((string?)append.Element("supports"));
-            var selects = append.Element("rules")?.Elements("select").ToList() ?? [];
+            var appendedRules = append.Element("rules")?.Elements().ToList() ?? [];
             foreach (var target in targets)
             {
                 if (supports.Count > 0)
@@ -511,7 +510,7 @@ internal sealed class AuroraImporter : IAuroraImporter
                     }
                 }
 
-                if (selects.Count > 0)
+                if (appendedRules.Count > 0)
                 {
                     var rules = target.Element("rules");
                     if (rules is null)
@@ -519,9 +518,9 @@ internal sealed class AuroraImporter : IAuroraImporter
                         target.Add(rules = new XElement("rules"));
                     }
                     // the same append can come twice (a pull request repeating a merged file)
-                    foreach (var select in selects.Where(s => !rules.Elements().Any(r => XNode.DeepEquals(r, s))))
+                    foreach (var rule in appendedRules.Where(a => !rules.Elements().Any(r => XNode.DeepEquals(r, a))))
                     {
-                        rules.Add(new XElement(select));
+                        rules.Add(new XElement(rule));
                     }
                 }
             }
