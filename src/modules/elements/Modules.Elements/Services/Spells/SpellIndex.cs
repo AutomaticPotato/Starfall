@@ -162,7 +162,10 @@ internal sealed class SpellIndex : ISpellIndex
             })
             .FirstOrDefault(k => k is not null);
         var spellcasting = ReadSpellcasting(elementId, xml);
-        var conditions = rules.Where(r => r.Name == "grant" && string.Equals((string?)r.Attribute("type"), "Condition", StringComparison.OrdinalIgnoreCase))
+        // only the unconditional ones: a condition behind requirements (a Dragonborn's ancestry) is registered, or not,
+        // by the rules engine, and read from the character's registrations
+        var conditions = rules.Where(r => r.Name == "grant" && string.Equals((string?)r.Attribute("type"), "Condition", StringComparison.OrdinalIgnoreCase)
+                && r.Attribute("requirements") is null && r.Attribute("equipped") is null)
             .Select(r => (string?)r.Attribute("id"))
             .OfType<string>()
             .ToList();
@@ -236,8 +239,10 @@ internal sealed class SpellIndex : ISpellIndex
         var snapshot = await GetAsync(cancellationToken);
         var matches = SupportsExpression.Compile(SupportsExpression.FillSpellPlaceholders(supports, lists, slotLevels), numbersAreTerms: true);
         return snapshot.Spells
-            // a spell's lists, its level and its school ("1,(Abjuration||Illusion)" on Enspelled Armor)
-            .Where(s => matches([.. s.Lists, s.Level.ToString(System.Globalization.CultureInfo.InvariantCulture), .. (s.School is { Length: > 0 } school ? new[] { school } : [])], s.AuroraId))
+            // a spell's lists, its level, its school ("1,(Abjuration||Illusion)" on Enspelled Armor) and whether it is a
+            // ritual ("Ritual,1" on Ritual Caster)
+            .Where(s => matches([.. s.Lists, s.Level.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                .. (s.School is { Length: > 0 } school ? new[] { school } : []), .. (s.Ritual ? new[] { "Ritual" } : [])], s.AuroraId))
             .ToList();
     }
 }

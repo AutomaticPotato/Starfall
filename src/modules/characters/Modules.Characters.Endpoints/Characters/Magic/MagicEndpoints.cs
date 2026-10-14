@@ -142,8 +142,9 @@ public sealed record DefensesResponse(List<string> Resistances, List<string> Imm
 
 /// <summary>
 /// The character's damage resistances, immunities and vulnerabilities: Aurora grants them as conditions built into
-/// the app (ID_INTERNAL_CONDITION_DAMAGE_RESISTANCE_FIRE), which the rules engine cannot register, so they are read
-/// from the XML of the elements the character has.
+/// the app (ID_INTERNAL_CONDITION_DAMAGE_RESISTANCE_FIRE). Starlights has them as elements ("Damage Resistance (Fire)"),
+/// so the rules engine registers the ones whose requirements hold; unconditional grants are also read from the XML
+/// of the elements the character has, for content imported before those elements existed.
 /// </summary>
 public sealed partial class GetDefensesEndpoint : EndpointWithoutRequest<DefensesResponse>
 {
@@ -176,6 +177,27 @@ public sealed partial class GetDefensesEndpoint : EndpointWithoutRequest<Defense
         var elementIds = registrations.Select(r => r.AssociatedElementId.Value).Distinct().ToList();
         var magic = await _spells.GetElementMagicAsync(elementIds, ct);
         var result = new DefensesResponse([], [], []);
+        void Add(string kind, string damage)
+        {
+            var list = kind switch
+            {
+                "RESISTANCE" => result.Resistances,
+                "IMMUNITY" => result.Immunities,
+                _ => result.Vulnerabilities,
+            };
+            var name = System.Globalization.CultureInfo.InvariantCulture.TextInfo.ToTitleCase(damage.Replace('_', ' ').ToLowerInvariant());
+            if (!list.Contains(name))
+            {
+                list.Add(name);
+            }
+        }
+        foreach (var registration in registrations.Where(r => r.AssociatedElementType == "Condition"))
+        {
+            if (RegisteredConditionRegex().Match(registration.AssociatedElementName) is { Success: true } registered)
+            {
+                Add(registered.Groups[1].Value.ToUpperInvariant(), registered.Groups[2].Value);
+            }
+        }
         foreach (var id in elementIds)
         {
             foreach (var condition in magic.GetValueOrDefault(id)?.Conditions ?? [])
@@ -185,22 +207,16 @@ public sealed partial class GetDefensesEndpoint : EndpointWithoutRequest<Defense
                 {
                     continue;
                 }
-                var list = m.Groups[1].Value switch
-                {
-                    "RESISTANCE" => result.Resistances,
-                    "IMMUNITY" => result.Immunities,
-                    _ => result.Vulnerabilities,
-                };
-                var name = System.Globalization.CultureInfo.InvariantCulture.TextInfo.ToTitleCase(m.Groups[2].Value.Replace('_', ' ').ToLowerInvariant());
-                if (!list.Contains(name))
-                {
-                    list.Add(name);
-                }
+                Add(m.Groups[1].Value, m.Groups[2].Value);
             }
         }
 
         await Send.OkAsync(result, ct);
     }
+
+    // the built-in condition elements' names: "Damage Resistance (Fire)"
+    [System.Text.RegularExpressions.GeneratedRegex(@"^Damage (Resistance|Immunity|Vulnerability) \((.+)\)$")]
+    private static partial System.Text.RegularExpressions.Regex RegisteredConditionRegex();
 
     // Aurora spells vulnerability "VULNERAILITY" once
     [System.Text.RegularExpressions.GeneratedRegex(@"^ID_INTERNAL_CONDITION_DAMAGE_(RESISTANCE|IMMUNITY|VULNERABILITY|VULNERAILITY)_([A-Z_]+)$")]

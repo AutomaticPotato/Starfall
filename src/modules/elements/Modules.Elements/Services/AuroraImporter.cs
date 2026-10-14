@@ -438,15 +438,17 @@ internal sealed class AuroraImporter : IAuroraImporter
             documents.Add((file, document));
         }
 
-        // appends first, so every element is read with what other files add to it
+        // appends first, so every element is read with what other files add to it (Starlights' corrections among them)
+        documents.Add((BuiltIn.BuiltInContent.Prefix + "fixes.xml", BuiltIn.BuiltInContent.FixesDocument()));
         var (appended, unmatched) = ApplyAppends(documents);
         foreach (var (file, document) in documents)
         {
             AddDocument(file, document);
         }
 
-        // Starlights' own extras (an additional feat, language, proficiency, spell)
+        // Starlights' own extras (an additional feat, language, proficiency, spell), and the damage conditions the Aurora app has built in
         AddDocument(BuiltIn.BuiltInContent.Prefix + "extras.xml", BuiltIn.BuiltInContent.ExtrasDocument());
+        AddDocument(BuiltIn.BuiltInContent.Prefix + "conditions.xml", BuiltIn.BuiltInContent.ConditionsDocument());
 
         // the deities Aurora has no entry for, generated from the 5etools data
         if (_fiveETools.Available)
@@ -821,8 +823,18 @@ internal sealed class AuroraImporter : IAuroraImporter
     {
         public IEnumerable<XElement> Rules => Xml.Element("rules")?.Elements() ?? [];
 
-        public List<string> Supports { get; init; } = ((string?)Xml.Element("supports"))?
-            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .ToList() ?? [];
+        public List<string> Supports { get; init; } = [
+            .. ((string?)Xml.Element("supports"))?.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries) ?? [],
+            .. CompanionTerms(Xml)];
+
+        // a companion is chosen by its creature type, size and challenge ("Beast,(Tiny||Small||Medium),(1/4||1/8||0)" for
+        // the Beast Master), which Aurora keeps in its setters
+        private static IEnumerable<string> CompanionTerms(XElement xml) =>
+            (string?)xml.Attribute("type") != "Companion"
+                ? []
+                : xml.Element("setters")?.Elements("set")
+                    .Where(s => (string?)s.Attribute("name") is "type" or "size" or "challenge")
+                    .Select(s => s.Value.Trim())
+                    .Where(v => v.Length > 0) ?? [];
     }
 }
