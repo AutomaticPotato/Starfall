@@ -7,15 +7,14 @@ import { cn } from "@/lib/utils";
 import { AbilitiesTab } from "./abilities-tab";
 import { MagicTab } from "./magic-tab";
 import { useCharacterHeader } from "@/lib/api/builder";
+import { stepChoices, type StepAsks } from "@/lib/rules/wizard-steps";
 import { PortraitFramer } from "./portrait-framer";
 import { StartingEquipment } from "./starting-equipment";
 
-interface Step {
+interface Step extends StepAsks {
   id: string;
   title: string;
   hint: string;
-  /** the builder's sections this step's choices come from */
-  sections?: string[];
 }
 
 const STEPS: Step[] = [
@@ -25,7 +24,7 @@ const STEPS: Step[] = [
   { id: "background", title: "Background", hint: "Your background is what you did before adventuring. It gives skills and, in the 2024 rules, your ability score increases and an origin feat. Alignment and a god are optional.", sections: ["Background", "Alignment", "Deity"] },
   { id: "abilities", title: "Ability scores", hint: "Strength, Dexterity, Constitution, Intelligence, Wisdom and Charisma. Put your best scores in what your class uses most (its description says which)." },
   { id: "equipment", title: "Equipment", hint: "What the books say you start with, from your class and your background. Choose an option in each group, then add it to your equipment." },
-  { id: "spells", title: "Spells", hint: "If your class casts spells, choose them here. Not a spellcaster? Just go on." },
+  { id: "spells", title: "Spells", hint: "Choose your cantrips and spells here: your class's, and any your species, background or feats give. Open a list and point at a spell (or tap ⓘ) to read what it does. No spells? Just go on.", spells: true },
   { id: "done", title: "Done", hint: "Your character is ready to play. Save it with the bar at the bottom of the page." },
 ];
 
@@ -64,9 +63,9 @@ export function Wizard({
     }
     heading.current?.scrollIntoView({ block: "start", behavior: "smooth" });
   }, [at]);
-  const of = (s: Step) => choices.filter((c) => s.sections?.includes(c.section));
-  const open = (s: Step) => of(s).filter((c) => !c.optional && !c.selected).length;
-  const shown = of(step);
+  const asks = (s: Step) => !!(s.sections || s.spells);
+  const open = (s: Step) => stepChoices(s, choices).filter((c) => !c.optional && !c.selected).length;
+  const shown = stepChoices(step, choices);
 
   return (
     <div className="space-y-5">
@@ -94,7 +93,7 @@ export function Wizard({
                 className={cn("flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3 py-1 text-sm", i === at ? "border-primary bg-primary text-primary-foreground" : "hover:bg-muted")}
               >
                 <span className="tabular-nums opacity-70">{i + 1}</span> {s.title}
-                {s.sections && (left === 0 ? <CheckIcon className="size-3.5" /> : <span className="rounded-full bg-amber-500/90 px-1.5 text-[11px] text-black">{left}</span>)}
+                {asks(s) && (left === 0 ?<CheckIcon className="size-3.5" /> : <span className="rounded-full bg-amber-500/90 px-1.5 text-[11px] text-black">{left}</span>)}
               </button>
             </li>
           );
@@ -111,13 +110,19 @@ export function Wizard({
           </header>
 
           {step.id === "rules" && rules}
-          {step.sections && (shown.length === 0 ? <p className="text-sm text-muted-foreground">Nothing to choose here yet: pick a class first.</p> : <div className="space-y-2 rounded-lg border p-3">{shown.map((c) => renderChoice(c, c.depth === 0 && step.sections!.includes(c.name)))}</div>)}
+          {asks(step) &&
+            !step.spells &&
+            (shown.length === 0 ? (
+              <p className="text-sm text-muted-foreground">{step.spells ? "No spells to choose: your class, species and background give none (yet)." : "Nothing to choose here yet: pick a class first."}</p>
+            ) : (
+              <div className="space-y-2 rounded-lg border p-3">{shown.map((c) => renderChoice(c, c.depth === 0 && !!step.sections?.includes(c.name)))}</div>
+            ))}
           {step.id === "abilities" && <AbilitiesTab characterId={characterId} />}
           {step.id === "equipment" && <StartingEquipment characterId={characterId} choices={choices} />}
-          {step.id === "spells" && <MagicTab characterId={characterId} />}
+          {step.id === "spells" && <MagicTab characterId={characterId} spellChoices={shown} renderChoice={(c) => renderChoice(c, false)} />}
           {step.id === "done" && (
             <div className="space-y-3">
-              {STEPS.filter((s) => s.sections && open(s) > 0).map((s) => (
+              {STEPS.filter((s) => asks(s) && open(s) > 0).map((s) => (
                 <p key={s.id} className="text-sm text-amber-700 dark:text-amber-300">
                   {s.title}: {open(s)} {open(s) === 1 ? "choice is" : "choices are"} still open.{" "}
                   <button type="button" className="underline" onClick={() => setAt(STEPS.indexOf(s))}>
@@ -159,7 +164,7 @@ export function Wizard({
             )}
           </div>
         </section>
-        {step.sections ? <aside className="hidden lg:block">{aside}</aside> : <div className="hidden lg:block" />}
+        {asks(step) ? <aside className="hidden lg:block">{aside}</aside> : <div className="hidden lg:block" />}
       </div>
     </div>
   );

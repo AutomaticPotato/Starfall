@@ -40,6 +40,7 @@ import { ExtrasCard } from "./extras-card";
 import { Wizard } from "./wizard";
 import { editionOf, switchEdition, useCharacterSources, useSetCharacterSources, useSources } from "@/lib/api/sources";
 import { EditionPicker } from "@/components/edition-picker";
+import { stepChoices } from "@/lib/rules/wizard-steps";
 import { cn } from "@/lib/utils";
 
 const SECTION_ORDER = ["Class", "Species", "Background", "Alignment", "Deity"];
@@ -60,12 +61,16 @@ export function CharacterBuilderPage() {
   const [preview, setPreview] = useState<string | null>(null); // option under the pointer in an open list
   const [focus, setFocus] = useState<string | null>(null); // last picked or inspected element
   const [drawerId, setDrawerId] = useState<string | null>(null);
+  const [tab, setTab] = useState("build");
   const [params, setParams] = useSearchParams();
   const guided = params.get("guide") === "1";
 
+  // spells are chosen on the Magic tab (as in Aurora), everything else on the Build tab
+  const spellChoices = useMemo(() => stepChoices({ spells: true }, choicesData?.choices ?? []), [choicesData]);
+  const openSpells = spellChoices.filter((c) => !c.optional && !c.selected).length;
   const sections = useMemo(() => {
     const bySection = new Map<string, BuilderChoice[]>();
-    for (const choice of choicesData?.choices ?? []) {
+    for (const choice of (choicesData?.choices ?? []).filter((c) => c.type !== "Spell")) {
       if (!bySection.has(choice.section)) bySection.set(choice.section, []);
       bySection.get(choice.section)!.push(choice);
     }
@@ -115,12 +120,15 @@ export function CharacterBuilderPage() {
           onExit={() => setParams({}, { replace: true })}
         />
       ) : (
-      <Tabs defaultValue="build">
+      <Tabs value={tab} onValueChange={setTab}>
         <div className="flex flex-wrap items-center gap-2">
         <TabsList className="max-w-full justify-start overflow-x-auto">
           <TabsTrigger value="build">Build</TabsTrigger>
           <TabsTrigger value="abilities">Abilities</TabsTrigger>
-          <TabsTrigger value="magic">Magic</TabsTrigger>
+          <TabsTrigger value="magic">
+            Magic
+            {openSpells > 0 && <span className="ms-1 rounded-full bg-amber-500/90 px-1.5 text-[11px] text-black">{openSpells}</span>}
+          </TabsTrigger>
           <TabsTrigger value="equipment">Equipment</TabsTrigger>
           <TabsTrigger value="story">Story</TabsTrigger>
           <TabsTrigger value="sources">Sources</TabsTrigger>
@@ -135,7 +143,22 @@ export function CharacterBuilderPage() {
         </TabsContent>
 
         <TabsContent value="magic" className="mt-4">
-          <MagicTab characterId={id} />
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_24rem] xl:grid-cols-[minmax(0,1fr)_28rem]">
+            <div className="min-w-0">
+              <MagicTab
+                characterId={id}
+                spellChoices={spellChoices}
+                renderChoice={(choice) => (
+                  <ChoiceRow key={choice.ruleId} characterId={id} choice={choice} hideLabel={false} onHighlight={setPreview} onPicked={setFocus} onInspect={inspect} />
+                )}
+              />
+            </div>
+            <aside className="hidden lg:block">
+              <div className="sticky top-20 max-h-[calc(100vh-6rem)] overflow-y-auto rounded-lg border bg-background/60 p-5">
+                <ElementPanel id={preview ?? focus} emptyHint="Open a spell list and point at a spell to read what it does, or use the ⓘ button next to a pick." />
+              </div>
+            </aside>
+          </div>
         </TabsContent>
 
         <TabsContent value="equipment" className="mt-4">
@@ -161,6 +184,23 @@ export function CharacterBuilderPage() {
             {/* min-w-0: a long pick must not stretch the column past a phone's screen */}
             <div className="min-w-0 space-y-4">
               {isLoading && <Spinner className="mx-auto my-12 size-6" />}
+              {spellChoices.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setTab("magic")}
+                  className={cn(
+                    "flex w-full items-center gap-2 rounded-lg border px-4 py-3 text-left text-sm hover:bg-muted/60",
+                    openSpells > 0 ? "border-amber-500/60 bg-amber-500/10" : "bg-background/60",
+                  )}
+                >
+                  <SparklesIcon className="size-5 shrink-0 text-muted-foreground" />
+                  <span className="min-w-0 flex-1">
+                    <span className="font-medium">Spells</span>{" "}
+                    {openSpells > 0 ? `${openSpells} to choose: on the Magic tab` : "all chosen: see or change them on the Magic tab"}
+                  </span>
+                  <span className="shrink-0 underline">Magic tab</span>
+                </button>
+              )}
               {sections
                 .filter(([section]) => section !== "Extras")
                 .map(([section, choices]) => (

@@ -6,8 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Spinner } from "@/components/ui/spinner";
+import type { BuilderChoice } from "@/lib/api/builder";
 import { useMagic, useSaveMagic, useSpellcasting, useSpellIndex, type SpellFigures } from "@/lib/api/magic";
 import { normalizeText } from "@/lib/rules/picker";
+import { spellChoiceGroups } from "@/lib/rules/wizard-steps";
 import {
   casterLevelShare,
   expended,
@@ -35,18 +37,26 @@ import { cn } from "@/lib/utils";
 const signed = (n: number) => (n >= 0 ? `+${n}` : `${n}`);
 
 /**
- * The character's spellcasting, like Aurora's Magic tab: for each spellcasting class its ability, spell attack and
- * save DC, the spells it has by level and, for classes that prepare, which are prepared today (always-prepared
+ * The character's spellcasting, like Aurora's Magic tab: first the spells to choose (the builder's spell choices,
+ * from the class, the species, the background and feats), then for each spellcasting class its ability, spell attack
+ * and save DC, the spells it has by level and, for classes that prepare, which are prepared today (always-prepared
  * spells do not count). Spell slots are ticked off as they are spent and come back on a rest.
  */
-export function MagicTab({ characterId }: { characterId: string }) {
+export function MagicTab({ characterId, spellChoices = [], renderChoice }: { characterId: string; spellChoices?: BuilderChoice[]; renderChoice?: (choice: BuilderChoice) => ReactNode }) {
   const { data: casting, isLoading } = useSpellcasting(characterId);
   const { data: magic } = useMagic(characterId);
   const { byId: figures } = useSpellIndex();
   const save = useSaveMagic(characterId);
   const failed = (e: Error) => toast.error("Could not save", { description: e.message });
+  const picks = renderChoice ? <SpellPicks choices={spellChoices} renderChoice={renderChoice} /> : null;
 
-  if (isLoading || !casting || !magic) return <Spinner className="mx-auto my-8 size-5" />;
+  if (isLoading || !casting || !magic)
+    return (
+      <div className="max-w-4xl space-y-5">
+        {picks}
+        <Spinner className="mx-auto my-8 size-5" />
+      </div>
+    );
 
   const casters = casting.casters;
   const slots = spellSlots(casters);
@@ -55,14 +65,18 @@ export function MagicTab({ characterId }: { characterId: string }) {
 
   if (casters.length === 0 && casting.otherSpells.length === 0) {
     return (
-      <div className="max-w-4xl rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
-        No spellcasting. Spells from a class, species, feat or magic item show up here.
+      <div className="max-w-4xl space-y-5">
+        {picks}
+        {spellChoices.length === 0 && (
+          <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">No spellcasting. Spells from a class, species, feat or magic item show up here.</div>
+        )}
       </div>
     );
   }
 
   return (
     <div className="max-w-4xl space-y-5">
+      {picks}
       {(Object.keys(slots).length > 0 || pact) && (
         <section className="rounded-lg border">
           <h3 className="flex flex-wrap items-center gap-x-2 gap-y-2 border-b bg-muted/30 px-3 py-2 font-heading">
@@ -133,6 +147,38 @@ export function MagicTab({ characterId }: { characterId: string }) {
         </section>
       )}
     </div>
+  );
+}
+
+/**
+ * The spells to choose, grouped by what gives them (class, species, background and feats), each a pick like the
+ * Build tab's: open the list, point at (or tap ⓘ next to) a spell to read what it does, pick it.
+ */
+function SpellPicks({ choices, renderChoice }: { choices: BuilderChoice[]; renderChoice: (choice: BuilderChoice) => ReactNode }) {
+  const groups = spellChoiceGroups(choices);
+  if (groups.length === 0) return null;
+  const open = groups.reduce((n, g) => n + g.open, 0);
+  return (
+    <section className="rounded-lg border" aria-labelledby="spell-picks">
+      <h3 id="spell-picks" className="flex flex-wrap items-center gap-x-2 gap-y-1 border-b bg-muted/30 px-3 py-2 font-heading">
+        <BookOpenIcon className="size-4 text-muted-foreground" />
+        Choose your spells
+        <span className={cn("ms-auto rounded-full px-2 py-0.5 font-sans text-xs", open > 0 ? "bg-amber-500/90 text-black" : "bg-muted text-muted-foreground")}>
+          {open > 0 ? `${open} to choose` : "all chosen"}
+        </span>
+      </h3>
+      <div className="space-y-4 p-3">
+        {groups.map((g) => (
+          <div key={g.title} className="space-y-2">
+            <h4 className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+              {g.title}
+              {g.open > 0 && <span className="text-xs text-amber-700 dark:text-amber-300">{g.open} open</span>}
+            </h4>
+            {g.choices.map((c) => renderChoice(c))}
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }
 
