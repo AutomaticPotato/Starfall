@@ -124,6 +124,8 @@ export interface Resolved {
   entry: InventoryEntry;
   item?: ItemInfo;
   base?: ItemInfo;
+  /** the base is the one the magic item names outright, not one picked for this entry: it gives figures, not the name */
+  baseImplied: boolean;
   name: string;
   /** weight of one, in pounds */
   weight: number;
@@ -137,7 +139,11 @@ export interface Resolved {
 
 export function resolve(entry: InventoryEntry, catalog: Catalog): Resolved {
   const item = entry.elementId ? catalog.get(entry.elementId) : undefined;
-  const base = entry.baseElementId ? catalog.get(entry.baseElementId) : undefined;
+  const chosen = entry.baseElementId ? catalog.get(entry.baseElementId) : undefined;
+  // a magic item that names its weapon or armor outright (the Dagger of the Unbodied's "Dagger") is that weapon even
+  // when no base was picked for it (the DM gave it, a trade): its finesse, damage type, range and proficiency
+  const implied = chosen ? undefined : namedBase(item, catalog);
+  const base = chosen ?? implied;
   const custom = entry.custom ?? undefined;
   const weight = custom?.weight ?? (base ? (base.weight ?? 0) + (item?.weight ?? 0) : (item?.weight ?? 0));
   const container = item?.container
@@ -149,7 +155,8 @@ export function resolve(entry: InventoryEntry, catalog: Catalog): Resolved {
     entry,
     item,
     base,
-    name: displayName(entry, item, base),
+    baseImplied: !!implied,
+    name: displayName(entry, item, chosen),
     weight,
     categories: item ? [...new Set([...item.categories, ...(base?.categories ?? [])])] : custom?.category ? [custom.category] : ["Adventuring Gear"],
     magic: !!item?.magic || !!custom?.magic,
@@ -162,7 +169,31 @@ export function resolve(entry: InventoryEntry, catalog: Catalog): Resolved {
 }
 
 /** An entry's name as lists show it (the player's own, else the generated one). */
-export const generatedNameOf = (r: Resolved) => displayName({ ...r.entry, name: null }, r.item, r.base);
+export const generatedNameOf = (r: Resolved) => displayName({ ...r.entry, name: null }, r.item, r.baseImplied ? undefined : r.base);
+
+const namedBases = new WeakMap<Catalog, Map<string, ItemInfo | undefined>>();
+
+/**
+ * The plain weapon or armor a magic item names outright ("Dagger", "Plate"), as the server's base candidates match it;
+ * the 2024 book's when both books have it (the same figures, and its mastery). None for a rule over categories (ID_…).
+ */
+export function namedBase(item: ItemInfo | undefined, catalog: Catalog): ItemInfo | undefined {
+  const rule = item?.base?.rule?.trim();
+  if (!item?.base || !rule || rule.includes("ID_")) return undefined;
+  const key = `${item.base.kind}:${rule.toLowerCase()}`;
+  let cache = namedBases.get(catalog);
+  if (!cache) namedBases.set(catalog, (cache = new Map()));
+  if (cache.has(key)) return cache.get(key);
+  const name = rule.toLowerCase();
+  const found = [...catalog.values()].filter((i) => {
+    if (i.magic || (item.base!.kind === "Weapon" ? !i.weapon : !i.armor)) return false;
+    const n = i.name.toLowerCase();
+    return n === name || n === `${name} armor` || n.startsWith(`${name} (`);
+  });
+  const pick = found.find((i) => i.source === "Player’s Handbook (2024)") ?? found[0];
+  cache.set(key, pick);
+  return pick;
+}
 
 /** The player's name, else Aurora's name-format with the base item ("Flame Tongue Longsword", "Longsword +1"). */
 export function displayName(entry: InventoryEntry, item?: ItemInfo, base?: ItemInfo): string {

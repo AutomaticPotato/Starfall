@@ -125,6 +125,27 @@ describe("magic weapons with dice of their own", () => {
     expect(r.weapon?.properties).toEqual(["Finesse", "Light", "Thrown"]);
     expect(resolve(entry("d", "dagger"), withIt).weapon?.damage).toBe("1d4");
   });
+
+  it("are the weapon they name when the DM gave them without picking one (no base on the entry)", () => {
+    const unbodied: ItemInfo = {
+      id: "unbodied", name: "Dagger of the Unbodied", elementType: "Magic Item", auroraId: "ID_UNBODIED", categories: ["Magic Weapons"],
+      magic: { rarity: "Uncommon" } as ItemInfo["magic"], weapon: { damage: "1d6" }, base: { kind: "Weapon", rule: "Dagger" },
+    };
+    const dagger2024: ItemInfo = { ...catalog.get("dagger")!, id: "dagger24", source: "Player’s Handbook (2024)", weapon: { ...catalog.get("dagger")!.weapon!, mastery: "Nick" } };
+    const withIt = new Map(catalog).set("unbodied", unbodied).set("dagger24", dagger2024);
+    const r = resolve(entry("u", "unbodied"), withIt);
+    expect(r.weapon).toMatchObject({ damage: "1d6", damageType: "piercing", range: "20/60", properties: ["Finesse", "Light", "Thrown"], mastery: "Nick" });
+    expect(r.base?.id).toBe("dagger24");
+    expect(r.baseImplied).toBe(true);
+    expect(r.name).toBe("Dagger of the Unbodied");
+    // finesse: Dexterity for its attack and damage, like any dagger
+    const lines = sheetAttacks(inv(entry("u", "unbodied", { equipped: "Main Hand" })), withIt, facts({ STR: 8, DEX: 18 }, {}, ["ID_PROFICIENCY_WEAPON_PROFICIENCY_DAGGER"]));
+    expect(lines[0]).toMatchObject({ name: "Dagger of the Unbodied", attack: "+7 vs AC", damage: "1d6+4 piercing" });
+  });
+
+  it("imply no base when their rule is a category of weapons (+1 Weapon)", () => {
+    expect(resolve(entry("w", "weapon+1"), catalog).base).toBeUndefined();
+  });
 });
 
 describe("equipping and attunement", () => {

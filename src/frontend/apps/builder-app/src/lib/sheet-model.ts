@@ -92,7 +92,7 @@ const byName = (a: { name: string }, b: { name: string }) => a.name.localeCompar
 
 /** Aurora's name for an item in lists: its own name, or the magic item's made from its base ("Spear +1"), not the player's. */
 export function generatedName(r: Resolved): string {
-  return r.entry.custom ? (r.entry.name ?? "Homebrew item") : displayName({ ...r.entry, name: null }, r.item, r.base);
+  return r.entry.custom ? (r.entry.name ?? "Homebrew item") : displayName({ ...r.entry, name: null }, r.item, r.baseImplied ? undefined : r.base);
 }
 
 /**
@@ -191,7 +191,7 @@ export function sheetItemCards(inventory: Inventory, catalog: Catalog, texts: Re
     .map((e) => resolve(e, catalog))
     .map((r) => {
       const own = texts.get(r.item?.id ?? "");
-      const base = r.base ? texts.get(r.base.id) : own;
+      const base = r.base && !r.baseImplied ? texts.get(r.base.id) : own;
       const custom = r.entry.custom;
       return {
         title: r.entry.name?.trim() || generatedName(r),
