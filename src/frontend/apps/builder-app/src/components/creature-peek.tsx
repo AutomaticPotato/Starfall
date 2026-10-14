@@ -4,11 +4,13 @@
  * A Compendium creature shows its book's stat block, a homebrew monster the Homebrew page's.
  */
 import { useEffect, useRef, useState, type PointerEvent, type ReactNode } from "react";
-import { EntryView } from "@/components/lore/entry-view";
+import { LoreRenderProvider } from "@/components/lore/render";
+import { StatBlock } from "@/components/lore/stat-block";
 import { HomebrewStatBlock } from "@/components/homebrew-stat-block";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Spinner } from "@/components/ui/spinner";
 import { useLoreEntry, useLoreMeta } from "@/lib/lore/data";
+import { monsterSubtitle } from "@/lib/lore/monster-text";
 import type { HomebrewMonster } from "@/lib/rules/homebrew";
 import { cn } from "@/lib/utils";
 
@@ -58,5 +60,13 @@ function BestiaryBlock({ k }: { k: string }) {
   const entry = useLoreEntry(meta.data, "bestiary", k);
   if (meta.isLoading || entry.isLoading) return <Spinner className="mx-auto my-4 size-5" />;
   if (!meta.data || !entry.data?.entry) return <p className="text-muted-foreground">No stat block found for this creature.</p>;
-  return <EntryView meta={meta.data} category="bestiary" entry={entry.data.entry} compact />;
+  // the numbers only: its picture and lore stay on its Compendium page (a phone would scroll past the picture first)
+  const m = entry.data.entry;
+  return (
+    <LoreRenderProvider value={{ meta: meta.data }}>
+      <h3 className="font-heading text-lg leading-tight">{m.name}</h3>
+      <p className="mb-2 text-xs italic text-muted-foreground">{monsterSubtitle(m as Record<string, unknown>)}</p>
+      <StatBlock meta={meta.data} m={m} />
+    </LoreRenderProvider>
+  );
 }
