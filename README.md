@@ -22,7 +22,8 @@
 - **Character sheets like Aurora's**, on screen and as PDF, built in (nothing to copy from Aurora), with the portrait
   sized and placed as you like and a last page showing the whole picture; bring in players' Aurora character files.
 - **Builder**: multiclassing, 2014 and 2024 rules (or both), Save / Discard, items that cast spells, extra feats,
-  languages and proficiencies.
+  languages and proficiencies. Each option in a choice says what it needs ("Artificer Level 6+"); the ones a character
+  doesn't qualify for yet are greyed out at the end of the list.
 - **Battle Action Simulator**: attacks, spells, slots and charges, familiars, conditions; magic items under the action
   they take (wands and staffs cast, potions, charms with charges), and a potion or healing charm used on another
   party member goes straight into their simulator; prepare spells right there, and cast one the player forgot to
@@ -181,6 +182,9 @@ cd starlights && git pull
 cd deploy && STARLIGHTS_COMMIT=$(git rev-parse --short HEAD) docker compose build && docker compose up -d
 ```
 
+This version changes how content is imported (Aurora's appends, and what each option needs), so import it again once and update the characters: `./admin.sh import AuroraLegacy.index --replace`, then `./admin.sh import homebrew --replace` if you have homebrew, then `./admin.sh reprocess`. Characters keep their picks. Coming from a version before the sheet was built in: nothing is needed from Aurora any more, and the
+`deploy/data/aurora-sheets` folder can be deleted.
+
 New content: press **Save and update now** on the Content page, or run `./admin.sh update`. The database changes a new
 version needs are applied by themselves when it starts. To get new content every night, add a cron job (`crontab -e`):
 
@@ -258,7 +262,8 @@ docker rmi starlights/backend starlights/web
   [LICENSE](./LICENSE)).
 - [Aurora Legacy](https://github.com/AuroraLegacy/elements): the community's content files.
 - [5etools](https://github.com/5etools-mirror-3/5etools-src): the data behind the Compendium of Lore.
-- The PDF sheet: Aurora Builder's sheet templates, and the fonts [Carlito](https://github.com/googlefonts/carlito) and
+- The PDF sheet: Aurora Builder's sheet templates (their artwork and the Dungeons & Dragons logos belong to their
+  owners), and the fonts [Carlito](https://github.com/googlefonts/carlito) and
   Adobe's [Source Sans 3](https://github.com/adobe-fonts/source-sans) (SIL Open Font License); see
   [the sheet's folder](./src/frontend/apps/builder-app/src/assets/sheet/README.md).
 - This fork (Docker packaging and the features listed above) by C Hassapis.
