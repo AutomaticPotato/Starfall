@@ -1,20 +1,17 @@
-import { AlertTriangleIcon, BookOpenIcon, CheckIcon, MoonIcon, SearchIcon, SparklesIcon, SunriseIcon, WandSparklesIcon } from "lucide-react";
+import { AlertTriangleIcon, BookOpenIcon, CheckIcon, MoonIcon, SparklesIcon, SunriseIcon, WandSparklesIcon } from "lucide-react";
 import { useMemo, useState, type ReactNode } from "react";
 import { toast } from "sonner";
-import { InfoCard } from "@/components/info-card";
+import { SpellBrowser, SpellCard } from "@/components/spells/spell-browser";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Spinner } from "@/components/ui/spinner";
 import type { BuilderChoice } from "@/lib/api/builder";
 import { useMagic, useSaveMagic, useSpellcasting, useSpellIndex, type SpellFigures } from "@/lib/api/magic";
-import { normalizeText } from "@/lib/rules/picker";
 import { spellChoiceGroups } from "@/lib/rules/wizard-steps";
 import {
   casterLevelShare,
   expended,
   isPrepared,
-  levelName,
   longRest,
   nextLevelSummary,
   ordinal,
@@ -43,16 +40,18 @@ const signed = (n: number) => (n >= 0 ? `+${n}` : `${n}`);
  * spells do not count). Spell slots are ticked off as they are spent and come back on a rest.
  */
 export function MagicTab({ characterId, spellChoices = [], renderChoice }: { characterId: string; spellChoices?: BuilderChoice[]; renderChoice?: (choice: BuilderChoice) => ReactNode }) {
-  const { data: casting, isLoading } = useSpellcasting(characterId);
-  const { data: magic } = useMagic(characterId);
+  const { data: casting, isLoading, error: castingError } = useSpellcasting(characterId);
+  const { data: magic, error: magicError } = useMagic(characterId);
   const { byId: figures } = useSpellIndex();
   const save = useSaveMagic(characterId);
   const failed = (e: Error) => toast.error("Could not save", { description: e.message });
   const picks = renderChoice ? <SpellPicks choices={spellChoices} renderChoice={renderChoice} /> : null;
 
+  if (castingError || magicError) return <div className="space-y-4">{picks}<p role="alert">Could not load spellcasting. Reload the page to try again.</p></div>;
+
   if (isLoading || !casting || !magic)
     return (
-      <div className="max-w-4xl space-y-5">
+      <div className="spell-browser max-w-6xl space-y-5">
         {picks}
         <Spinner className="mx-auto my-8 size-5" />
       </div>
@@ -65,7 +64,7 @@ export function MagicTab({ characterId, spellChoices = [], renderChoice }: { cha
 
   if (casters.length === 0 && casting.otherSpells.length === 0) {
     return (
-      <div className="max-w-4xl space-y-5">
+      <div className="spell-browser max-w-6xl space-y-5">
         {picks}
         {spellChoices.length === 0 && (
           <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">No spellcasting. Spells from a class, species, feat or magic item show up here.</div>
@@ -75,10 +74,10 @@ export function MagicTab({ characterId, spellChoices = [], renderChoice }: { cha
   }
 
   return (
-    <div className="max-w-4xl space-y-5">
+    <div className="spell-browser max-w-6xl space-y-5">
       {picks}
       {(Object.keys(slots).length > 0 || pact) && (
-        <section className="rounded-lg border">
+        <section className="surface">
           <h3 className="flex flex-wrap items-center gap-x-2 gap-y-2 border-b bg-muted/30 px-3 py-2 font-heading">
             <SparklesIcon className="size-4 text-muted-foreground" />
             Spell slots
@@ -89,19 +88,20 @@ export function MagicTab({ characterId, spellChoices = [], renderChoice }: { cha
             )}
             <span className="ms-auto flex gap-2">
               {pact && (
-                <Button size="sm" variant="outline" onClick={() => change(shortRest)} title="Pact magic slots come back">
-                  <SunriseIcon /> Short rest
+                <Button size="sm" variant="outline" onClick={() => change(shortRest)} title="Pact magic slots come back" disabled={save.isPending}>
+                  <SunriseIcon /> Restore pact slots
                 </Button>
               )}
               <Button
                 size="sm"
                 variant="outline"
+                disabled={save.isPending}
                 onClick={() => {
                   change(longRest);
                   toast.success("Every slot is back");
                 }}
               >
-                <MoonIcon /> Long rest
+                <MoonIcon /> Restore all slots
               </Button>
             </span>
           </h3>
@@ -129,11 +129,11 @@ export function MagicTab({ characterId, spellChoices = [], renderChoice }: { cha
       )}
 
       {casters.map((c) => (
-        <CasterCard key={c.name} caster={c} magic={magic} slots={slots} figures={figures} proficiency={casting.proficiencyBonus} onChange={change} />
+        <CasterCard key={c.name} caster={c} magic={magic} figures={figures} proficiency={casting.proficiencyBonus} busy={save.isPending} onChange={change} />
       ))}
 
       {casting.otherSpells.length > 0 && (
-        <section className="rounded-lg border">
+        <section className="surface">
           <h3 className="flex flex-wrap items-baseline gap-x-2 border-b bg-muted/30 px-3 py-2 font-heading">
             <WandSparklesIcon className="size-4 self-center text-muted-foreground" />
             Other spells
@@ -155,11 +155,14 @@ export function MagicTab({ characterId, spellChoices = [], renderChoice }: { cha
  * Build tab's: open the list, point at (or tap ⓘ next to) a spell to read what it does, pick it.
  */
 function SpellPicks({ choices, renderChoice }: { choices: BuilderChoice[]; renderChoice: (choice: BuilderChoice) => ReactNode }) {
+  const [level, setLevel] = useState("all");
+  const levels = [...new Set(choices.map((c) => c.level || 1))].sort((a, b) => a - b);
   const groups = spellChoiceGroups(choices);
+  const visible = spellChoiceGroups(choices.filter((c) => level === "all" || String(c.level || 1) === level));
   if (groups.length === 0) return null;
   const open = groups.reduce((n, g) => n + g.open, 0);
   return (
-    <section className="rounded-lg border" aria-labelledby="spell-picks">
+    <section className="surface" aria-labelledby="spell-picks">
       <h3 id="spell-picks" className="flex flex-wrap items-center gap-x-2 gap-y-1 border-b bg-muted/30 px-3 py-2 font-heading">
         <BookOpenIcon className="size-4 text-muted-foreground" />
         Choose your spells
@@ -168,7 +171,12 @@ function SpellPicks({ choices, renderChoice }: { choices: BuilderChoice[]; rende
         </span>
       </h3>
       <div className="space-y-4 p-3">
-        {groups.map((g) => (
+        <p className="text-sm text-muted-foreground" role="status">{choices.filter((c) => c.selected).length} of {choices.length} selections filled · {open} required selections remaining. Preparation is separate below.</p>
+        <nav className="flex flex-wrap gap-2" aria-label="Spell progression levels">
+          <Button variant={level === "all" ? "default" : "outline"} aria-pressed={level === "all"} onClick={() => setLevel("all")}>All levels</Button>
+          {levels.map((n) => { const remaining = choices.filter((c) => (c.level || 1) === n && !c.optional && !c.selected).length; return <Button key={n} variant={level === String(n) ? "default" : "outline"} aria-pressed={level === String(n)} onClick={() => setLevel(String(n))}>Level {n}{remaining ? ` · ${remaining} left` : " · ✓"}</Button>; })}
+        </nav>
+        {visible.map((g) => (
           <div key={g.title} className="space-y-2">
             <h4 className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
               {g.title}
@@ -201,7 +209,7 @@ function SlotRow({ label, note, total, spent, onSpent }: { label: string; note?:
               aria-label={`${label} slot ${i + 1} of ${total}${isSpent ? ", spent" : ""}`}
               onClick={() => onSpent(isSpent ? i : i + 1)}
               className={cn(
-                "flex size-7 items-center justify-center rounded-md border transition-colors focus-visible:outline-2 focus-visible:outline-ring",
+                "flex size-11 items-center justify-center rounded-md border transition-colors focus-visible:outline-2 focus-visible:outline-ring",
                 isSpent ? "border-muted-foreground/40 bg-muted text-muted-foreground" : "border-primary/60 bg-primary/10 hover:bg-primary/20",
               )}
             >
@@ -268,22 +276,21 @@ interface Row {
 function CasterCard({
   caster: c,
   magic,
-  slots,
   figures,
   proficiency,
+  busy,
   onChange,
 }: {
   caster: Caster;
   magic: MagicState;
-  slots: Record<number, number>;
   figures: Map<string, SpellFigures> | undefined;
   proficiency: number;
+  busy: boolean;
   onChange: (fn: (m: MagicState) => MagicState) => void;
 }) {
   const { count, max } = preparedCount(c, magic);
   const stale = new Set(stalePrepared(c, magic));
   const [showAll, setShowAll] = useState(() => c.knowsWholeList && count === 0);
-  const [query, setQuery] = useState("");
 
   const rows = useMemo(() => {
     const stale = new Set(stalePrepared(c, magic));
@@ -302,17 +309,12 @@ function CasterCard({
     return [...byId.values()].sort((a, b) => a.spell.level - b.spell.level || a.spell.name.localeCompare(b.spell.name));
   }, [c, magic, figures]);
 
-  const q = normalizeText(query);
-  const visible = rows.filter((r) => {
-    if (c.knowsWholeList && !showAll && r.preparable && !r.prepared && !r.stale) return false;
-    return !q || normalizeText(r.spell.name).includes(q);
-  });
-  const levels = [...new Set(visible.map((r) => r.spell.level))].sort((a, b) => a - b);
+  const visible = rows.filter((r) => !(c.knowsWholeList && !showAll && r.preparable && !r.prepared && !r.stale));
   const next = nextLevelSummary(c);
   const lists = c.lists.join(", ");
 
   return (
-    <section className="rounded-lg border">
+    <section className="surface">
       <div className="flex flex-wrap items-center gap-2 border-b bg-muted/30 px-3 py-2">
         <h3 className="me-2 flex items-center gap-2 font-heading">
           <BookOpenIcon className="size-4 text-muted-foreground" />
@@ -328,10 +330,14 @@ function CasterCard({
           <p className="mb-2 font-medium">Spell save DC</p>
           <Breakdown parts={[["Base", 8], ["Proficiency bonus", proficiency], [c.ability ?? "Ability", c.abilityModifier], ["Items and features", c.dcBonus]]} total={String(c.dc)} />
         </Figure>
+        {!c.knowsWholeList && <Figure label={c.spellbook ? "In spellbook" : "Known spells"} value={c.spells.filter((s) => s.level > 0 && s.kind !== "always").length} />}
+        <Figure label="Cantrips" value={c.spells.filter((s) => s.level === 0).length} />
+        <span className="text-sm text-muted-foreground">{c.edition} rules</span>
         {c.prepares && max !== null && <Figure label="Prepared" value={`${count} / ${max}`} warn={count > max} />}
       </div>
 
       <div className="space-y-3 p-3">
+        {c.prepares && max !== null && <p role="status" className="text-sm font-medium">{count} / {max} prepared · {Math.max(0, max - count)} remaining</p>}
         <p className="text-sm text-muted-foreground">
           {c.pact
             ? `Pact magic: all your slots are ${ordinal(c.pact.level)} level and come back after a short rest.`
@@ -378,114 +384,22 @@ function CasterCard({
                 </button>
               ))}
             </div>
-            {showAll && (
-              <div className="relative min-w-40 flex-1">
-                <SearchIcon className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-                <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search spells…" className="h-8 pl-8" aria-label={`Search ${c.name} spells`} />
-              </div>
-            )}
+
           </div>
         )}
 
-        {levels.length === 0 && <p className="text-sm text-muted-foreground">{q ? "No spell matches." : "No spells yet."}</p>}
-        {levels.map((level) => (
-          <div key={level} className="rounded-md border">
-            <p className="flex items-baseline gap-2 border-b px-3 py-1.5 text-sm font-medium">
-              {levelName(level)}
-              {level > 0 && (
-                <span className="text-xs font-normal text-muted-foreground">
-                  {c.pact ? (level <= c.pact.level ? `cast with a ${ordinal(c.pact.level)}-level pact slot` : "no slot of this level yet") : slots[level] ? `${slots[level]} slot${slots[level] === 1 ? "" : "s"}` : "no slots of this level yet"}
-                </span>
-              )}
-            </p>
-            <div className="divide-y">
-              {visible
-                .filter((r) => r.spell.level === level)
-                .map((r) => (
-                  <SpellRow
-                    key={r.spell.elementId}
-                    // the class's own Spellcasting feature says nothing new on every row
-                    spell={/^Spellcasting\b/.test(r.spell.origin) ? { ...r.spell, origin: "" } : r.spell}
-                    figures={figures?.get(r.spell.elementId)}
-                    stale={r.stale}
-                    toggle={
-                      r.preparable
-                        ? {
-                            on: r.prepared,
-                            problem: r.prepared ? null : prepareProblem(c, magic, r.spell.elementId),
-                            onToggle: () => onChange((m) => togglePrepared(c, m, r.spell.elementId)),
-                          }
-                        : undefined
-                    }
-                  />
-                ))}
-            </div>
-          </div>
-        ))}
+        <SpellBrowser label={`${c.name} spells`} entries={visible.map((r) => {
+          const problem = r.preparable && !r.prepared ? prepareProblem(c, magic, r.spell.elementId) : null;
+          return { id: r.spell.elementId, name: r.spell.name, figures: { ...figures?.get(r.spell.elementId), level: r.spell.level }, source: figures?.get(r.spell.elementId)?.source,
+            status: r.spell.kind === "always" ? "Always prepared · does not count toward your limit" : r.spell.level === 0 ? "Cantrip · no slot needed" : r.prepared ? "Prepared" : r.preparable ? "Not prepared" : "Known",
+            requirement: r.stale ? "No longer available with your current level or enabled sources. Remove it to free a selection." : problem,
+            action: r.preparable ? <Button variant={r.prepared ? "outline" : "default"} disabled={busy || !!problem} onClick={() => { onChange((m) => togglePrepared(c, m, r.spell.elementId)); toast(`${r.spell.name} ${r.prepared ? "unprepared" : "prepared"}`); }}>{r.prepared ? "Unprepare" : "Prepare"}</Button> : undefined };
+        })} />
       </div>
     </section>
   );
 }
 
-function SpellRow({
-  spell,
-  figures,
-  stale,
-  toggle,
-}: {
-  spell: KnownSpell;
-  figures: SpellFigures | undefined;
-  stale?: boolean;
-  toggle?: { on: boolean; problem: string | null; onToggle: () => void };
-}) {
-  const always = spell.kind === "always";
-  return (
-    <div className={cn("flex items-center gap-2 px-3 py-1.5 text-sm", toggle && !toggle.on && "text-muted-foreground")}>
-      {toggle ? (
-        <button
-          type="button"
-          role="checkbox"
-          aria-checked={toggle.on}
-          aria-label={`Prepare ${spell.name}`}
-          title={toggle.problem ?? (toggle.on ? "Prepared: click to unprepare" : "Click to prepare")}
-          disabled={!!toggle.problem}
-          onClick={toggle.onToggle}
-          className={cn(
-            "flex size-6 shrink-0 items-center justify-center rounded border focus-visible:outline-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-40",
-            toggle.on ? "border-primary bg-primary text-primary-foreground" : "border-muted-foreground/50 hover:border-foreground",
-          )}
-        >
-          {toggle.on && <CheckIcon className="size-4" />}
-        </button>
-      ) : (
-        <span className="flex size-6 shrink-0 items-center justify-center" aria-hidden>
-          {always && <CheckIcon className="size-4 text-primary-text" />}
-        </span>
-      )}
-      <span className="min-w-0 flex-1">
-        <InfoCard id={spell.elementId} className={cn("font-medium", toggle && !toggle.on && "font-normal")}>
-          {spell.name}
-        </InfoCard>
-        {figures?.ritual && <Tag title="Ritual: can also be cast as a ritual, taking 10 minutes longer and no slot">R</Tag>}
-        {figures?.concentration && <Tag title="Concentration: ends if you cast another concentration spell or lose concentration">C</Tag>}
-        {always && <Tag title="Always prepared: does not count toward your prepared spells">always prepared</Tag>}
-        {stale && <Tag title="No longer fits: a lower level or a book switched off">no longer fits</Tag>}
-        {spell.origin && <span className="ms-2 text-xs text-muted-foreground">{spell.origin}</span>}
-      </span>
-      {figures && (
-        <span className="hidden max-w-[40%] shrink-0 truncate text-xs text-muted-foreground sm:inline">
-          {/* "1 reaction, which you take when…": the trigger is on the spell's card */}
-          {[figures.castingTime?.split(",")[0], figures.range].filter(Boolean).join(" · ")}
-        </span>
-      )}
-    </div>
-  );
-}
-
-function Tag({ children, title }: { children: ReactNode; title: string }) {
-  return (
-    <span title={title} className="ms-1.5 inline-block rounded border px-1 text-[11px] font-medium uppercase leading-4 tracking-wide text-muted-foreground">
-      {children}
-    </span>
-  );
+function SpellRow({ spell, figures }: { spell: KnownSpell; figures: SpellFigures | undefined }) {
+  return <SpellCard entry={{ id: spell.elementId, name: spell.name, figures: { ...figures, level: spell.level }, source: figures?.source, status: spell.kind === "always" ? "Always prepared" : spell.origin || "Known" }} />;
 }

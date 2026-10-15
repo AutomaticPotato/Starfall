@@ -34,6 +34,7 @@ import { SourcesPicker } from "@/components/sources-picker";
 import { StoryTab } from "./story-tab";
 import { AbilitiesTab } from "./abilities-tab";
 import { EquipmentTab } from "./equipment-tab";
+import { SpellChoice } from "./spell-choice";
 import { MagicTab } from "./magic-tab";
 import { AuroraUpdateDialog } from "../aurora-import-dialog";
 import { CharacterCampaigns } from "./character-campaigns";
@@ -125,7 +126,7 @@ export function CharacterBuilderPage() {
       <Tabs value={tab} onValueChange={setTab}>
         <ToDoBar open={openTabs} loading={isLoading} tab={tab} setTab={setTab} />
         <div className="flex flex-wrap items-center gap-2">
-        <TabsList className="max-w-full justify-start overflow-x-auto">
+        <TabsList className="h-auto max-w-full flex-wrap justify-start">
           <TabsTrigger value="build">
             Build
             {openTabs.build > 0 && <span className="ms-1 rounded-full bg-amber-500/90 px-1.5 text-[11px] text-black">{openTabs.build}</span>}
@@ -152,22 +153,7 @@ export function CharacterBuilderPage() {
         </TabsContent>
 
         <TabsContent value="magic" className="mt-4">
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_24rem] xl:grid-cols-[minmax(0,1fr)_28rem]">
-            <div className="min-w-0">
-              <MagicTab
-                characterId={id}
-                spellChoices={spellChoices}
-                renderChoice={(choice) => (
-                  <ChoiceRow key={choice.ruleId} characterId={id} choice={choice} hideLabel={false} onHighlight={setPreview} onPicked={setFocus} onInspect={inspect} />
-                )}
-              />
-            </div>
-            <aside className="hidden lg:block">
-              <div className="sticky top-20 max-h-[calc(100vh-6rem)] overflow-y-auto rounded-lg border bg-background/60 p-5">
-                <ElementPanel id={preview ?? focus} emptyHint="Open a spell list and point at a spell to read what it does, or use the ⓘ button next to a pick." />
-              </div>
-            </aside>
-          </div>
+          <MagicTab characterId={id} spellChoices={spellChoices} renderChoice={(choice) => <SpellChoice key={`${choice.registrationId}:${choice.ruleId}`} characterId={id} choice={choice} />} />
         </TabsContent>
 
         <TabsContent value="equipment" className="mt-4">
@@ -569,6 +555,8 @@ function ChoiceRow({
     choice.level > 0 ? `level ${choice.level}` : null,
     choice.depth > 0 && !choice.name.includes(choice.parentName) ? `from ${choice.parentName}` : null,
   ].filter(Boolean);
+
+  if (choice.type === "Spell") return <SpellChoice characterId={characterId} choice={choice} />;
 
   // a choice still to make stands out (amber), so the player finds what is left; "Show me the next one" looks for it
   const todo = isOpen(choice);
