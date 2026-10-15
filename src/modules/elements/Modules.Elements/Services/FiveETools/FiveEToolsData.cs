@@ -7,9 +7,10 @@ using Starlights.Modules.Elements.Integration;
 namespace Starlights.Modules.Elements.Services.FiveETools;
 
 /// <summary>
-/// Location of the 5etools "data" folder (config <c>FiveETools:Path</c>, default /data/5etools).
+/// Location of the 5etools "data" folder (config <c>FiveETools:Path</c>, default /data/5etools), and whether what it
+/// has and Aurora Legacy lacks is generated as Aurora content (<c>FiveETools:Generate</c>, default on).
 /// </summary>
-public sealed record FiveEToolsOptions(string DataPath);
+public sealed record FiveEToolsOptions(string DataPath, bool Generate = true);
 
 /// <summary>
 /// Reads the 5etools data release for what Aurora Legacy lacks: deities it has no entry for (generated as
@@ -113,6 +114,33 @@ internal sealed class FiveEToolsData : IFiveEToolsLore
         return new XDocument(root);
     }
 
+    /// <summary>
+    /// The spells, feats, class options, backgrounds, species, subclasses and classes 5etools has and the Aurora
+    /// catalog lacks, as an Aurora element file (see <see cref="FiveEToolsContent"/>); null when switched off.
+    /// </summary>
+    public XDocument? ContentAsAurora(IEnumerable<AuroraCatalogElement> aurora)
+    {
+        if (!_options.Generate || !Available)
+        {
+            return null;
+        }
+        var content = new FiveEToolsContent(new FiveEToolsJson(_options.DataPath), new FiveEToolsAuroraIndex(aurora), Books(), _logger);
+        return content.Generate();
+    }
+
+    /// <summary>See <see cref="FiveEToolsContent.FillFeatRequirements"/>: requirements for Aurora feats that only describe theirs.</summary>
+    public int FillFeatRequirements(IEnumerable<XElement> feats, IEnumerable<AuroraCatalogElement> aurora)
+    {
+        if (!Available)
+        {
+            return 0;
+        }
+        var content = new FiveEToolsContent(new FiveEToolsJson(_options.DataPath), new FiveEToolsAuroraIndex(aurora), Books(), _logger);
+        var filled = content.FillFeatRequirements(feats);
+        _logger.LogInformation("gave {Count} Aurora feats the requirements 5etools records for them", filled);
+        return filled;
+    }
+
     public IReadOnlyList<LoreEntry> GetOrganizations() => Cached("book/book-frhof.json", () =>
     {
         using var document = Read("book/book-frhof.json");
@@ -158,9 +186,12 @@ internal sealed class FiveEToolsData : IFiveEToolsLore
     });
 
     // 5etools abbreviations (PHB, MTF, …) to the books' full names
-    private Dictionary<string, string> SourceNames() => Cached("books.json", () =>
+    private Dictionary<string, string> SourceNames() => Books().ToDictionary(b => b.Key, b => b.Value.Name, StringComparer.OrdinalIgnoreCase);
+
+    // 5etools abbreviations to the books' full names and publication dates
+    private Dictionary<string, (string Name, DateTime? Published)> Books() => Cached("books.json", () =>
     {
-        var names = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        var names = new Dictionary<string, (string Name, DateTime? Published)>(StringComparer.OrdinalIgnoreCase);
         foreach (var (file, key) in new[] { ("books.json", "book"), ("adventures.json", "adventure") })
         {
             using var document = Read(file);
@@ -172,7 +203,7 @@ internal sealed class FiveEToolsData : IFiveEToolsLore
             {
                 if (FiveEToolsRenderer.Text(book, "id") is { } id && FiveEToolsRenderer.Text(book, "name") is { } name)
                 {
-                    names.TryAdd(id, name);
+                    names.TryAdd(id, (name, DateTime.TryParse(FiveEToolsRenderer.Text(book, "published"), out var published) ? published : null));
                 }
             }
         }

@@ -58,6 +58,11 @@ internal sealed class AuroraImporter : IAuroraImporter
     // across files resolve to the same element and re-running an import does not duplicate anything
     private static readonly Guid IdNamespace = new("8a4c4f1e-2b7d-4d52-9d0e-6f3b2a9c7e11");
 
+    // written on every element's stored XML: an update re-creates an element whose XML changed, so raising this when
+    // the importer makes something new of the same XML (2: appends and every element's prerequisites) re-creates them
+    // all once, with no --replace needed
+    private const string ImportVersion = "2";
+
     private readonly ILogger<AuroraImporter> _logger;
     private readonly IPersistence _persistence;
     private readonly AuroraImporterOptions _options;
@@ -126,9 +131,11 @@ internal sealed class AuroraImporter : IAuroraImporter
             }
         }
 
+        // the copy of each id that counts (see Precedence), whichever file of the index repeats it, so every index
+        // imports the same copy and an update does not swap it back and forth
         foreach (var file in files)
         {
-            byFile.GetValueOrDefault(file, []).ForEach(Add);
+            byFile.GetValueOrDefault(file, []).ForEach(e => Add(byId.GetValueOrDefault(e.Id, e)));
         }
         var requestedCount = toImport.Count;
 
@@ -195,6 +202,7 @@ internal sealed class AuroraImporter : IAuroraImporter
         }
 
         int alreadyImported = 0, skippedConditional = 0, skippedUnresolved = 0;
+        ILookup<(string, string), string>? sameName = null;
         var importedByType = new SortedDictionary<string, int>();
 
         foreach (var aurora in toImport.Values)
@@ -250,7 +258,12 @@ internal sealed class AuroraImporter : IAuroraImporter
             {
                 prerequisite = prerequisite[..256]; // the column's size; Aurora's longest is about 80
             }
-            var check = Convert(((string?)aurora.Xml.Element("requirements"))?.Trim(), byId);
+            var ownRequirements = ((string?)aurora.Xml.Element("requirements"))?.Trim();
+            if (aurora.Type == "Feat")
+            {
+                ownRequirements = AnyEdition(ownRequirements, byId, sameName ??= SameName(byId));
+            }
+            var check = Convert(ownRequirements, byId);
             if (!string.IsNullOrEmpty(prerequisite) || check is not null)
             {
                 Attach("prerequisites", id =>
@@ -363,7 +376,7 @@ internal sealed class AuroraImporter : IAuroraImporter
         {
             folders.Add((Path.GetFullPath(homebrew), HomebrewPrefix));
         }
-        // last, so the merged content wins wherever a pull request repeats an id: only what is new comes from them
+        // where a pull request or homebrew repeats an id, its copy counts (see Precedence)
         if (_options.PullRequestsPath is { } pulls && Directory.Exists(pulls))
         {
             folders.Add((Path.GetFullPath(pulls), PullRequestsPrefix));
@@ -382,11 +395,20 @@ internal sealed class AuroraImporter : IAuroraImporter
                     continue;
                 }
 
+                xml.SetAttributeValue("starlights-import", ImportVersion);
                 var element = new AuroraElement(id, name, type, (string?)xml.Attribute("source"), file, xml);
                 elements.Add(element);
-                if (!byId.TryAdd(id, element))
+                if (byId.TryGetValue(id, out var other))
                 {
                     duplicates++;
+                    if (Precedence(file) > Precedence(other.File))
+                    {
+                        byId[id] = element;
+                    }
+                }
+                else
+                {
+                    byId[id] = element;
                 }
 
                 // a class taken as an additional class: its <multiclass> becomes an element of its own ("Fighter
@@ -402,7 +424,10 @@ internal sealed class AuroraImporter : IAuroraImporter
                     var synthetic = Multiclass(multiclass, multiclassId, id, name, (string?)xml.Attribute("source"));
                     var multiclassElement = new AuroraElement(multiclassId, (string)synthetic.Attribute("name")!, "Multiclass", (string?)xml.Attribute("source"), file, synthetic);
                     elements.Add(multiclassElement);
-                    byId.TryAdd(multiclassId, multiclassElement);
+                    if (!byId.TryGetValue(multiclassId, out var otherMulticlass) || Precedence(file) > Precedence(otherMulticlass.File))
+                    {
+                        byId[multiclassId] = multiclassElement;
+                    }
                 }
             }
             byFile[file] = elements;
@@ -432,15 +457,29 @@ internal sealed class AuroraImporter : IAuroraImporter
             documents.Add((file, document));
         }
 
-        // appends first, so every element is read with what other files add to it
+        // appends first, so every element is read with what other files add to it (Starlights' corrections among them)
+        documents.Add((BuiltIn.BuiltInContent.Prefix + "fixes.xml", BuiltIn.BuiltInContent.FixesDocument()));
         var (appended, unmatched) = ApplyAppends(documents);
+
+        // feats whose prerequisite Aurora only describes are checked with what 5etools records for them
+        if (_fiveETools.Available)
+        {
+            var elements = documents.SelectMany(d => d.Document.Descendants("element")).Where(e => e.Attribute("id") is not null && e.Attribute("name") is not null && e.Attribute("type") is not null).ToList();
+            _fiveETools.FillFeatRequirements(
+                // no requirements, or requirements but no prerequisite at all (the 2014 War Caster's spellcasting)
+                elements.Where(e => (string?)e.Attribute("type") == "Feat"
+                    && (e.Element("requirements") is null || e.Element("prerequisite") is null && e.Element("prerequisites") is null)),
+                elements.Select(e => new FiveETools.AuroraCatalogElement((string)e.Attribute("id")!, (string)e.Attribute("name")!, (string)e.Attribute("type")!,
+                    (string?)e.Attribute("source"), ((string?)e.Element("supports"))?.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries) ?? [], e)));
+        }
         foreach (var (file, document) in documents)
         {
             AddDocument(file, document);
         }
 
-        // Starlights' own extras (an additional feat, language, proficiency, spell)
+        // Starlights' own extras (an additional feat, language, proficiency, spell), and the damage conditions the Aurora app has built in
         AddDocument(BuiltIn.BuiltInContent.Prefix + "extras.xml", BuiltIn.BuiltInContent.ExtrasDocument());
+        AddDocument(BuiltIn.BuiltInContent.Prefix + "conditions.xml", BuiltIn.BuiltInContent.ConditionsDocument());
 
         // the deities Aurora has no entry for, generated from the 5etools data
         if (_fiveETools.Available)
@@ -453,6 +492,13 @@ internal sealed class AuroraImporter : IAuroraImporter
             }
         }
 
+        // what the 5etools data has and all of the above lacks (a book Aurora Legacy has not added yet), translated
+        if (_fiveETools.Available
+            && _fiveETools.ContentAsAurora(byId.Values.Select(e => new FiveETools.AuroraCatalogElement(e.Id, e.Name, e.Type, e.Source, e.Supports, e.Xml))) is { } content)
+        {
+            AddDocument(FiveEToolsData.Prefix + "content.xml", content);
+        }
+
         // a class's Ability Score Improvement levels ask for an "Improvement Option" (2014 classes): the Aurora app makes
         // the answers itself (increase abilities, or take a feat), so they are generated for every such choice no file answers
         if (ImprovementOptions(byId.Values.ToList()) is { } improvements)
@@ -463,6 +509,26 @@ internal sealed class AuroraImporter : IAuroraImporter
         _logger.LogInformation("aurora catalog: {Elements} elements in {Files} files ({Duplicates} duplicate ids ignored, {Appended} appends applied, {Unmatched} appends for elements not loaded)",
             byId.Count, byFile.Count, duplicates, appended, unmatched);
         return (byId, byFile);
+    }
+
+    /// <summary>
+    /// Which copy of an id counts when files repeat it: homebrew (the user's own) over an open pull request (the newest
+    /// first: a pull request repeating merged elements changes them, as the TCoE Artificer's spellcasting fix does) over
+    /// the merged content; among equals the first. When a pull request is merged or closed its copies go, and the merged
+    /// ones count again.
+    /// </summary>
+    private static double Precedence(string file)
+    {
+        if (file.StartsWith(HomebrewPrefix, StringComparison.Ordinal))
+        {
+            return 2;
+        }
+        if (file.StartsWith(PullRequestsPrefix, StringComparison.Ordinal))
+        {
+            var folder = file[PullRequestsPrefix.Length..].Split('/')[0];
+            return 1 + (int.TryParse(folder.Replace("pr-", "", StringComparison.Ordinal), out var number) ? number / 1_000_000.0 : 0);
+        }
+        return 0;
     }
 
     /// <summary>
@@ -630,6 +696,20 @@ internal sealed class AuroraImporter : IAuroraImporter
             _ => $"({converted}),({equipped})",
         };
     }
+
+    // the classes and species by type and name, for AnyEdition
+    private static ILookup<(string, string), string> SameName(Dictionary<string, AuroraElement> catalog) =>
+        catalog.Values.Where(e => e.Type is "Class" or "Race").ToLookup(e => (e.Type, e.Name), e => e.Id);
+
+    /// <summary>
+    /// A feat's prerequisite of a class or species ("ID_PHB_CLASS_WIZARD", "ID_RACE_ELF") as that class or species of
+    /// any edition: Initiate of High Sorcery asks for the Wizard, the 2024 Wizard too; Elven Accuracy for an Elf.
+    /// </summary>
+    private static string? AnyEdition(string? expression, Dictionary<string, AuroraElement> catalog, ILookup<(string, string), string> sameName) =>
+        string.IsNullOrEmpty(expression) ? expression : AuroraId.Replace(expression, m =>
+            catalog.TryGetValue(m.Value, out var element) && element.Type is "Class" or "Race" && sameName[(element.Type, element.Name)].Distinct().ToList() is { Count: > 1 } all
+                ? $"({string.Join("||", all.Order(StringComparer.Ordinal))})"
+                : m.Value);
 
     // Aurora ids of imported elements as their element ids, the others left as they are
     private static string? Convert(string? expression, Dictionary<string, AuroraElement> catalog) =>
@@ -808,8 +888,18 @@ internal sealed class AuroraImporter : IAuroraImporter
     {
         public IEnumerable<XElement> Rules => Xml.Element("rules")?.Elements() ?? [];
 
-        public List<string> Supports { get; init; } = ((string?)Xml.Element("supports"))?
-            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .ToList() ?? [];
+        public List<string> Supports { get; init; } = [
+            .. ((string?)Xml.Element("supports"))?.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries) ?? [],
+            .. CompanionTerms(Xml)];
+
+        // a companion is chosen by its creature type, size and challenge ("Beast,(Tiny||Small||Medium),(1/4||1/8||0)" for
+        // the Beast Master), which Aurora keeps in its setters
+        private static IEnumerable<string> CompanionTerms(XElement xml) =>
+            (string?)xml.Attribute("type") != "Companion"
+                ? []
+                : xml.Element("setters")?.Elements("set")
+                    .Where(s => (string?)s.Attribute("name") is "type" or "size" or "challenge")
+                    .Select(s => s.Value.Trim())
+                    .Where(v => v.Length > 0) ?? [];
     }
 }

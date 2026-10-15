@@ -148,16 +148,25 @@ admin with the key button):
 | Content | Standard link | Used for |
 |---|---|---|
 | Aurora Legacy | [github.com/AuroraLegacy/elements](https://github.com/AuroraLegacy/elements) | classes, species, backgrounds, feats, spells, items: the builder's rules |
-| 5etools | [github.com/5etools-mirror-3/5etools-src](https://github.com/5etools-mirror-3/5etools-src) | the Compendium of Lore, deities Aurora lacks, creatures for encounters, starting equipment |
+| 5etools | [github.com/5etools-mirror-3/5etools-src](https://github.com/5etools-mirror-3/5etools-src) | the Compendium of Lore, deities and rules Aurora lacks, creatures for encounters, starting equipment |
 
 To use your own fork (or a branch, as `…/tree/branch-name`), paste its link and press **Save and update now**. The
 server then:
 
 1. downloads each repository at its newest commit (skipped when nothing changed; for 5etools only its `data` folder);
 2. sets up the base rules the first time;
-3. imports Aurora Legacy, the 5etools deities and the built-in extras;
+3. imports Aurora Legacy, what 5etools has and Aurora Legacy lacks, and the built-in extras;
 4. builds the Compendium of Lore;
 5. runs every character through the rules again, so they get new choices.
+
+**When 5etools is ahead of Aurora Legacy.** A new book often reaches 5etools first. Whatever 5etools has and Aurora
+Legacy (with its open pull requests and your homebrew) does not (spells, feats, class options such as invocations,
+backgrounds, species, subclasses, classes) is translated into Aurora's format and imported with everything else,
+marked "Imported automatically from 5etools". What 5etools records as data becomes rules: proficiencies and their
+choices, ability scores, prerequisites, spell slots and prepared spells, spells a subclass always has prepared. What it
+only describes in words stays words on the sheet. Aurora's version always wins: once Aurora Legacy adds the book, its
+own elements are used and the translation stops (a character who already took the translated one keeps it). To turn
+this off, set `FiveETools__Generate=false` for the API in `deploy/docker-compose.yml`.
 
 The page also shows where things stand: the **server** (the Starlights version it was built from, whether every
 database change is applied, and how many characters, campaigns, elements and homebrew items there are) and the

@@ -145,6 +145,14 @@ internal sealed class SupportsExpression
                         tokens.Add("|");
                     }
                     break;
+                // "&&" is AND as well, as Aurora reads it ("Wizard&&0" on a High Elf's cantrip)
+                case '&':
+                    Flush();
+                    if (tokens.Count == 0 || tokens[^1] != ",")
+                    {
+                        tokens.Add(",");
+                    }
+                    break;
                 default:
                     term.Append(c);
                     break;

@@ -38,73 +38,16 @@ public sealed class DomainEventProcessingService : BackgroundService
         {
             while (!stoppingToken.IsCancellationRequested)
             {
-                using var scope = _factory.CreateScope();
-                var contextFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<ElementsContext>>();
-
-                await using var context = await contextFactory.CreateDbContextAsync(stoppingToken);
-
-                if (stoppingToken.IsCancellationRequested)
+                try
                 {
-                    break;
+                    interval = await ProcessBatchAsync(interval, stoppingToken);
                 }
-
-                var newEvents = await context.Set<EventMessage>()
-                    .Where(x => x.ProcessedOn == null)
-                    .OrderBy(x => x.OccurredOn)
-                    .Take(BatchSize)
-                    .ToListAsync(stoppingToken);
-
-                if (newEvents.Count > 0)
+                // a failure (the database busy, a timeout) is tried again after a pause, instead of stopping the whole app
+                catch (Exception ex) when (ex is not OperationCanceledException || !stoppingToken.IsCancellationRequested)
                 {
-                    //using var _ = ElementsInstrumentation.StartActivity($"Process Event Messages ({newEvents.Count})", a => a.AddTag("newEvents", newEvents.Count));
-
-                    _logger.LogDebug("processing {Count} new domain events", newEvents.Count);
-
-                    var publisher = scope.ServiceProvider.GetRequiredService<IDomainEventPublisher>();
-
-                    foreach (var item in newEvents)
-                    {
-                        try
-                        {
-                            var eventType = ResolveEventType(item.EventType);
-                            if (eventType == null)
-                            {
-                                _logger.LogError("Event type '{EventType}' could not be resolved.", item.EventType);
-                                continue;
-                            }
-
-                            //_logger.LogDebug("processing event: {EventType} ({EventId})", eventType.Name, item.Id);
-
-                            var deserialized = JsonSerializer.Deserialize(item.Payload, eventType);
-                            if (deserialized is IDomainEvent domainEvent)
-                            {
-                                //_logger.LogInformation("publishing event: {EventType} ({EventId})", eventType.Name, item.Id);
-                                await publisher.PublishAsync(domainEvent);
-
-                                // Mark the event as processed
-                                item.ProcessedOn = DateTime.UtcNow;
-                                await context.SaveChangesAsync(stoppingToken);
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogError(ex, "Exception while publishing the message [id='{MessageId}', type='{EventType}']", item.Id, item.EventType);
-                            item.ErrorMessage = ex.Message; // stored when the save is moved to bulk save
-                            throw;
-                        }
-                    }
+                    _logger.LogError(ex, "event processing failed; trying again in {Interval}ms", MaximumInterval);
+                    interval = TimeSpan.FromMilliseconds(MaximumInterval);
                 }
-
-                interval = newEvents.Count switch
-                {
-                    BatchSize => TimeSpan.FromMilliseconds(0), // if we processed a full batch, reset the interval to 0 to poll immediately
-                    > 0 => TimeSpan.FromMilliseconds(InitialInterval),
-                    _ => TimeSpan.FromMilliseconds(Math.Min(interval.TotalMilliseconds * 2, MaximumInterval)),
-                };
-
-                _logger.LogDebug("[Elements] service waiting... [interval='{Interval}ms', IsCancellationRequested={IsCancellationRequested}]",
-                    interval.TotalMilliseconds, stoppingToken.IsCancellationRequested);
-
                 await Task.Delay(interval, stoppingToken);
             }
         }
@@ -115,6 +58,78 @@ public sealed class DomainEventProcessingService : BackgroundService
         }
 
         _logger.LogWarning("stopping EventProcessing service...");
+    }
+
+    /// <summary>Publishes the next batch of unprocessed events; returns how long to wait before the next one.</summary>
+    private async Task<TimeSpan> ProcessBatchAsync(TimeSpan interval, CancellationToken stoppingToken)
+    {
+        using var scope = _factory.CreateScope();
+        var contextFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<ElementsContext>>();
+
+        await using var context = await contextFactory.CreateDbContextAsync(stoppingToken);
+
+        if (stoppingToken.IsCancellationRequested)
+        {
+            return interval;
+        }
+
+        var newEvents = await context.Set<EventMessage>()
+            .Where(x => x.ProcessedOn == null)
+            .OrderBy(x => x.OccurredOn)
+            .Take(BatchSize)
+            .ToListAsync(stoppingToken);
+
+        if (newEvents.Count > 0)
+        {
+            //using var _ = ElementsInstrumentation.StartActivity($"Process Event Messages ({newEvents.Count})", a => a.AddTag("newEvents", newEvents.Count));
+
+            _logger.LogDebug("processing {Count} new domain events", newEvents.Count);
+
+            var publisher = scope.ServiceProvider.GetRequiredService<IDomainEventPublisher>();
+
+            foreach (var item in newEvents)
+            {
+                try
+                {
+                    var eventType = ResolveEventType(item.EventType);
+                    if (eventType == null)
+                    {
+                        _logger.LogError("Event type '{EventType}' could not be resolved.", item.EventType);
+                        continue;
+                    }
+
+                    //_logger.LogDebug("processing event: {EventType} ({EventId})", eventType.Name, item.Id);
+
+                    var deserialized = JsonSerializer.Deserialize(item.Payload, eventType);
+                    if (deserialized is IDomainEvent domainEvent)
+                    {
+                        //_logger.LogInformation("publishing event: {EventType} ({EventId})", eventType.Name, item.Id);
+                        await publisher.PublishAsync(domainEvent);
+
+                        // Mark the event as processed
+                        item.ProcessedOn = DateTime.UtcNow;
+                        await context.SaveChangesAsync(stoppingToken);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Exception while publishing the message [id='{MessageId}', type='{EventType}']", item.Id, item.EventType);
+                    item.ErrorMessage = ex.Message; // stored when the save is moved to bulk save
+                    throw;
+                }
+            }
+        }
+
+        var next = newEvents.Count switch
+        {
+            BatchSize => TimeSpan.FromMilliseconds(0), // if we processed a full batch, reset the interval to 0 to poll immediately
+            > 0 => TimeSpan.FromMilliseconds(InitialInterval),
+            _ => TimeSpan.FromMilliseconds(Math.Min(interval.TotalMilliseconds * 2, MaximumInterval)),
+        };
+
+        _logger.LogDebug("[Elements] service waiting... [interval='{Interval}ms', IsCancellationRequested={IsCancellationRequested}]",
+            next.TotalMilliseconds, stoppingToken.IsCancellationRequested);
+        return next;
     }
 
     private static Type? ResolveEventType(string eventTypeName)
