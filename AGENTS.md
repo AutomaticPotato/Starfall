@@ -21,4 +21,5 @@ Inspect status, diffs, commits and all worktrees before editing. Work on an isol
 - [Status](docs/ai/PROJECT_STATUS.md)
 - [Decisions](docs/ai/DECISIONS.md)
 - [Current handoff](docs/ai/CODEX_HANDOFF.md)
+- [Owner engineering directive](docs/ai/DEVELOPMENT_DIRECTIVE.md)
 Focused skills live in `.agents/skills/`; load only the relevant subject.

@@ -25,3 +25,10 @@ Run workspace package build before app build; API/client package exports use dis
 - `/characters/:id/play`: `pages/characters/sheet/interactive-sheet.tsx:InteractiveSheetPage`. Reuses `Vitals`, `Status` and a narrowed `RestDialog` from battle-page, `MagicTab`, `EquipmentTab`, and original API hooks. Ability/attack summaries clearly identify base values; temporary effects/actions remain in battle.
 - `/characters/:id/sheet` remains the original PDF route. Only a reciprocal link was added. No PDF generation code changed.
 - `tools/frontend/smoke.mjs` and `fixtures.mjs`: synthetic browser regression harness; intercepts every API request. Start Vite with `VITE_API_BASE=''`, then run `PLAYWRIGHT_MODULE=/absolute/path/to/playwright/index.mjs node tools/frontend/smoke.mjs` from root. Override FRONTEND_URL and SCREENSHOT_DIR as needed. Screenshots default to /tmp/starlights-frontend-shots. Never point at a deployed application.
+
+## Final validation tools
+`tools/frontend/workflows.mjs`, `complete-characters.mjs`, `play-checks.mjs` use a disposable real SQL/API at localhost:55053 and Vite at localhost:55052. They are not mocks and must never target production. See CODEX_HANDOFF.md for isolation, order and evidence. `accessibility.mjs` uses synthetic intercepted responses to test keyboard navigation and failed-save rollback. The fixture matrix includes 360px as well as the original five widths.
+
+The sheet owns expansion state above loading guards because preparing a spell may refresh dependent element queries. Theme selection uses DialogTrigger for reliable focus return. Save failures use existing API rollback; rest/slot notices announce pending saves without claiming success prematurely. The original imported content and mechanics remain authoritative.
+
+Official assets live in builder-app/public/branding; source SHA and crop reproduction are in its README. Full logo is on the landing header, compass in navigation, central D20 in favicons. Local-only development defaults are in vite.config.ts.

@@ -1,15 +1,16 @@
 # Project status
-## Existing completed systems
-Character creation/guided builder, registration progression, multiclassing, sources/2014+2024 editions, equipment, spellcasting/preparation, Aurora import/PDF, campaigns, party transfers, combat/action simulation, lore/content imports, player locks, snapshots and Docker packaging.
+
+## Existing systems
+Character creation/guided builder, registration progression, multiclassing, 2014/2024 sources, equipment, spellcasting/preparation, Aurora imports/PDF, campaigns, combat/action simulation, lore imports, player locks, snapshots and Docker packaging.
+
+## Frontend modernization
+Implemented on isolated `codex/frontend-modernisation`: three persisted previewable themes, responsive navigation, shared filtered/paginated spell cards, one choice per spell reprint group, explicit level/choice limits, interactive sheet sharing character state, coherent simulator surfaces, and official celestial branding. No combat calculations, backend APIs, production data or PDF engine changes. Implementation is ready for review; no merge/push/deploy authorized.
+
+## Evidence and limitations
+See CODEX_HANDOFF.md for commits and artifact paths. Supported-runtime build passes; frontend 188 tests pass with 5 optional content tests skipped; character backend 299 pass. Ninety responsive/theme checks and real synthetic Fighter/Wizard/multiclass, save/rest/preparation/battle/PDF workflows pass. Existing lint debt: 38 errors and 1 warning. Optional 5etools tests need the missing parser.js from a full source checkout. Fresh imported test content supplies no alignment options, so that choice remains unfilled. No exhaustive all-class/content or full WCAG audit is claimed.
 
 ## Parallel work
-User reports interrupted Claude work: homebrew improvements, CR/encounter difficulty and integration. On 2026-10-15 both `aurora-server` and `homebrew-workshop` were clean at `6a6aea2`; no unfinished diff was visible. Claude worktree: `/home/chassapis/.claude/jobs/f4aa8337/tmp/wt-hb`. Treat homebrew, encounter calculations and related backend/integration as protected; recheck before integration.
+Protected Claude branches: `security/pdfjs-6.2.108`, `feature/homebrew-home-tile`, `ci/aurora-server-vitest`, `fix/backend-auth-tests` (Mission 006B). Homepage Index.tsx overlaps the Homebrew tile branch; retain both changes when the owner approves integration. PDF dependencies/interface and auth tests remain Claude's work. Local source is authoritative; inspect current branch state again before integration.
 
-## Frontend priorities
-Semantic themes/shared surfaces → spell selection → interactive sheet → battle presentation → automated and responsive validation. Exact milestone state is in CODEX_HANDOFF.md.
-
-## Environment limitations
-Initial shell has Node 18, no dotnet on PATH, restricted DNS and Docker socket access denied. Existing frontend dependencies and Playwright package are available in local caches; test feasibility is being assessed. No production data or services may be changed to work around these limitations.
-
-## Implemented on the isolated frontend branch
-Three previewable persisted themes, responsive header menu, shared spell browser, learning/preparation counts and level navigation, duplicate printing consolidation, interactive sheet route and token-based battle presentation. No backend/database/rules engine changes. Full browser/build/runtime verification remains outstanding until the local toolchain is available; see handoff for exact test outcomes.
+## Next priority
+Owner review, then an explicitly approved integration in a fresh worktree using current local aurora-server. Repeat synthetic checks after conflict resolution. Do not begin a new mission or touch production to resolve test-environment limitations.
