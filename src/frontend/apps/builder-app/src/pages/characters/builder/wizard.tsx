@@ -61,7 +61,7 @@ export function Wizard({
       first.current = false;
       return;
     }
-    heading.current?.scrollIntoView({ block: "start", behavior: "smooth" });
+    heading.current?.scrollIntoView({ block: "start", behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth" });
   }, [at]);
   const asks = (s: Step) => !!(s.sections || s.spells);
   const open = (s: Step) => stepChoices(s, choices).filter((c) => !c.optional && !c.selected).length;
@@ -80,8 +80,8 @@ export function Wizard({
         </Button>
       </div>
 
-      {/* one row that slides sideways on a phone, wrapping on wider screens */}
-      <ol ref={pills} className="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0" aria-label="Steps">
+      {/* Wrap the level steps at every width; no horizontal navigation strip. */}
+      <ol ref={pills} className="flex flex-wrap gap-1.5 pb-1" aria-label="Steps">
         {STEPS.map((s, i) => {
           const left = open(s);
           return (
@@ -100,7 +100,7 @@ export function Wizard({
         })}
       </ol>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_24rem] xl:grid-cols-[minmax(0,1fr)_28rem]">
+      <div className={cn("grid gap-6", !step.spells && "lg:grid-cols-[minmax(0,1fr)_24rem] xl:grid-cols-[minmax(0,1fr)_28rem]")}>
         <section className="min-w-0 space-y-4">
           <header ref={heading} className="scroll-mt-20">
             <h2 className="font-heading text-2xl font-semibold">
@@ -132,7 +132,7 @@ export function Wizard({
               ))}
               <div className="flex flex-wrap gap-2">
                 <Button asChild>
-                  <Link to={`/characters/${characterId}/sheet`}>
+                  <Link to={`/characters/${characterId}/play`}>
                     <ScrollTextIcon /> See the character sheet
                   </Link>
                 </Button>
@@ -164,7 +164,7 @@ export function Wizard({
             )}
           </div>
         </section>
-        {asks(step) ? <aside className="hidden lg:block">{aside}</aside> : <div className="hidden lg:block" />}
+        {!step.spells && (asks(step) ? <aside className="hidden lg:block">{aside}</aside> : <div className="hidden lg:block" />)}
       </div>
     </div>
   );

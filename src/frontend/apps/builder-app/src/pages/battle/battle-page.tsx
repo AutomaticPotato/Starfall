@@ -155,7 +155,7 @@ export function CharacterBattlePage() {
   if (sheet.error || !sheet.data)
     return (
       <Shell>
-        <p className="py-24 text-center text-white/80">
+        <p className="py-24 text-center text-muted-foreground">
           {(sheet.error as { status?: number } | null)?.status === 401 ? "This character's player locked their characters with a password." : "This character could not be loaded."}
         </p>
       </Shell>
@@ -483,7 +483,7 @@ interface Ctx {
 
 function Shell({ children }: { children: ReactNode }) {
   return (
-    <div className="dark relative min-h-[calc(100vh-4rem)] overflow-clip bg-neutral-950 text-neutral-100">
+    <div className="relative min-h-[calc(100vh-4rem)] overflow-clip bg-card text-foreground">
       <BattleBackdrop />
       <div className="relative mx-auto max-w-6xl space-y-4 px-3 py-6 sm:px-4">{children}</div>
     </div>
@@ -493,18 +493,18 @@ function Shell({ children }: { children: ReactNode }) {
 function Loading() {
   return (
     <Shell>
-      <Spinner className="mx-auto my-24 size-6 text-white" />
+      <Spinner className="mx-auto my-24 size-6 text-foreground" />
     </Shell>
   );
 }
 
 function Panel({ title, icon, children, className, action }: { title?: string; icon?: ReactNode; children: ReactNode; className?: string; action?: ReactNode }) {
   return (
-    <section className={cn("rounded-xl border border-white/10 bg-neutral-900/85 p-3 shadow-xl backdrop-blur-md sm:p-4", className)}>
+    <section className={cn("rounded-xl border border-border bg-card p-3 shadow-sm sm:p-4", className)}>
       {title && (
         <header className="mb-2 flex items-center gap-2">
           {icon}
-          <h2 className="font-heading text-sm uppercase tracking-[0.2em] text-amber-200/90">{title}</h2>
+          <h2 className="section-heading text-foreground">{title}</h2>
           <span className="flex-1" />
           {action}
         </header>
@@ -516,42 +516,42 @@ function Panel({ title, icon, children, className, action }: { title?: string; i
 
 function Stat({ label, value, sub, className }: { label: string; value: ReactNode; sub?: ReactNode; className?: string }) {
   return (
-    <div className={cn("flex min-w-0 flex-col items-center justify-center rounded-lg border border-white/10 bg-black/30 px-1 py-1.5 text-center sm:px-2 sm:py-2", className)}>
-      <span className="text-xs font-semibold uppercase leading-tight tracking-wide text-white/70 sm:text-xs sm:tracking-wider">{label}</span>
-      <span className="font-heading text-xl leading-tight text-white sm:text-2xl">{value}</span>
-      {sub && <span className="line-clamp-2 break-words text-xs leading-tight text-white/75 sm:text-xs">{sub}</span>}
+    <div className={cn("flex min-w-0 flex-col items-center justify-center rounded-lg border border-border bg-muted px-1 py-1.5 text-center sm:px-2 sm:py-2", className)}>
+      <span className="text-sm font-semibold uppercase leading-tight tracking-wide text-muted-foreground sm:text-sm sm:tracking-wider">{label}</span>
+      <span className="font-heading text-xl leading-tight text-foreground sm:text-2xl">{value}</span>
+      {sub && <span className="line-clamp-2 break-words text-sm leading-tight text-muted-foreground sm:text-sm">{sub}</span>}
     </div>
   );
 }
 
 function Chip({ children, tone = "neutral", className }: { children: ReactNode; tone?: "neutral" | "gold" | "red" | "blue" | "green"; className?: string }) {
   const tones = {
-    neutral: "border-white/15 bg-white/5 text-white/80",
-    gold: "border-amber-300/40 bg-amber-300/10 text-amber-100",
-    red: "border-red-400/40 bg-red-500/10 text-red-100",
-    blue: "border-sky-300/40 bg-sky-400/10 text-sky-100",
-    green: "border-emerald-300/40 bg-emerald-400/10 text-emerald-100",
+    neutral: "border-border bg-muted text-muted-foreground",
+    gold: "border-amber-300/40 bg-amber-300/10 text-[var(--warning)]",
+    red: "border-red-400/40 bg-red-500/10 text-destructive",
+    blue: "border-sky-300/40 bg-sky-400/10 text-[var(--info)]",
+    green: "border-emerald-300/40 bg-emerald-400/10 text-[var(--success)]",
   };
-  return <span className={cn("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs", tones[tone], className)}>{children}</span>;
+  return <span className={cn("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-sm", tones[tone], className)}>{children}</span>;
 }
 
 function Header({ id, data, model, onRest }: { id: string; data: SheetData; model: BattleModel; onRest: (k: "short" | "long") => void }) {
   return (
     <div className="flex flex-wrap items-end gap-4 pt-2">
-      <Link to="/battle" className="absolute left-3 top-2 inline-flex items-center gap-1 text-xs text-white/75 hover:text-white sm:left-4">
+      <Link to="/battle" className="absolute left-3 top-2 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground sm:left-4">
         <ArrowLeftIcon className="size-3.5" /> All characters
       </Link>
       {data.portraitUrl ? (
         <img src={data.portraitUrl} alt="" className="mt-4 size-20 rounded-xl border-2 border-amber-200/40 object-cover shadow-2xl sm:size-24" />
       ) : (
-        <div className="mt-4 flex size-20 items-center justify-center rounded-xl border-2 border-amber-200/30 bg-black/40 sm:size-24">
-          <SwordIcon className="size-8 text-amber-200/60" />
+        <div className="mt-4 flex size-20 items-center justify-center rounded-xl border-2 border-amber-200/30 bg-muted sm:size-24">
+          <SwordIcon className="size-8 text-[var(--warning)]" />
         </div>
       )}
       <div className="min-w-0 flex-1">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-300/80 sm:tracking-[0.3em]">Battle Action Simulator</p>
-        <h1 className="line-clamp-2 break-words font-heading text-3xl tracking-wide text-white drop-shadow sm:text-4xl">{data.name}</h1>
-        <p className="truncate text-sm text-white/75">
+        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--warning)] sm:tracking-[0.3em]">Battle Action Simulator</p>
+        <h1 className="line-clamp-2 break-words font-heading text-3xl tracking-wide text-foreground drop-shadow sm:text-4xl">{data.name}</h1>
+        <p className="truncate text-sm text-muted-foreground">
           {data.classLine}
           {data.player ? ` · ${data.player}` : ""}
         </p>
@@ -565,14 +565,14 @@ function Header({ id, data, model, onRest }: { id: string; data: SheetData; mode
       </div>
       <div className="flex flex-wrap gap-2">
         <Button size="sm" variant="secondary" asChild>
-          <Link to={`/characters/${id}/sheet`}>
+          <Link to={`/characters/${id}/play`}>
             <FileTextIcon /> Sheet
           </Link>
         </Button>
         <Button size="sm" variant="secondary" onClick={() => onRest("short")}>
           <CoffeeIcon /> Short rest
         </Button>
-        <Button size="sm" onClick={() => onRest("long")} className="bg-amber-500 text-black hover:bg-amber-400">
+        <Button size="sm" onClick={() => onRest("long")} className="bg-primary text-primary-foreground hover:bg-primary/90">
           <BedDoubleIcon /> Long rest
         </Button>
       </div>
@@ -580,7 +580,7 @@ function Header({ id, data, model, onRest }: { id: string; data: SheetData; mode
   );
 }
 
-function Vitals({
+export function Vitals({
   data,
   model,
   state,
@@ -618,35 +618,35 @@ function Vitals({
   };
   return (
     <div className="grid gap-3 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1.6fr)]">
-      <Panel title="Hit points" icon={<HeartIcon className="size-4 text-red-300" />}>
+      <Panel title="Hit points" icon={<HeartIcon className="size-4 text-destructive" />}>
         <div className="flex items-end gap-3">
-          <div className="font-heading text-5xl leading-none text-white">
+          <div className="font-heading text-5xl leading-none text-foreground">
             {hp}
-            <span className="text-2xl text-white/70"> / {maxHp}</span>
+            <span className="text-2xl text-muted-foreground"> / {maxHp}</span>
           </div>
           {state.temporaryHitPoints > 0 && <Chip tone="blue">+{state.temporaryHitPoints} temporary</Chip>}
         </div>
-        <div className="mt-2 h-2.5 overflow-hidden rounded-full bg-white/10" role="meter" aria-valuemin={0} aria-valuemax={maxHp} aria-valuenow={hp} aria-label="Hit points">
+        <div className="mt-2 h-2.5 overflow-hidden rounded-full bg-muted" role="meter" aria-valuemin={0} aria-valuemax={maxHp} aria-valuenow={hp} aria-label="Hit points">
           <div className={cn("h-full rounded-full transition-all", ratio > 0.5 ? "bg-emerald-400" : ratio > 0.25 ? "bg-amber-400" : "bg-red-500")} style={{ width: `${Math.round(ratio * 100)}%` }} />
         </div>
         <div className="mt-3 flex flex-wrap items-center gap-2">
-          <Input inputMode="numeric" aria-label="Amount" placeholder="Amount" value={amount} onChange={(e) => setAmount(e.target.value.replace(/\D/g, ""))} className="h-8 w-24 border-white/20 bg-black/40 text-white" />
+          <Input inputMode="numeric" aria-label="Amount" placeholder="Amount" value={amount} onChange={(e) => setAmount(e.target.value.replace(/\D/g, ""))} className="h-8 w-24 border-border bg-muted text-foreground" />
           <Button size="sm" variant="destructive" disabled={!n} onClick={() => apply(onDamage)}>
             Damage
           </Button>
-          <Button size="sm" className="bg-emerald-600 text-white hover:bg-emerald-500" disabled={!n} onClick={() => apply(onHeal)}>
+          <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90" disabled={!n} onClick={() => apply(onHeal)}>
             Heal
           </Button>
           <Button size="sm" variant="secondary" disabled={!n} onClick={() => apply(onTemp)}>
             Temp HP
           </Button>
         </div>
-        <p className="mt-2 text-xs text-white/70">
+        <p className="mt-2 text-sm text-muted-foreground">
           Hit dice {hitDiceLeft} of {data.hitDice || `${data.level}`} left · damage takes temporary hit points first
         </p>
       </Panel>
       {/* four to a row on a phone too: two rows instead of three before the actions */}
-      <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
+      <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4 sm:gap-2">
         <Stat label="Armor class" value={ac.total} sub={ac.changes.length ? ac.changes.join(" · ") : data.armor.label + (data.armor.shield ? ` + ${data.armor.shield}` : "")} className={ac.total !== data.armorClass ? "border-sky-300/50" : undefined} />
         <Stat label="Initiative" value={signed(data.initiative)} />
         <Stat label="Speed" value={`${speed} ft`} sub={[data.speeds.fly && `fly ${data.speeds.fly}`, data.speeds.climb && `climb ${data.speeds.climb}`, data.speeds.swim && `swim ${data.speeds.swim}`].filter(Boolean).join(" · ") || undefined} />
@@ -660,7 +660,7 @@ function Vitals({
           sub={dicePools.multi ? dicePools.pools.map((p) => `${dicePools.leftOf(p.sides)} d${p.sides}`).join(" · ") : data.hitDie ? `d${data.hitDie} + ${model.mod("CON")} each` : undefined}
         />
         <Stat label="Saves" value={<span className="text-sm leading-6">{data.saves.filter((s) => s.proficiency !== "none").map((s) => s.abilityScoreAbbreviation).join(" ") || "—"}</span>} sub="proficient" className={extra} />
-        <button type="button" onClick={() => setMore((m) => !m)} className="col-span-4 py-1 text-xs text-white/70 underline sm:hidden">
+        <button type="button" onClick={() => setMore((m) => !m)} className="col-span-2 py-1 text-sm text-muted-foreground underline sm:hidden">
           {more ? "Fewer" : "More: passive Perception, spell DC, hit dice, saves"}
         </button>
       </div>
@@ -668,12 +668,12 @@ function Vitals({
   );
 }
 
-function Status({ data, state, edition, exhaustionText, updateCombat, hp }: { data: SheetData; state: CombatState; edition: "2014" | "2024"; exhaustionText: string; updateCombat: (c: (s: CombatState) => CombatState) => void; hp: number }) {
+export function Status({ data, state, edition, exhaustionText, updateCombat, hp }: { data: SheetData; state: CombatState; edition: "2014" | "2024"; exhaustionText: string; updateCombat: (c: (s: CombatState) => CombatState) => void; hp: number }) {
   const lookup = useLoreLookup();
   const [adding, setAdding] = useState(false);
   const toggle = (name: string) => updateCombat((c) => ({ ...c, conditions: c.conditions.includes(name) ? c.conditions.filter((x) => x !== name) : [...c.conditions, name] }));
   return (
-    <Panel title="Condition" icon={<BrainIcon className="size-4 text-sky-300" />} action={<Button size="sm" variant="ghost" className="h-7 text-white/80" onClick={() => setAdding((a) => !a)}>{adding ? "Done" : "Conditions…"}</Button>}>
+    <Panel title="Condition" icon={<BrainIcon className="size-4 text-[var(--info)]" />} action={<Button size="sm" variant="ghost" className="h-7 text-muted-foreground" onClick={() => setAdding((a) => !a)}>{adding ? "Done" : "Conditions…"}</Button>}>
       <div className="flex flex-wrap items-center gap-2 text-sm">
         {state.concentration ? (
           <Chip tone="gold">
@@ -701,12 +701,12 @@ function Status({ data, state, edition, exhaustionText, updateCombat, hp }: { da
           );
         })}
         <span className="inline-flex items-center gap-1">
-          <span className="text-xs text-white/75">Exhaustion</span>
-          <Button size="icon" variant="ghost" className="size-6 text-white" aria-label="Less exhaustion" onClick={() => updateCombat((c) => ({ ...c, exhaustion: Math.max(0, c.exhaustion - 1) }))}>
+          <span className="text-sm text-muted-foreground">Exhaustion</span>
+          <Button size="icon" variant="ghost" className="size-6 text-foreground" aria-label="Less exhaustion" onClick={() => updateCombat((c) => ({ ...c, exhaustion: Math.max(0, c.exhaustion - 1) }))}>
             <MinusIcon />
           </Button>
           <span className="w-4 text-center font-semibold">{state.exhaustion}</span>
-          <Button size="icon" variant="ghost" className="size-6 text-white" aria-label="More exhaustion" onClick={() => updateCombat((c) => ({ ...c, exhaustion: Math.min(6, c.exhaustion + 1) }))}>
+          <Button size="icon" variant="ghost" className="size-6 text-foreground" aria-label="More exhaustion" onClick={() => updateCombat((c) => ({ ...c, exhaustion: Math.min(6, c.exhaustion + 1) }))}>
             <PlusIcon />
           </Button>
         </span>
@@ -714,31 +714,31 @@ function Status({ data, state, edition, exhaustionText, updateCombat, hp }: { da
           type="button"
           aria-pressed={state.heroicInspiration}
           onClick={() => updateCombat((c) => ({ ...c, heroicInspiration: !c.heroicInspiration }))}
-          className={cn("rounded-full border px-2 py-0.5 text-xs", state.heroicInspiration ? "border-amber-300 bg-amber-300/20 text-amber-100" : "border-white/15 text-white/75")}
+          className={cn("rounded-full border px-2 py-0.5 text-sm", state.heroicInspiration ? "border-amber-300 bg-amber-300/20 text-[var(--warning)]" : "border-border text-muted-foreground")}
         >
           <SparklesIcon className="mr-1 inline size-3" />
           {edition === "2024" ? "Heroic Inspiration" : "Inspiration"}
         </button>
       </div>
-      {exhaustionText && <p className="mt-2 text-xs text-red-200/90">Exhaustion {state.exhaustion}: {exhaustionText}</p>}
+      {exhaustionText && <p className="mt-2 text-sm text-destructive">Exhaustion {state.exhaustion}: {exhaustionText}</p>}
       {state.conditions.length > 0 && (
-        <ul className="mt-2 space-y-0.5 text-xs text-white/70">
+        <ul className="mt-2 space-y-0.5 text-sm text-muted-foreground">
           {CONDITIONS.filter((c) => state.conditions.includes(c.name)).map((c) => (
             <li key={c.name}>
-              <span className="font-semibold text-white/85">{c.name}.</span> {c.effect}
+              <span className="font-semibold text-muted-foreground">{c.name}.</span> {c.effect}
             </li>
           ))}
         </ul>
       )}
       {hp === 0 && (
-        <div className="mt-3 rounded-lg border border-red-400/40 bg-red-950/40 p-2 text-sm">
-          <p className="font-semibold text-red-100">At 0 hit points: death saving throws (DC 10) at the start of each turn.</p>
+        <div className="mt-3 rounded-lg border border-red-400/40 bg-destructive/10 p-2 text-sm">
+          <p className="font-semibold text-destructive">At 0 hit points: death saving throws (DC 10) at the start of each turn.</p>
           <div className="mt-1 flex flex-wrap gap-4">
             <DeathSaves label="Successes" value={state.deathSaveSuccesses} tone="bg-emerald-400" onChange={(v) => updateCombat((c) => ({ ...c, deathSaveSuccesses: v }))} />
             <DeathSaves label="Failures" value={state.deathSaveFailures} tone="bg-red-500" onChange={(v) => updateCombat((c) => ({ ...c, deathSaveFailures: v }))} />
           </div>
-          {state.deathSaveSuccesses >= 3 && <p className="mt-1 text-emerald-200">Stable.</p>}
-          {state.deathSaveFailures >= 3 && <p className="mt-1 text-red-200">Dead.</p>}
+          {state.deathSaveSuccesses >= 3 && <p className="mt-1 text-[var(--success)]">Stable.</p>}
+          {state.deathSaveFailures >= 3 && <p className="mt-1 text-destructive">Dead.</p>}
         </div>
       )}
       {adding && (
@@ -750,7 +750,7 @@ function Status({ data, state, edition, exhaustionText, updateCombat, hp }: { da
               title={c.effect}
               aria-pressed={state.conditions.includes(c.name)}
               onClick={() => toggle(c.name)}
-              className={cn("rounded-full border px-2.5 py-1 text-xs", state.conditions.includes(c.name) ? "border-red-300 bg-red-500/20 text-red-50" : "border-white/15 text-white/75 hover:bg-white/10")}
+              className={cn("rounded-full border px-2.5 py-1 text-sm", state.conditions.includes(c.name) ? "border-red-300 bg-red-500/20 text-destructive" : "border-border text-muted-foreground hover:bg-muted")}
             >
               {c.name}
             </button>
@@ -772,15 +772,15 @@ function Effects({ ctx }: { ctx: Ctx }) {
   return (
     <Panel
       title="In effect"
-      icon={<SparklesIcon className="size-4 text-sky-300" />}
+      icon={<SparklesIcon className="size-4 text-[var(--info)]" />}
       action={
-        <Button size="sm" variant="ghost" className="h-7 text-white/80" onClick={() => setAdding((a) => !a)}>
+        <Button size="sm" variant="ghost" className="h-7 text-muted-foreground" onClick={() => setAdding((a) => !a)}>
           {adding ? "Done" : "Add an effect…"}
         </Button>
       }
     >
       {ctx.effects.length === 0 ? (
-        <p className="text-xs text-white/70">
+        <p className="text-sm text-muted-foreground">
           Nothing yet.<span className="hidden sm:inline"> Casting a spell or using a feature that changes your numbers (Shield, Mage Armor, Bladesong, Rage) turns it on here; so can you.</span>
         </p>
       ) : (
@@ -788,12 +788,12 @@ function Effects({ ctx }: { ctx: Ctx }) {
           {ctx.effects.map((e) => (
             <li key={e.key} className="flex flex-wrap items-center gap-2 text-sm">
               <Chip tone={e.kind === "situation" ? "neutral" : "blue"}>{e.key.replace("@", " at level ")}</Chip>
-              <span className="text-xs text-white/75">{e.summary}</span>
-              {e.untilNextTurn && <span className="text-xs text-white/70">ends at the start of your next turn</span>}
-              {e.concentration && <span className="text-xs text-white/70">concentration</span>}
-              {e.notes && <span className="text-xs text-white/70">{e.notes}</span>}
+              <span className="text-sm text-muted-foreground">{e.summary}</span>
+              {e.untilNextTurn && <span className="text-sm text-muted-foreground">ends at the start of your next turn</span>}
+              {e.concentration && <span className="text-sm text-muted-foreground">concentration</span>}
+              {e.notes && <span className="text-sm text-muted-foreground">{e.notes}</span>}
               <span className="flex-1" />
-              <Button size="sm" variant="ghost" className="h-6 text-white/75" aria-label={`End ${e.name}`} onClick={() => ctx.setEffect(e.key, false)}>
+              <Button size="sm" variant="ghost" className="h-6 text-muted-foreground" aria-label={`End ${e.name}`} onClick={() => ctx.setEffect(e.key, false)}>
                 End
               </Button>
             </li>
@@ -808,7 +808,7 @@ function Effects({ ctx }: { ctx: Ctx }) {
               type="button"
               title={effectFor(k, ctx.effectCtx)?.summary}
               onClick={() => ctx.setEffect(k, true)}
-              className="rounded-full border border-white/15 px-2.5 py-1 text-xs text-white/80 hover:border-sky-300/60 hover:bg-white/10"
+              className="rounded-full border border-border px-2.5 py-1 text-sm text-muted-foreground hover:border-sky-300/60 hover:bg-muted"
             >
               {k.replace("@2", "")}
             </button>
@@ -822,9 +822,9 @@ function Effects({ ctx }: { ctx: Ctx }) {
 function DeathSaves({ label, value, tone, onChange }: { label: string; value: number; tone: string; onChange: (v: number) => void }) {
   return (
     <span className="inline-flex items-center gap-1.5">
-      <span className="text-xs text-white/70">{label}</span>
+      <span className="text-sm text-muted-foreground">{label}</span>
       {[1, 2, 3].map((i) => (
-        <button key={i} type="button" aria-label={`${label} ${i}`} aria-pressed={value >= i} onClick={() => onChange(value >= i ? i - 1 : i)} className={cn("size-4 rounded-full border border-white/40", value >= i && tone)} />
+        <button key={i} type="button" aria-label={`${label} ${i}`} aria-pressed={value >= i} onClick={() => onChange(value >= i ? i - 1 : i)} className={cn("size-4 rounded-full border border-border", value >= i && tone)} />
       ))}
     </span>
   );
@@ -873,47 +873,47 @@ function Hud({
         disabled={disabled}
         onClick={() => setTurn((t) => ({ ...t, [field]: !t[field] }))}
         className={cn(
-          "flex h-9 shrink-0 items-center gap-1.5 rounded-lg border px-2 text-xs font-semibold transition sm:px-2.5 sm:text-sm",
-          disabled ? "border-white/10 text-white/30 line-through" : used ? "border-white/10 bg-white/5 text-white/60 line-through" : "border-amber-300/60 bg-amber-300/15 text-amber-50 hover:bg-amber-300/25",
+          "flex h-9 shrink-0 items-center gap-1.5 rounded-lg border px-2 text-sm font-semibold transition sm:px-2.5 sm:text-sm",
+          disabled ? "border-border text-muted-foreground line-through" : used ? "border-border bg-muted text-muted-foreground line-through" : "border-amber-300/60 bg-amber-300/15 text-[var(--warning)] hover:bg-amber-300/25",
         )}
       >
-        <span className={cn("size-2.5 rotate-45", used || disabled ? "bg-white/25" : "bg-amber-300 shadow-[0_0_8px] shadow-amber-300/70")} />
+        <span className={cn("size-2.5 rotate-45", used || disabled ? "bg-muted" : "bg-amber-300 shadow-[0_0_8px] shadow-amber-300/70")} />
         <span className="sm:hidden">{short}</span>
         <span className="hidden sm:inline">{label}</span>
       </button>
     );
   };
   return (
-    <div className="sticky top-16 z-30 -mx-3 border-y border-white/10 bg-neutral-950/90 px-3 py-2 shadow-lg backdrop-blur-md sm:-mx-4 sm:rounded-xl sm:border sm:px-4">
+    <div className="sticky top-16 z-30 -mx-3 border-y border-border bg-card px-3 py-2 shadow-lg backdrop-blur-md sm:-mx-4 sm:rounded-xl sm:border sm:px-4">
       <div className="flex items-center gap-3">
-        <HeartIcon className="size-4 shrink-0 text-red-400" />
+        <HeartIcon className="size-4 shrink-0 text-destructive" />
         <div className="min-w-0 flex-1">
           <div className="flex items-baseline gap-1.5 text-sm">
-            <span className="font-heading text-xl leading-none text-white">{hp}</span>
-            <span className="text-white/60">/ {maxHp}</span>
-            {temp > 0 && <span className="rounded bg-sky-400/20 px-1.5 text-xs text-sky-100">+{temp} temp</span>}
+            <span className="font-heading text-xl leading-none text-foreground">{hp}</span>
+            <span className="text-muted-foreground">/ {maxHp}</span>
+            {temp > 0 && <span className="rounded bg-sky-400/20 px-1.5 text-sm text-[var(--info)]">+{temp} temp</span>}
           </div>
-          <div className="mt-1 h-2 overflow-hidden rounded-full bg-white/10" role="meter" aria-label="Hit points" aria-valuemin={0} aria-valuemax={maxHp} aria-valuenow={hp}>
+          <div className="mt-1 h-2 overflow-hidden rounded-full bg-muted" role="meter" aria-label="Hit points" aria-valuemin={0} aria-valuemax={maxHp} aria-valuenow={hp}>
             <div className={cn("h-full rounded-full transition-all", ratio > 0.5 ? "bg-emerald-400" : ratio > 0.25 ? "bg-amber-400" : "bg-red-500")} style={{ width: `${Math.round(ratio * 100)}%` }} />
           </div>
         </div>
-        <span className="flex shrink-0 items-center gap-1 text-sm text-white" title="Armor class">
-          <ShieldIcon className="size-4 text-sky-300" />
+        <span className="flex shrink-0 items-center gap-1 text-sm text-foreground" title="Armor class">
+          <ShieldIcon className="size-4 text-[var(--info)]" />
           <span className="font-heading text-lg">{ac}</span>
         </span>
-        <span className="flex shrink-0 items-center gap-1 text-sm text-white" title="Movement left this turn">
-          <FootprintsIcon className="size-4 text-white/70" />
+        <span className="flex shrink-0 items-center gap-1 text-sm text-foreground" title="Movement left this turn">
+          <FootprintsIcon className="size-4 text-muted-foreground" />
           {left}
-          <span className="text-white/50">ft</span>
+          <span className="text-muted-foreground">ft</span>
         </span>
       </div>
-      <div className="mt-2 flex items-center gap-1.5">
+      <div className="mt-2 flex flex-wrap items-center gap-1.5">
         {gem("Action", "Action", "action", incapacitated)}
         {gem("Bonus action", "Bonus", "bonus", incapacitated)}
         {gem("Reaction", "React", "reaction", noReactions)}
         <span className="flex-1" />
-        <span className="hidden text-xs text-white/60 sm:inline">Round {turn.round}</span>
-        <Button size="sm" onClick={onNextTurn} className="h-9 shrink-0 bg-amber-500 px-2.5 text-black hover:bg-amber-400" aria-label="Next turn">
+        <span className="hidden text-sm text-muted-foreground sm:inline">Round {turn.round}</span>
+        <Button size="sm" onClick={onNextTurn} className="h-9 shrink-0 bg-primary px-2.5 text-primary-foreground hover:bg-primary/90" aria-label="Next turn">
           <RotateCcwIcon />
           <span className="sm:hidden">Next</span>
           <span className="hidden sm:inline">Next turn</span>
@@ -922,7 +922,7 @@ function Hud({
       {conditions.length > 0 && (
         <div className="mt-1.5 flex flex-wrap gap-1">
           {conditions.map((c) => (
-            <span key={c} className="rounded-full border border-violet-300/40 bg-violet-400/15 px-2 py-0.5 text-xs text-violet-100">
+            <span key={c} className="rounded-full border border-violet-300/40 bg-violet-400/15 px-2 py-0.5 text-sm text-[var(--info)]">
               {c}
             </span>
           ))}
@@ -935,10 +935,10 @@ function Hud({
 /** A tab of the actions: its icon and name, and a glowing dot while that action is still yours this turn. */
 function ActionTab({ value, icon, label, ready }: { value: string; icon: ReactNode; label: string; ready?: boolean }) {
   return (
-    <TabsTrigger value={value} className="h-9 shrink-0 gap-1.5 text-white/70 data-[state=active]:bg-amber-400 data-[state=active]:text-black [&_svg]:size-4">
+    <TabsTrigger value={value} className="h-9 shrink-0 gap-1.5 text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground [&_svg]:size-4">
       {icon}
       {label}
-      {ready !== undefined && <span aria-hidden className={cn("size-2 rotate-45", ready ? "bg-amber-300 shadow-[0_0_6px] shadow-amber-300/80" : "bg-white/20")} />}
+      {ready !== undefined && <span aria-hidden className={cn("size-2 rotate-45", ready ? "bg-amber-300 shadow-[0_0_6px] shadow-amber-300/80" : "bg-muted")} />}
     </TabsTrigger>
   );
 }
@@ -956,13 +956,13 @@ function SpellInfo({ spell, effect, spellKey }: { spell: BattleSpell; effect: Re
     <div className="space-y-2">
       <div>
         <p className="font-heading text-base font-semibold">{spell.name}</p>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-sm text-muted-foreground">
           {spell.level === 0 ? "Cantrip" : `Level ${spell.level}`}
           {spell.concentration ? " · Concentration" : ""}
           {spell.ritual ? " · Ritual" : ""}
         </p>
       </div>
-      <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-xs">
+      <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-sm">
         {(
           [
             ["Casting time", spell.time],
@@ -979,10 +979,10 @@ function SpellInfo({ spell, effect, spellKey }: { spell: BattleSpell; effect: Re
             </div>
           ))}
       </dl>
-      {reads.length > 0 && <p className="rounded-md bg-muted px-2 py-1 text-xs">In a fight: {reads.join(" · ")}</p>}
-      <p className="whitespace-pre-line text-xs leading-relaxed">{plainSpellText(spell.description)}</p>
+      {reads.length > 0 && <p className="rounded-md bg-muted px-2 py-1 text-sm">In a fight: {reads.join(" · ")}</p>}
+      <p className="whitespace-pre-line text-sm leading-relaxed">{plainSpellText(spell.description)}</p>
       {spellKey && (
-        <p className="text-xs">
+        <p className="text-sm">
           <LoreLink category="spells" k={spellKey}>
             Open it in the Compendium
           </LoreLink>
@@ -1009,7 +1009,7 @@ const PROPERTY_TEXT: Record<string, string> = {
 /** What a weapon does, for its name's tooltip: range, each property and its mastery in plain words. */
 function WeaponInfo({ weapon, itemKey, mastery }: { weapon: WeaponAttack; itemKey: string | null; mastery: boolean }) {
   return (
-    <div className="space-y-2 text-xs">
+    <div className="space-y-2 text-sm">
       <p className="font-heading text-base font-semibold">{weapon.name}</p>
       <p>
         {weapon.melee ? "Melee" : "Ranged"} · {weapon.range} · {formatRoll(weapon.roll)}
@@ -1040,7 +1040,7 @@ function WeaponInfo({ weapon, itemKey, mastery }: { weapon: WeaponAttack; itemKe
 /** A feature's whole text, for its name's tooltip. */
 function FeatureInfo({ f }: { f: BattleFeature }) {
   return (
-    <div className="space-y-1.5 text-xs">
+    <div className="space-y-1.5 text-sm">
       <p className="font-heading text-base font-semibold">{f.title}</p>
       <p className="text-muted-foreground">{[f.slot !== "Other" ? f.slot : null, f.usage].filter(Boolean).join(" · ")}</p>
       <p className="whitespace-pre-line leading-relaxed">{f.text}</p>
@@ -1077,16 +1077,16 @@ function TurnBar({
       onClick={() => setTurn((t) => ({ ...t, [field]: !t[field] }))}
       className={cn(
         "flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold transition",
-        disabled ? "border-white/10 text-white/30 line-through" : used ? "border-white/10 bg-white/5 text-white/70 line-through" : "border-amber-300/50 bg-amber-300/10 text-amber-50 hover:bg-amber-300/20",
+        disabled ? "border-border text-muted-foreground line-through" : used ? "border-border bg-muted text-muted-foreground line-through" : "border-amber-300/50 bg-amber-300/10 text-[var(--warning)] hover:bg-amber-300/20",
       )}
     >
-      <span className={cn("size-2.5 rotate-45", used || disabled ? "bg-white/20" : "bg-amber-300")} />
+      <span className={cn("size-2.5 rotate-45", used || disabled ? "bg-muted" : "bg-amber-300")} />
       {label}
     </button>
   );
   return (
-    <Panel title={`Round ${turn.round} · this turn`} icon={<TimerIcon className="size-4 text-amber-300" />} action={
-      <Button size="sm" onClick={onNextTurn} className="h-7 bg-amber-500 text-black hover:bg-amber-400">
+    <Panel title={`Round ${turn.round} · this turn`} icon={<TimerIcon className="size-4 text-[var(--warning)]" />} action={
+      <Button size="sm" onClick={onNextTurn} className="h-7 bg-primary text-primary-foreground hover:bg-primary/90">
         <RotateCcwIcon /> Next turn
       </Button>
     }>
@@ -1094,20 +1094,20 @@ function TurnBar({
         {pip("Action", turn.action, "action", incapacitated)}
         {pip("Bonus action", turn.bonus, "bonus", incapacitated)}
         {pip("Reaction", turn.reaction, "reaction", noReactions)}
-        <div className="flex items-center gap-1.5 rounded-lg border border-white/15 px-2 py-1.5 text-sm">
-          <FootprintsIcon className="size-4 text-white/75" />
+        <div className="flex items-center gap-1.5 rounded-lg border border-border px-2 py-1.5 text-sm">
+          <FootprintsIcon className="size-4 text-muted-foreground" />
           <span className="font-semibold">{left}</span>
-          <span className="text-white/75">/ {total} ft</span>
-          <Button size="icon" variant="ghost" className="size-6 text-white" aria-label="Move 5 feet" onClick={() => setTurn((t) => ({ ...t, moved: Math.min(total, t.moved + 5) }))}>
+          <span className="text-muted-foreground">/ {total} ft</span>
+          <Button size="icon" variant="ghost" className="size-6 text-foreground" aria-label="Move 5 feet" onClick={() => setTurn((t) => ({ ...t, moved: Math.min(total, t.moved + 5) }))}>
             <MinusIcon />
           </Button>
-          <Button size="icon" variant="ghost" className="size-6 text-white" aria-label="Give back 5 feet" onClick={() => setTurn((t) => ({ ...t, moved: Math.max(0, t.moved - 5) }))}>
+          <Button size="icon" variant="ghost" className="size-6 text-foreground" aria-label="Give back 5 feet" onClick={() => setTurn((t) => ({ ...t, moved: Math.max(0, t.moved - 5) }))}>
             <PlusIcon />
           </Button>
         </div>
       </div>
       {(incapacitated || forcedDisadvantage || d20Penalty > 0) && (
-        <p className="mt-2 text-xs text-red-200/90">
+        <p className="mt-2 text-sm text-destructive">
           {incapacitated && "You can't take actions or bonus actions right now. "}
           {forcedDisadvantage && "Your conditions give your attacks disadvantage (counted in the target's roll below). "}
           {d20Penalty > 0 && `Exhaustion: −${d20Penalty} to attack rolls (counted below).`}
@@ -1142,7 +1142,7 @@ function Choices({ ctx, speed }: { ctx: Ctx; speed: number }) {
   const limited = model.features.filter((f) => f.parsedUsage);
   return (
     <Tabs defaultValue="action" className="gap-3">
-      <TabsList className="h-auto w-full justify-start gap-1 overflow-x-auto border border-white/10 bg-neutral-900/80 p-1 backdrop-blur [scrollbar-width:none] sm:flex-wrap">
+      <TabsList className="h-auto w-full justify-start gap-1 flex-wrap border border-border bg-card p-1 backdrop-blur [scrollbar-width:none] sm:flex-wrap">
         <ActionTab value="action" icon={<SwordIcon />} label="Action" ready={!ctx.turn.action && !ctx.incapacitated} />
         <ActionTab value="bonus" icon={<ZapIcon />} label="Bonus action" ready={!ctx.turn.bonus && !ctx.incapacitated} />
         <ActionTab value="reaction" icon={<ShieldIcon />} label="Reaction" ready={!ctx.turn.reaction && !ctx.noReactions} />
@@ -1154,7 +1154,7 @@ function Choices({ ctx, speed }: { ctx: Ctx; speed: number }) {
       </TabsList>
 
       <TabsContent value="action" className="space-y-3">
-        <Panel title={`Attack action${data.attacksPerAction > 1 ? ` · ${data.attacksPerAction} attacks` : ""}`} icon={<SwordIcon className="size-4 text-amber-300" />}>
+        <Panel title={`Attack action${data.attacksPerAction > 1 ? ` · ${data.attacksPerAction} attacks` : ""}`} icon={<SwordIcon className="size-4 text-[var(--warning)]" />}>
           <div className="grid gap-2 md:grid-cols-2">
             {[...model.weapons.filter((w) => w.equipped !== false), ...model.offHand.filter((w) => w.equipped !== false && model.offHandAction[w.name] === "Attack"), model.unarmed].map((w) => (
               <WeaponCard key={`${w.name}|${w.mode ?? ""}`} ctx={ctx} weapon={w} slot="Attack" attacks={w.mode === "Off hand" ? 1 : data.attacksPerAction} />
@@ -1162,7 +1162,7 @@ function Choices({ ctx, speed }: { ctx: Ctx; speed: number }) {
           </div>
           {model.weapons.some((w) => w.equipped === false) && (
             <details className="mt-2">
-              <summary className="cursor-pointer text-xs text-white/75">Weapons in your pack ({new Set(model.weapons.filter((w) => w.equipped === false).map((w) => w.name)).size}): drawing one is your free object interaction</summary>
+              <summary className="cursor-pointer text-sm text-muted-foreground">Weapons in your pack ({new Set(model.weapons.filter((w) => w.equipped === false).map((w) => w.name)).size}): drawing one is your free object interaction</summary>
               <div className="mt-2 grid gap-2 md:grid-cols-2">
                 {[...model.weapons, ...model.offHand].filter((w) => w.equipped === false).map((w) => (
                   <WeaponCard key={`${w.name}|${w.mode ?? ""}`} ctx={ctx} weapon={w} slot="Attack" attacks={data.attacksPerAction} />
@@ -1170,29 +1170,29 @@ function Choices({ ctx, speed }: { ctx: Ctx; speed: number }) {
               </div>
             </details>
           )}
-          <p className="mt-2 text-xs text-white/75">Grapple or shove: {model.grapple}</p>
+          <p className="mt-2 text-sm text-muted-foreground">Grapple or shove: {model.grapple}</p>
           {bySlot("Attack").length > 0 && <FeatureList ctx={ctx} features={bySlot("Attack")} note="Part of the Attack action" />}
         </Panel>
         {spellsBy("Action").length > 0 && (
-          <Panel title="Cast a spell" icon={<ZapIcon className="size-4 text-sky-300" />}>
+          <Panel title="Cast a spell" icon={<ZapIcon className="size-4 text-[var(--info)]" />}>
             <SpellList ctx={ctx} spells={spellsBy("Action")} />
           </Panel>
         )}
         {bySlot("Action").length > 0 && (
-          <Panel title="Your features" icon={<SparklesIcon className="size-4 text-amber-300" />}>
+          <Panel title="Your features" icon={<SparklesIcon className="size-4 text-[var(--warning)]" />}>
             <FeatureList ctx={ctx} features={bySlot("Action")} />
           </Panel>
         )}
         {itemUsesFor("Action")}
-        <Panel title="Every creature can" icon={<ShieldIcon className="size-4 text-white/75" />}>
+        <Panel title="Every creature can" icon={<ShieldIcon className="size-4 text-muted-foreground" />}>
           <StandardList ctx={ctx} />
         </Panel>
       </TabsContent>
 
       <TabsContent value="bonus" className="space-y-3">
         {model.offHand.some((w) => w.equipped !== false && model.offHandAction[w.name] !== "Attack") && (
-          <Panel title="Two-weapon fighting" icon={<SwordIcon className="size-4 text-amber-300" />}>
-            <p className="mb-2 text-xs text-white/75">After attacking with a light melee weapon, attack with the other one as a bonus action{model.edition === "2024" ? " (with the Nick mastery it is part of the Attack action instead)" : ""}. No ability modifier to its damage unless it is negative or you have the Two-Weapon Fighting style.</p>
+          <Panel title="Two-weapon fighting" icon={<SwordIcon className="size-4 text-[var(--warning)]" />}>
+            <p className="mb-2 text-sm text-muted-foreground">After attacking with a light melee weapon, attack with the other one as a bonus action{model.edition === "2024" ? " (with the Nick mastery it is part of the Attack action instead)" : ""}. No ability modifier to its damage unless it is negative or you have the Two-Weapon Fighting style.</p>
             <div className="grid gap-2 md:grid-cols-2">
               {model.offHand.filter((w) => w.equipped !== false && model.offHandAction[w.name] !== "Attack").map((w) => (
                 <WeaponCard key={`${w.name}|off`} ctx={ctx} weapon={w} slot="Bonus Action" attacks={1} />
@@ -1205,8 +1205,8 @@ function Choices({ ctx, speed }: { ctx: Ctx; speed: number }) {
       </TabsContent>
 
       <TabsContent value="reaction" className="space-y-3">
-        <Panel title="Opportunity attack" icon={<SwordIcon className="size-4 text-amber-300" />}>
-          <p className="mb-2 text-xs text-white/75">When a creature you can see leaves your reach, make one melee attack against it.</p>
+        <Panel title="Opportunity attack" icon={<SwordIcon className="size-4 text-[var(--warning)]" />}>
+          <p className="mb-2 text-sm text-muted-foreground">When a creature you can see leaves your reach, make one melee attack against it.</p>
           {model.opportunity && <WeaponCard ctx={ctx} weapon={model.opportunity} slot="Reaction" attacks={1} />}
         </Panel>
         <SlotSection ctx={ctx} features={bySlot("Reaction")} spells={spellsBy("Reaction")} empty="" />
@@ -1216,9 +1216,9 @@ function Choices({ ctx, speed }: { ctx: Ctx; speed: number }) {
       <TabsContent value="spells" className="space-y-3">
         <SlotsPanel ctx={ctx} />
         {ctx.magicState && ctx.casters.some((c) => c.prepares) && (
-          <Panel title="Prepare spells" icon={<ListChecksIcon className="size-4 text-sky-300" />}>
+          <Panel title="Prepare spells" icon={<ListChecksIcon className="size-4 text-[var(--info)]" />}>
             <details open={ctx.casters.filter((c) => c.prepares).every((c) => (ctx.magicState!.prepared[c.name] ?? []).length === 0) || undefined}>
-              <summary className="cursor-pointer text-sm text-white/70">Change what you have prepared (after a long rest). The same as the Magic tab.</summary>
+              <summary className="cursor-pointer text-sm text-muted-foreground">Change what you have prepared (after a long rest). The same as the Magic tab.</summary>
               <div className="mt-3">
                 <PrepareSpells casters={ctx.casters} magic={ctx.magicState} onChange={ctx.updateMagic} />
               </div>
@@ -1227,10 +1227,10 @@ function Choices({ ctx, speed }: { ctx: Ctx; speed: number }) {
         )}
         {model.spells.length === 0 ? (
           <Panel>
-            <p className="text-sm text-white/70">{data.name} has no spells.</p>
+            <p className="text-sm text-muted-foreground">{data.name} has no spells.</p>
           </Panel>
         ) : (
-          <Panel title="Spells" icon={<ZapIcon className="size-4 text-sky-300" />}>
+          <Panel title="Spells" icon={<ZapIcon className="size-4 text-[var(--info)]" />}>
             <SpellList ctx={ctx} spells={model.spells} grouped />
           </Panel>
         )}
@@ -1238,8 +1238,8 @@ function Choices({ ctx, speed }: { ctx: Ctx; speed: number }) {
 
       <TabsContent value="resources" className="space-y-3">
         <SlotsPanel ctx={ctx} />
-        <Panel title="Limited uses" icon={<SparklesIcon className="size-4 text-amber-300" />}>
-          {limited.length === 0 ? <p className="text-sm text-white/75">No features with limited uses.</p> : <FeatureList ctx={ctx} features={limited} />}
+        <Panel title="Limited uses" icon={<SparklesIcon className="size-4 text-[var(--warning)]" />}>
+          {limited.length === 0 ? <p className="text-sm text-muted-foreground">No features with limited uses.</p> : <FeatureList ctx={ctx} features={limited} />}
         </Panel>
       </TabsContent>
 
@@ -1262,16 +1262,16 @@ function Choices({ ctx, speed }: { ctx: Ctx; speed: number }) {
       </TabsContent>
 
       <TabsContent value="move" className="space-y-3">
-        <Panel title="Movement" icon={<FootprintsIcon className="size-4 text-white/70" />}>
-          <ul className="space-y-1 text-sm text-white/80">
+        <Panel title="Movement" icon={<FootprintsIcon className="size-4 text-muted-foreground" />}>
+          <ul className="space-y-1 text-sm text-muted-foreground">
             <li>Walk {speed} ft{data.speeds.fly ? `, fly ${data.speeds.fly} ft` : ""}{data.speeds.climb ? `, climb ${data.speeds.climb} ft` : ""}{data.speeds.swim ? `, swim ${data.speeds.swim} ft` : ""}. You can split it before and after your action.</li>
             <li>Standing up from prone costs half your speed ({Math.floor(speed / 2)} ft); dropping prone is free.</li>
             <li>Difficult terrain costs 1 extra foot per foot. Climbing or swimming without a speed for it costs the same.</li>
             <li>The Dash action adds your speed again (+{speed} ft).</li>
           </ul>
         </Panel>
-        <Panel title="Free on your turn" icon={<SparklesIcon className="size-4 text-white/70" />}>
-          <ul className="space-y-1 text-sm text-white/80">
+        <Panel title="Free on your turn" icon={<SparklesIcon className="size-4 text-muted-foreground" />}>
+          <ul className="space-y-1 text-sm text-muted-foreground">
             <li>One object interaction: draw or stow a weapon, open a door, pick up an item.</li>
             <li>Speak a few words, gesture.</li>
             {model.features.filter((f) => f.slot === "Other" && /\bfree\b|no action required/i.test(f.text)).map((f) => (
@@ -1288,16 +1288,16 @@ function Choices({ ctx, speed }: { ctx: Ctx; speed: number }) {
 }
 
 function SlotSection({ ctx, features, spells, empty }: { ctx: Ctx; features: BattleFeature[]; spells: BattleSpell[]; empty: string }) {
-  if (features.length === 0 && spells.length === 0) return empty ? <Panel><p className="text-sm text-white/75">{empty}</p></Panel> : null;
+  if (features.length === 0 && spells.length === 0) return empty ? <Panel><p className="text-sm text-muted-foreground">{empty}</p></Panel> : null;
   return (
     <>
       {features.length > 0 && (
-        <Panel title="Your features" icon={<SparklesIcon className="size-4 text-amber-300" />}>
+        <Panel title="Your features" icon={<SparklesIcon className="size-4 text-[var(--warning)]" />}>
           <FeatureList ctx={ctx} features={features} />
         </Panel>
       )}
       {spells.length > 0 && (
-        <Panel title="Spells" icon={<ZapIcon className="size-4 text-sky-300" />}>
+        <Panel title="Spells" icon={<ZapIcon className="size-4 text-[var(--info)]" />}>
           <SpellList ctx={ctx} spells={spells} />
         </Panel>
       )}
@@ -1338,16 +1338,16 @@ function WeaponCard({ ctx, weapon, slot, attacks }: { ctx: Ctx; weapon: WeaponAt
   const field = SLOT_FIELD[slot];
   const spent = field ? ctx.turn[field] : false;
   return (
-    <div className="rounded-lg border border-white/10 bg-black/35 p-3">
+    <div className="rounded-lg border border-border bg-muted p-3">
       <div className="flex items-start gap-2">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-1.5">
-            <Peek label={`${weapon.name}: what it does`} className="truncate font-semibold text-white" content={() => <WeaponInfo weapon={weapon} itemKey={itemKey} mastery={weapon.masteryKnown ?? ctx.model.hasWeaponMastery} />}>
+            <Peek label={`${weapon.name}: what it does`} className="truncate font-semibold text-foreground" content={() => <WeaponInfo weapon={weapon} itemKey={itemKey} mastery={weapon.masteryKnown ?? ctx.model.hasWeaponMastery} />}>
               {weapon.name}
             </Peek>
             {weapon.mode && <Chip tone={weapon.current ? "gold" : "neutral"}>{weapon.mode}{weapon.current ? " · held now" : ""}</Chip>}
           </div>
-          <div className="text-xs text-white/75">{weapon.range}{weapon.properties.length ? ` · ${weapon.properties.join(", ")}` : ""}</div>
+          <div className="text-sm text-muted-foreground">{weapon.range}{weapon.properties.length ? ` · ${weapon.properties.join(", ")}` : ""}</div>
         </div>
         <Button size="sm" variant="secondary" className="h-9 min-w-16 sm:h-7" disabled={(ctx.incapacitated && slot !== "Reaction") || spent} onClick={() => ctx.use(slot)}>
           Use
@@ -1360,23 +1360,23 @@ function WeaponCard({ ctx, weapon, slot, attacks }: { ctx: Ctx; weapon: WeaponAt
         <Mini label={`vs AC ${ctx.targetAc}`} value={percent(hit)} sub={`${expected.toFixed(1)} dmg/attack`} />
       </div>
       <RollNote roll={roll} />
-      <p className="mt-1.5 text-xs text-white/70">
+      <p className="mt-1.5 text-sm text-muted-foreground">
         {weapon.roll.type}
         {attacks > 1 ? ` · ${attacks} attacks: about ${(expected * attacks).toFixed(1)} damage per Attack action` : ""}
         {crit > 0.05 ? ` · critical ${percent(crit)}` : ""}
       </p>
       {on.map((p) => (
-        <p key={p.id} className="mt-1 text-xs text-red-100/90">
+        <p key={p.id} className="mt-1 text-sm text-destructive">
           +{formatRoll(p.roll)} ({p.label.toLowerCase()})
         </p>
       ))}
       {(weapon.notes ?? []).map((n) => (
-        <p key={n} className="mt-1 text-xs text-sky-100/80">
+        <p key={n} className="mt-1 text-sm text-[var(--info)]">
           {n}
         </p>
       ))}
       {(weapon.masteryKnown ?? ctx.model.hasWeaponMastery) && weapon.properties.filter((p) => MASTERY[p]).map((p) => (
-        <p key={p} className="mt-1 text-xs text-amber-100/80">
+        <p key={p} className="mt-1 text-sm text-[var(--warning)]">
           <span className="font-semibold">Mastery: {p}.</span> {MASTERY[p]}
         </p>
       ))}
@@ -1386,10 +1386,10 @@ function WeaponCard({ ctx, weapon, slot, attacks }: { ctx: Ctx; weapon: WeaponAt
 
 function Mini({ label, value, sub }: { label: string; value: ReactNode; sub?: ReactNode }) {
   return (
-    <div className="rounded-md bg-white/5 px-1 py-1">
-      <div className="text-xs uppercase tracking-wider text-white/70">{label}</div>
-      <div className="truncate text-sm font-semibold text-white">{value}</div>
-      {sub && <div className="truncate text-xs text-white/70">{sub}</div>}
+    <div className="rounded-md bg-muted px-1 py-1">
+      <div className="text-sm uppercase tracking-wider text-muted-foreground">{label}</div>
+      <div className="truncate text-sm font-semibold text-foreground">{value}</div>
+      {sub && <div className="truncate text-sm text-muted-foreground">{sub}</div>}
     </div>
   );
 }
@@ -1409,7 +1409,7 @@ const RECHARGE: Record<string, string> = { turn: "per turn", short: "per short r
 function FeatureList({ ctx, features, note }: { ctx: Ctx; features: BattleFeature[]; note?: string }) {
   return (
     <ul className="mt-1 space-y-2">
-      {note && <li className="text-xs uppercase tracking-wider text-white/70">{note}</li>}
+      {note && <li className="text-sm uppercase tracking-wider text-muted-foreground">{note}</li>}
       {features.map((f) => (
         <FeatureItem key={f.title} ctx={ctx} f={f} />
       ))}
@@ -1432,23 +1432,23 @@ function FeatureItem({ ctx, f }: { ctx: Ctx; f: BattleFeature }) {
   const field = SLOT_FIELD[f.slot];
   const blocked = (field && ctx.turn[field]) || (f.slot === "Reaction" ? ctx.noReactions : ctx.incapacitated && f.slot !== "Other");
   return (
-    <li className="rounded-lg border border-white/10 bg-black/30 p-2.5">
+    <li className="rounded-lg border border-border bg-muted p-2.5">
       <div className="flex flex-wrap items-center gap-2">
-        <Peek label={`${f.title}: what it does`} className="font-semibold text-white" content={() => <FeatureInfo f={f} />}>
+        <Peek label={`${f.title}: what it does`} className="font-semibold text-foreground" content={() => <FeatureInfo f={f} />}>
           {f.title}
         </Peek>
         {f.slot !== "Other" && <Chip>{f.slot}</Chip>}
         {u?.kind === "pool" && <Chip tone="gold">uses {f.cost > 1 ? `${f.cost} ` : ""}{u.pool}</Chip>}
         {f.dice && <Chip tone="blue">{f.dice}</Chip>}
         {counted && (
-          <span className="inline-flex items-center gap-1.5 text-xs text-white/70">
+          <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
             <UsePips max={counted.max} spent={spent} /> {left}/{counted.max} {RECHARGE[counted.recharge]}
             {regainOne ? " (one back per short rest)" : ""}
           </span>
         )}
         <span className="flex-1" />
         {many && (
-          <Input inputMode="numeric" aria-label={`How much ${f.title} spends`} value={amount} onChange={(e) => setAmount(e.target.value.replace(/\D/g, ""))} className="h-9 w-14 border-white/20 bg-black/40 text-center text-white sm:h-7" />
+          <Input inputMode="numeric" aria-label={`How much ${f.title} spends`} value={amount} onChange={(e) => setAmount(e.target.value.replace(/\D/g, ""))} className="h-9 w-14 border-border bg-muted text-center text-foreground sm:h-7" />
         )}
         {(counted || f.slot !== "Other") && (
           <Button size="sm" variant="secondary" className="h-9 min-w-16 sm:h-7" disabled={!!blocked || (left !== null && left < (many ? n : 1))} onClick={() => ctx.spendFeature(f, many ? n : 1)}>
@@ -1456,12 +1456,12 @@ function FeatureItem({ ctx, f }: { ctx: Ctx; f: BattleFeature }) {
           </Button>
         )}
         {counted && spent > 0 && owner && (
-          <Button size="sm" variant="ghost" className="h-9 text-white/75 sm:h-7" onClick={() => ctx.updateCombat((c) => ({ ...c, uses: { ...c.uses, [owner]: Math.max(0, (c.uses[owner] ?? 0) - (many ? n : 1)) } }))}>
+          <Button size="sm" variant="ghost" className="h-9 text-muted-foreground sm:h-7" onClick={() => ctx.updateCombat((c) => ({ ...c, uses: { ...c.uses, [owner]: Math.max(0, (c.uses[owner] ?? 0) - (many ? n : 1)) } }))}>
             <Undo2Icon /> Undo
           </Button>
         )}
       </div>
-      <p className="mt-1 line-clamp-2 text-xs text-white/70">{f.text}</p>
+      <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{f.text}</p>
     </li>
   );
 }
@@ -1473,12 +1473,12 @@ function StandardList({ ctx }: { ctx: Ctx }) {
       {ctx.model.standard.map((a) => {
         const key = a.lore ? lookup("actions", a.lore, ctx.model.edition) : null;
         return (
-          <li key={a.name} className="flex items-start gap-2 rounded-lg border border-white/10 bg-black/25 p-2">
+          <li key={a.name} className="flex items-start gap-2 rounded-lg border border-border bg-muted p-2">
             <div className="min-w-0 flex-1">
-              <div className="text-sm font-semibold text-white">{key ? <LoreLink category="actions" k={key}>{a.name}</LoreLink> : a.name}</div>
-              <p className="text-xs text-white/65">{a.text}</p>
+              <div className="text-sm font-semibold text-foreground">{key ? <LoreLink category="actions" k={key}>{a.name}</LoreLink> : a.name}</div>
+              <p className="text-sm text-muted-foreground">{a.text}</p>
             </div>
-            <Button size="sm" variant="ghost" className="h-7 text-white/80" disabled={ctx.turn.action || ctx.incapacitated} onClick={() => ctx.use("Action")}>
+            <Button size="sm" variant="ghost" className="h-7 text-muted-foreground" disabled={ctx.turn.action || ctx.incapacitated} onClick={() => ctx.use("Action")}>
               Use
             </Button>
           </li>
@@ -1492,14 +1492,14 @@ function SlotsPanel({ ctx }: { ctx: Ctx }) {
   const levels = Object.keys(ctx.slotTotals).map(Number).sort((a, b) => a - b);
   if (levels.length === 0 && !ctx.pact) return null;
   return (
-    <Panel title="Spell slots" icon={<ZapIcon className="size-4 text-sky-300" />}>
+    <Panel title="Spell slots" icon={<ZapIcon className="size-4 text-[var(--info)]" />}>
       <div className="flex flex-wrap gap-3">
         {levels.map((level) => {
           const total = ctx.slotTotals[level];
           const left = ctx.slotsLeft(level);
           return (
-            <div key={level} className="rounded-lg border border-white/10 bg-black/30 px-2.5 py-1.5">
-              <div className="text-xs uppercase tracking-wider text-white/70">{ordinal(level)} level</div>
+            <div key={level} className="rounded-lg border border-border bg-muted px-2.5 py-1.5">
+              <div className="text-sm uppercase tracking-wider text-muted-foreground">{ordinal(level)} level</div>
               <div className="mt-1 flex gap-1">
                 {Array.from({ length: total }, (_, i) => (
                   <button
@@ -1515,8 +1515,8 @@ function SlotsPanel({ ctx }: { ctx: Ctx }) {
           );
         })}
         {ctx.pact && (
-          <div className="rounded-lg border border-violet-300/30 bg-black/30 px-2.5 py-1.5">
-            <div className="text-xs uppercase tracking-wider text-white/70">Pact slots · {ordinal(ctx.pact.level)} level · short rest</div>
+          <div className="rounded-lg border border-violet-300/30 bg-muted px-2.5 py-1.5">
+            <div className="text-sm uppercase tracking-wider text-muted-foreground">Pact slots · {ordinal(ctx.pact.level)} level · short rest</div>
             <div className="mt-1 flex gap-1">
               {Array.from({ length: ctx.pact.count }, (_, i) => (
                 <button
@@ -1531,7 +1531,7 @@ function SlotsPanel({ ctx }: { ctx: Ctx }) {
           </div>
         )}
       </div>
-      <p className="mt-2 text-xs text-white/70">The same slots as the Magic tab: spending one here spends it there.</p>
+      <p className="mt-2 text-sm text-muted-foreground">The same slots as the Magic tab: spending one here spends it there.</p>
     </Panel>
   );
 }
@@ -1548,8 +1548,8 @@ function SpellList({ ctx, spells, grouped }: { ctx: Ctx; spells: BattleSpell[]; 
   return (
     <div className="flex flex-col gap-4">
       {resting.length > 0 && (
-        <details className="order-last rounded-lg border border-dashed border-white/10 p-2">
-          <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wider text-white/70">Not prepared ({resting.length}): prepare them above, or cast one anyway</summary>
+        <details className="order-last rounded-lg border border-dashed border-border p-2">
+          <summary className="cursor-pointer text-sm font-semibold uppercase tracking-wider text-muted-foreground">Not prepared ({resting.length}): prepare them above, or cast one anyway</summary>
           <div className="mt-2 grid gap-2 md:grid-cols-2">
             {resting.map((s) => (
               <SpellCard key={`${s.name}|${s.level}|${s.origin}|${s.item?.entryId ?? ""}`} ctx={ctx} spell={s} />
@@ -1559,7 +1559,7 @@ function SpellList({ ctx, spells, grouped }: { ctx: Ctx; spells: BattleSpell[]; 
       )}
       {levels.map((level) => (
         <div key={level}>
-          <h3 className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-white/70">{level === 0 ? "Cantrips" : `${ordinal(level)} level`}</h3>
+          <h3 className="mb-1.5 text-sm font-semibold uppercase tracking-wider text-muted-foreground">{level === 0 ? "Cantrips" : `${ordinal(level)} level`}</h3>
           <div className="grid gap-2 md:grid-cols-2">
             {sorted.filter((s) => s.level === level).map((s) => (
               <SpellCard key={`${s.name}|${s.level}|${s.origin}|${s.item?.entryId ?? ""}`} ctx={ctx} spell={s} />
@@ -1569,7 +1569,7 @@ function SpellList({ ctx, spells, grouped }: { ctx: Ctx; spells: BattleSpell[]; 
       ))}
       {fromItems.length > 0 && (
         <div>
-          <h3 className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-violet-200/70">From magic items (their charges)</h3>
+          <h3 className="mb-1.5 text-sm font-semibold uppercase tracking-wider text-[var(--info)]">From magic items (their charges)</h3>
           <div className="grid gap-2 md:grid-cols-2">
             {[...fromItems].sort((a, b) => a.castingName.localeCompare(b.castingName) || a.item!.cost - b.item!.cost).map((s) => (
               <SpellCard key={`${s.name}|${s.level}|${s.origin}|${s.item?.entryId ?? ""}`} ctx={ctx} spell={s} />
@@ -1608,31 +1608,31 @@ function SpellCard({ ctx, spell }: { ctx: Ctx; spell: BattleSpell }) {
   const attackRollOf = ctx.rollFor(effect.attack === "melee");
   const save = effect.save ? ctx.targetSaveFor(effect.save) : null;
   return (
-    <div className={cn("rounded-lg border bg-black/35 p-3", ready ? "border-white/10" : "border-dashed border-white/10 opacity-60")}>
+    <div className={cn("rounded-lg border bg-muted p-3", ready ? "border-border" : "border-dashed border-border opacity-60")}>
       <div className="flex items-start gap-2">
         <div className="min-w-0 flex-1">
-          <div className="font-semibold text-white">
+          <div className="font-semibold text-foreground">
             <Peek label={`${spell.name}: what it does`} content={() => <SpellInfo spell={spell} effect={effect} spellKey={key} />}>
               {spell.name}
             </Peek>
-            {spell.concentration && <span title="Concentration" className="ml-1.5 rounded bg-amber-300/20 px-1 text-xs text-amber-100">C</span>}
-            {spell.ritual && <span title="Ritual" className="ml-1 rounded bg-white/10 px-1 text-xs text-white/70">R</span>}
+            {spell.concentration && <span title="Concentration" className="ml-1.5 rounded bg-amber-300/20 px-1 text-sm text-[var(--warning)]">C</span>}
+            {spell.ritual && <span title="Ritual" className="ml-1 rounded bg-muted px-1 text-sm text-muted-foreground">R</span>}
           </div>
-          <div className="text-xs text-white/70">
+          <div className="text-sm text-muted-foreground">
             {[spell.time, spell.range, spell.duration, spell.components].filter(Boolean).join(" · ")}
           </div>
           {!ready && (
-            <div className="text-xs text-amber-200/80">
+            <div className="text-sm text-[var(--warning)]">
               Not prepared.{" "}
-              <button type="button" className="underline hover:text-amber-100" onClick={() => ctx.castAnyway(spell.name)}>
+              <button type="button" className="underline hover:text-[var(--warning)]" onClick={() => ctx.castAnyway(spell.name)}>
                 Forgot to prepare it? Cast anyway
               </button>
             </div>
           )}
-          {needsAttunement && <div className="text-xs text-amber-200/80">Attune to {item!.name} first (Equipment tab)</div>}
+          {needsAttunement && <div className="text-sm text-[var(--warning)]">Attune to {item!.name} first (Equipment tab)</div>}
         </div>
         {spell.item && levels.length > 1 ? (
-          <select aria-label="Charges" value={choice} onChange={(e) => setChoice(e.target.value)} className="h-9 rounded-md sm:h-7 border border-violet-300/40 bg-black/60 px-1 text-xs text-violet-100">
+          <select aria-label="Charges" value={choice} onChange={(e) => setChoice(e.target.value)} className="h-9 rounded-md sm:h-7 border border-violet-300/40 bg-muted px-1 text-sm text-[var(--info)]">
             {levels.map((l) => (
               <option key={l} value={l}>
                 {ordinal(l)}: {chargesFor(spell, l)} of {chargesLeft} charges
@@ -1640,16 +1640,16 @@ function SpellCard({ ctx, spell }: { ctx: Ctx; spell: BattleSpell }) {
             ))}
           </select>
         ) : spell.item ? (
-          <span className="rounded-md border border-violet-300/40 px-1.5 py-1 text-xs text-violet-100">
+          <span className="rounded-md border border-violet-300/40 px-1.5 py-1 text-sm text-[var(--info)]">
             {chargesFor(spell, castAt) ? `${chargesFor(spell, castAt)} of ${chargesLeft} charges` : "no charge"}
           </span>
         ) : item && (
-          <span className="rounded-md border border-violet-300/40 px-1.5 py-1 text-xs text-violet-100">
+          <span className="rounded-md border border-violet-300/40 px-1.5 py-1 text-sm text-[var(--info)]">
             {item.name}: {Math.max(0, (item.charges ?? 0) - item.chargesUsed)} charges
           </span>
         )}
         {spell.level > 0 && !item && (
-          <select aria-label="Cast with" value={choice} onChange={(e) => setChoice(e.target.value)} className="h-9 rounded-md sm:h-7 border border-white/20 bg-black/60 px-1 text-xs text-white">
+          <select aria-label="Cast with" value={choice} onChange={(e) => setChoice(e.target.value)} className="h-9 rounded-md sm:h-7 border border-border bg-muted px-1 text-sm text-foreground">
             {levels.map((l) => (
               <option key={l} value={l}>
                 {ordinal(l)} ({ctx.slotsLeft(l)} left)
@@ -1658,11 +1658,11 @@ function SpellCard({ ctx, spell }: { ctx: Ctx; spell: BattleSpell }) {
             {pactUsable && <option value="pact">Pact {ordinal(ctx.pact!.level)} ({ctx.pactLeft} left)</option>}
           </select>
         )}
-        <Button size="sm" className="h-9 min-w-16 bg-sky-500 text-black hover:bg-sky-400 sm:h-7" disabled={!ready || noSlot || spent || blocked || needsAttunement} onClick={() => ctx.cast(spell, castAt, usePact)}>
+        <Button size="sm" className="h-9 min-w-16 bg-primary text-primary-foreground hover:bg-primary/90 sm:h-7" disabled={!ready || noSlot || spent || blocked || needsAttunement} onClick={() => ctx.cast(spell, castAt, usePact)}>
           Cast
         </Button>
       </div>
-      <div className="mt-2 flex flex-wrap gap-1.5 text-xs">
+      <div className="mt-2 flex flex-wrap gap-1.5 text-sm">
         {effect.attack && <Chip tone="gold">{signed(bonus)} {effect.attack} spell attack · {percent(hitChanceWithDie(bonus, ctx.targetAc, attackRollOf.advantage, ctx.fx.die).hit)} vs AC {ctx.targetAc}</Chip>}
         {effect.save && <Chip tone="gold">DC {spell.saveDc} {effect.save} save{effect.halfOnSave ? " · half on a success" : ""}</Chip>}
         {save && (save.autoFail || save.advantage !== "normal" || save.bonus !== undefined || save.notes.length > 0) && (
@@ -1686,9 +1686,9 @@ function SpellCard({ ctx, spell }: { ctx: Ctx; spell: BattleSpell }) {
         <Chip>{spell.castingName ? `${spell.castingName} · ` : ""}{spell.slot === "Other" ? spell.time : spell.slot}</Chip>
       </div>
       {effect.attack && <RollNote roll={attackRollOf} />}
-      {effect.upcastNote && <p className="mt-1.5 text-xs text-sky-100/85">Higher slot: {effect.upcastNote}</p>}
-      <details className="mt-1.5 text-xs text-white/65">
-        <summary className="cursor-pointer text-white/70">Description</summary>
+      {effect.upcastNote && <p className="mt-1.5 text-sm text-[var(--info)]">Higher slot: {effect.upcastNote}</p>}
+      <details className="mt-1.5 text-sm text-muted-foreground">
+        <summary className="cursor-pointer text-muted-foreground">Description</summary>
         <p className="mt-1 whitespace-pre-line">{plainSpellText(spell.description)}</p>
       </details>
     </div>
@@ -1731,7 +1731,7 @@ function hitDiceOf(data: SheetData, state: CombatState, total: number) {
   return { pools, multi, leftOf, key };
 }
 
-function RestDialog({ kind, onClose, ctx, totalHitDice }: { kind: "short" | "long" | null; onClose: () => void; ctx: Ctx; totalHitDice: number }) {
+export function RestDialog({ kind, onClose, ctx, totalHitDice }: { kind: "short" | "long" | null; onClose: () => void; ctx: Pick<Ctx, "data" | "model" | "state" | "updateCombat" | "updateMagic" | "effectCtx" | "pact">; totalHitDice: number }) {
   const { data, model, state } = ctx;
   const [dice, setDice] = useState(0);
   const [rolled, setRolled] = useState<number[] | null>(null);
@@ -1917,7 +1917,7 @@ function RollNote({ roll }: { roll: AttackRoll }) {
   if (roll.advantage === "normal" && !roll.for.length && !roll.against.length && !roll.autoCrit && !roll.notes.length) return null;
   const word = roll.advantage === "advantage" ? "Advantage" : roll.advantage === "disadvantage" ? "Disadvantage" : "Normal roll";
   return (
-    <p className={cn("mt-1.5 text-xs", roll.advantage === "advantage" ? "text-emerald-200" : roll.advantage === "disadvantage" ? "text-red-200" : "text-white/75")}>
+    <p className={cn("mt-1.5 text-sm", roll.advantage === "advantage" ? "text-[var(--success)]" : roll.advantage === "disadvantage" ? "text-destructive" : "text-muted-foreground")}>
       <span className="font-semibold">{word}</span>
       {roll.for.length > 0 && ` · for: ${roll.for.join(", ")}`}
       {roll.against.length > 0 && ` · against: ${roll.against.join(", ")}`}
@@ -1955,20 +1955,20 @@ function TargetPanel(p: {
   const word = (r: AttackRoll) => (r.advantage === "advantage" ? "advantage" : r.advantage === "disadvantage" ? "disadvantage" : "normal");
   const myTurn = p.fights.find((f) => f.fight.turn && f.fight.combatants.find((c) => c.id === f.fight.turn)?.characterId === p.me);
   return (
-    <Panel title={p.target ? `Target: ${p.target.name}` : "Target"} icon={<CrosshairIcon className="size-4 text-amber-300" />}>
+    <Panel title={p.target ? `Target: ${p.target.name}` : "Target"} icon={<CrosshairIcon className="size-4 text-[var(--warning)]" />}>
       {p.fights.map((f) => {
         const current = f.fight.combatants.find((c) => c.id === f.fight.turn);
         return (
-          <p key={f.entryId} className={cn("mb-2 text-xs", myTurn === f ? "font-semibold text-amber-200" : "text-white/65")}>
+          <p key={f.entryId} className={cn("mb-2 text-sm", myTurn === f ? "font-semibold text-[var(--warning)]" : "text-muted-foreground")}>
             {f.campaignName}: {f.title}, round {f.fight.round}
             {current ? ` · ${myTurn === f ? "your turn!" : `${current.name}'s turn`}` : ""}{" "}
-            <Link to={`/campaigns/${f.campaignId}/fight/${f.entryId}`} className="underline decoration-white/30 hover:text-white">
+            <Link to={`/campaigns/${f.campaignId}/fight/${f.entryId}`} className="underline decoration-white/30 hover:text-foreground">
               order of play
             </Link>
           </p>
         );
       })}
-      <div className="flex flex-wrap items-center gap-2 text-xs">
+      <div className="flex flex-wrap items-center gap-2 text-sm">
         {p.fights.length > 0 && (
           <select
             aria-label="Target"
@@ -1977,7 +1977,7 @@ function TargetPanel(p: {
               const [campaignId, entryId, combatantId] = e.target.value.split("|");
               p.setPick(e.target.value ? { campaignId, entryId, combatantId } : null);
             }}
-            className="h-7 max-w-64 rounded-md border border-white/20 bg-black/60 px-1 text-white"
+            className="h-7 max-w-64 rounded-md border border-border bg-muted px-1 text-foreground"
           >
             <option value="">Someone else (describe below)</option>
             {p.fights.map((f) => (
@@ -1994,22 +1994,22 @@ function TargetPanel(p: {
             ))}
           </select>
         )}
-        <label className="flex items-center gap-1.5 text-white/70">
+        <label className="flex items-center gap-1.5 text-muted-foreground">
           AC
           {p.target?.ac != null ? (
-            <span className="font-semibold text-white">{p.target.ac}</span>
+            <span className="font-semibold text-foreground">{p.target.ac}</span>
           ) : (
-            <Input aria-label="Target AC" inputMode="numeric" value={p.manualAc} onChange={(e) => p.setManualAc(Math.min(40, Math.max(0, Number(e.target.value.replace(/\D/g, "")) || 0)))} className="h-7 w-14 border-white/20 bg-black/40 text-center text-white" />
+            <Input aria-label="Target AC" inputMode="numeric" value={p.manualAc} onChange={(e) => p.setManualAc(Math.min(40, Math.max(0, Number(e.target.value.replace(/\D/g, "")) || 0)))} className="h-7 w-14 border-border bg-muted text-center text-foreground" />
           )}
         </label>
-        <label className="flex items-center gap-1.5 text-white/70">
+        <label className="flex items-center gap-1.5 text-muted-foreground">
           <input type="checkbox" checked={p.within5} onChange={(e) => p.setWithin5(e.target.checked)} /> within 5 ft of you (for ranged attacks)
         </label>
         <span className="flex-1" />
-        <span className="text-white/70">Your own:</span>
-        <div className="flex overflow-hidden rounded-md border border-white/15" role="group" aria-label="Attack rolls">
+        <span className="text-muted-foreground">Your own:</span>
+        <div className="flex overflow-hidden rounded-md border border-border" role="group" aria-label="Attack rolls">
           {(["disadvantage", "normal", "advantage"] as const).map((a) => (
-            <button key={a} type="button" aria-pressed={p.advantage === a} onClick={() => p.setAdvantage(a)} className={cn("px-2 py-1 capitalize", p.advantage === a ? "bg-white/20 text-white" : "text-white/75 hover:bg-white/10")}>
+            <button key={a} type="button" aria-pressed={p.advantage === a} onClick={() => p.setAdvantage(a)} className={cn("px-2 py-1 capitalize", p.advantage === a ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-muted")}>
               {a === "normal" ? "Normal" : a === "advantage" ? "Adv." : "Disadv."}
             </button>
           ))}
@@ -2027,16 +2027,16 @@ function TargetPanel(p: {
               disabled={p.busy}
               title={`${m.note}${by ? ` · marked by ${by}` : ""}`}
               onClick={() => p.toggle(m.name, !on)}
-              className={cn("rounded-full border px-2 py-0.5 text-xs", on ? "border-violet-300/70 bg-violet-500/30 text-violet-50" : "border-white/15 text-white/70 hover:bg-white/10")}
+              className={cn("rounded-full border px-2 py-0.5 text-sm", on ? "border-violet-300/70 bg-violet-500/30 text-[var(--info)]" : "border-border text-muted-foreground hover:bg-muted")}
             >
               {m.name}
             </button>
           );
         })}
       </div>
-      <p className="mt-2 text-xs text-white/70">
-        Melee: <span className={melee.advantage === "advantage" ? "text-emerald-200" : melee.advantage === "disadvantage" ? "text-red-200" : ""}>{word(melee)}</span> · Ranged:{" "}
-        <span className={ranged.advantage === "advantage" ? "text-emerald-200" : ranged.advantage === "disadvantage" ? "text-red-200" : ""}>{word(ranged)}</span>
+      <p className="mt-2 text-sm text-muted-foreground">
+        Melee: <span className={melee.advantage === "advantage" ? "text-[var(--success)]" : melee.advantage === "disadvantage" ? "text-destructive" : ""}>{word(melee)}</span> · Ranged:{" "}
+        <span className={ranged.advantage === "advantage" ? "text-[var(--success)]" : ranged.advantage === "disadvantage" ? "text-destructive" : ""}>{word(ranged)}</span>
         {p.target ? " · marks are shared with the DM and party" : ""}
       </p>
     </Panel>

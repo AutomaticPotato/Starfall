@@ -18,3 +18,10 @@ Tailwind 4 imports workspace `packages/ui/src/index.css` through app `index.css`
 
 ## Validation
 Run workspace package build before app build; API/client package exports use dist. Vitest tests under `lib/rules` cover spell progression, multiclass, combat, inventory and encounters. Browser tests should use synthetic intercepted API responses on an isolated dev server, never production mutations. Check 320/390/768/1024/1440 widths, all themes, focus, expansion, filtering, errors and persistence. PDF tests need templates/assets present.
+
+## Modernization additions
+- `styles/themes.css`: Porcelain, Slate, Midnight semantic palettes, reduced motion and shared surfaces. `components/mode-toggle.tsx`: live preview, cancel and save; provider migrates existing light/dark settings.
+- `components/spells/spell-browser.tsx`: SpellBrowser/SpellCard, document-flow pagination and lazy descriptions. `pages/characters/builder/spell-choice.tsx`: Learn/Remove via existing hooks, server requirements, explicit printing selector. `lib/rules/spell-options.ts:groupSpellOptions`: reprint grouping without changing stored ids. Same-feature duplicate selection guard stays in SpellChoice.
+- `/characters/:id/play`: `pages/characters/sheet/interactive-sheet.tsx:InteractiveSheetPage`. Reuses `Vitals`, `Status` and a narrowed `RestDialog` from battle-page, `MagicTab`, `EquipmentTab`, and original API hooks. Ability/attack summaries clearly identify base values; temporary effects/actions remain in battle.
+- `/characters/:id/sheet` remains the original PDF route. Only a reciprocal link was added. No PDF generation code changed.
+- `tools/frontend/smoke.mjs` and `fixtures.mjs`: synthetic browser regression harness; intercepts every API request. Start Vite with `VITE_API_BASE=''`, then run `PLAYWRIGHT_MODULE=/absolute/path/to/playwright/index.mjs node tools/frontend/smoke.mjs` from root. Override FRONTEND_URL and SCREENSHOT_DIR as needed. Screenshots default to /tmp/starlights-frontend-shots. Never point at a deployed application.

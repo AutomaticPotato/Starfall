@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { groupSpellOptions } from "./spell-options";
 import type { SelectionRuleOptionDataModel } from "@starlights/api-client";
-const spell = (id: string, source: string, extra: Partial<SelectionRuleOptionDataModel> = {}): SelectionRuleOptionDataModel => ({ elementId: id, name: "Magic Missile", source, eligible: true, spell: { level: 1, school: "Evocation" }, ...extra });
+const spell = (id: string, source: string, extra: Partial<SelectionRuleOptionDataModel> = {}): SelectionRuleOptionDataModel => ({
+  elementId: id,
+  name: "Magic Missile",
+  source,
+  eligible: true,
+  spell: { level: 1, school: "Evocation" },
+  ...extra,
+});
 describe("spell reprints", () => {
   it("shows one card for repeated book entries while retaining every printing id", () => {
     const result = groupSpellOptions([spell("a", "Player's Handbook"), spell("b", "Supplement"), spell("c", "Player's Handbook (2024)")], "2024");
@@ -21,7 +28,10 @@ describe("spell reprints", () => {
     expect(result[0].printings.map((p) => p.elementId).sort()).toEqual(["allowed", "locked"]);
   });
   it("normalizes punctuation/spacing but keeps distinct spell names separate", () => {
-    const result = groupSpellOptions([spell("a", "A", { name: "  Melf’s  Acid Arrow " }), spell("b", "B", { name: "Melf's Acid Arrow" }), spell("c", "C", { name: "Acid Splash" })], "mixed");
+    const result = groupSpellOptions(
+      [spell("a", "A", { name: "  Melf’s  Acid Arrow " }), spell("b", "B", { name: "Melf's Acid Arrow" }), spell("c", "C", { name: "Acid Splash" })],
+      "mixed",
+    );
     expect(result).toHaveLength(2);
     expect(result.find((r) => r.printings.length === 2)?.printings.map((p) => p.elementId)).toEqual(["a", "b"]);
   });

@@ -67,6 +67,7 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <CharactersPage /> },
       { path: ":id", element: <CharacterBuilderPage /> },
+      { path: ":id/play", lazy: () => import("./pages/characters/sheet/interactive-sheet.tsx").then((m) => ({ Component: m.InteractiveSheetPage })) },
       // the upstream test page, still handy for looking at raw registrations and statistics
       { path: ":id/debug", element: <CharactersDetailsPage /> },
       { path: "create", element: <CharactersCreatePage /> },
@@ -124,7 +125,7 @@ const router = createBrowserRouter([
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="dark" storageKey="starlights-ui-theme">
+      <ThemeProvider defaultTheme="porcelain" storageKey="starlights-ui-theme">
         <PlayerProvider>
           <RouterProvider router={router} />
         </PlayerProvider>

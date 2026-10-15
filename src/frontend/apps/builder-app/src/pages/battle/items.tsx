@@ -36,7 +36,7 @@ export function Items({
   markUsed: (slot: "Action" | "Bonus Action") => void;
 }) {
   if (items.length === 0) {
-    return <p className="rounded-xl border border-white/10 bg-neutral-900/80 p-4 text-sm text-white/75">No magic items or potions carried. Add them in the builder's Equipment tab.</p>;
+    return <p className="rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground">No magic items or potions carried. Add them in the builder's Equipment tab.</p>;
   }
   const active = new Set(state.active ?? []);
   const toggle = (key: string) => update((c) => ({ ...c, active: (c.active ?? []).includes(key) ? (c.active ?? []).filter((k) => k !== key) : [...(c.active ?? []), key] }));
@@ -49,20 +49,20 @@ export function Items({
         const powers = riders[item.entryId] ?? [];
         const chargesLeft = item.charges ? Math.max(0, item.charges - item.chargesUsed) : null;
         return (
-          <article key={item.entryId} className={cn("rounded-xl border bg-neutral-900/80 p-3 shadow-xl backdrop-blur-md", item.active ? "border-amber-300/30" : "border-white/10")}>
+          <article key={item.entryId} className={cn("rounded-xl border bg-card p-3 shadow-sm", item.active ? "border-amber-300/30" : "border-border")}>
             <header className="flex flex-wrap items-center gap-2">
-              {item.consumable ? <FlaskConicalIcon className="size-4 text-emerald-300" /> : <GemIcon className="size-4 text-amber-300" />}
-              <h3 className="font-semibold text-white">{item.name}</h3>
-              {item.quantity > 1 && <span className="text-xs text-white/75">×{item.quantity}</span>}
+              {item.consumable ? <FlaskConicalIcon className="size-4 text-[var(--success)]" /> : <GemIcon className="size-4 text-[var(--warning)]" />}
+              <h3 className="font-semibold text-foreground">{item.name}</h3>
+              {item.quantity > 1 && <span className="text-sm text-muted-foreground">×{item.quantity}</span>}
               <span className="flex-1" />
-              {item.rarity && <span className="rounded-full border border-white/15 px-2 py-0.5 text-xs text-white/70">{item.rarity}</span>}
+              {item.rarity && <span className="rounded-full border border-border px-2 py-0.5 text-sm text-muted-foreground">{item.rarity}</span>}
               {item.requiresAttunement && (
-                <span className={cn("rounded-full border px-2 py-0.5 text-xs", item.attuned ? "border-emerald-300/40 text-emerald-100" : "border-red-300/40 text-red-100")}>
+                <span className={cn("rounded-full border px-2 py-0.5 text-sm", item.attuned ? "border-emerald-300/40 text-[var(--success)]" : "border-red-300/40 text-destructive")}>
                   {item.attuned ? "attuned" : "not attuned"}
                 </span>
               )}
             </header>
-            <p className="mt-1 text-xs text-white/75">
+            <p className="mt-1 text-sm text-muted-foreground">
               {item.bonuses.length > 0
                 ? item.active
                   ? `Active: ${item.bonuses.join(", ")}, already in your numbers.`
@@ -77,7 +77,7 @@ export function Items({
             </p>
 
             {chargesLeft !== null && item.charges !== null && (
-              <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-white/75">
+              <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
                 <span>Charges</span>
                 <span className="inline-flex gap-0.5">
                   {Array.from({ length: Math.min(item.charges, 30) }, (_, i) => (
@@ -97,7 +97,7 @@ export function Items({
             )}
 
             {item.spells.length > 0 && (
-              <p className="mt-2 text-xs text-violet-100/80">
+              <p className="mt-2 text-sm text-[var(--info)]">
                 Casts{" "}
                 {item.spells
                   .map((s) => `${s.spell.name} (${s.cost ? `${s.cost} charge${s.cost === 1 ? "" : "s"}${s.upcast ? ", more for a higher level" : ""}` : "no charge"}${s.dc ? `, save DC ${s.dc}` : ""})`)
@@ -112,36 +112,36 @@ export function Items({
                   const key = `${item.entryId}:${p.id}`;
                   const on = p.always || active.has(key);
                   return (
-                    <li key={p.id} className="flex flex-wrap items-center gap-2 text-xs">
-                      <span className="rounded-full border border-red-300/40 bg-red-500/10 px-2 py-0.5 text-red-100">
+                    <li key={p.id} className="flex flex-wrap items-center gap-2 text-sm">
+                      <span className="rounded-full border border-red-300/40 bg-red-500/10 px-2 py-0.5 text-destructive">
                         +{formatRoll(p.roll)} ({average(p.roll)} avg)
                       </span>
-                      <span className="text-white/75">{p.label}</span>
+                      <span className="text-muted-foreground">{p.label}</span>
                       <span className="flex-1" />
                       {p.always || p.critOnly ? (
-                        <span className="text-white/70">{p.critOnly ? "added to critical hits" : "always on"}</span>
+                        <span className="text-muted-foreground">{p.critOnly ? "added to critical hits" : "always on"}</span>
                       ) : (
-                        <Button size="sm" variant={on ? "default" : "secondary"} className={cn("h-7", on && "bg-amber-500 text-black hover:bg-amber-400")} aria-pressed={on} onClick={() => toggle(key)}>
+                        <Button size="sm" variant={on ? "default" : "secondary"} className={cn("h-7", on && "bg-primary text-primary-foreground hover:bg-primary/90")} aria-pressed={on} onClick={() => toggle(key)}>
                           {on ? "On" : "Switch on"}
                         </Button>
                       )}
                     </li>
                   );
                 })}
-                <li className="text-xs text-white/70">Switched-on damage is added to this weapon's attack cards.</li>
+                <li className="text-sm text-muted-foreground">Switched-on damage is added to this weapon's attack cards.</li>
               </ul>
             )}
 
             {heals && (
-              <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
-                <span className="rounded-full border border-emerald-300/40 bg-emerald-400/10 px-2 py-0.5 text-emerald-100">
+              <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
+                <span className="rounded-full border border-emerald-300/40 bg-emerald-400/10 px-2 py-0.5 text-[var(--success)]">
                   Heals {formatRoll(heals, false)} ({average(heals)} avg)
                 </span>
-                <span className="text-white/75">{edition === "2024" ? "Drinking it is a Bonus Action." : "Drinking it is an action."}</span>
+                <span className="text-muted-foreground">{edition === "2024" ? "Drinking it is a Bonus Action." : "Drinking it is an action."}</span>
                 <span className="flex-1" />
                 <Button
                   size="sm"
-                  className="h-7 bg-emerald-600 text-white hover:bg-emerald-500"
+                  className="h-7 bg-primary text-primary-foreground hover:bg-primary/90"
                   onClick={() => {
                     const amount = rollDice(heals);
                     heal(amount);
@@ -155,8 +155,8 @@ export function Items({
               </div>
             )}
 
-            <details className="mt-2 text-xs text-white/70">
-              <summary className="cursor-pointer text-white/70">What it does</summary>
+            <details className="mt-2 text-sm text-muted-foreground">
+              <summary className="cursor-pointer text-muted-foreground">What it does</summary>
               <p className="mt-1 whitespace-pre-line">{plainSpellText(item.html) || "No description."}</p>
             </details>
           </article>
@@ -208,9 +208,9 @@ export function ItemUses({
   if (rows.length === 0) return null;
   const props = { slot, spent, blocked, setCharges, consume, tempHp, heal, markUsed, party: applyToAlly ? party : [], applyToAlly };
   return (
-    <section className="rounded-xl border border-white/10 bg-neutral-900/85 p-3 shadow-xl backdrop-blur-md sm:p-4">
-      <h2 className="mb-2 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-white/80">
-        <GemIcon className="size-4 text-violet-300" /> Magic items
+    <section className="rounded-xl border border-border bg-card p-3 shadow-sm sm:p-4">
+      <h2 className="mb-2 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+        <GemIcon className="size-4 text-[var(--info)]" /> Magic items
       </h2>
       <div className="grid gap-2 md:grid-cols-2">
         {rows.map(({ item, use }) => (
@@ -293,22 +293,22 @@ function ItemUseRow({
   }
 
   return (
-    <div className="rounded-lg border border-white/10 bg-black/35 p-3">
+    <div className="rounded-lg border border-border bg-muted p-3">
       <div className="flex items-start gap-2">
         <div className="min-w-0 flex-1">
-          <div className="font-semibold text-white">{item.name}</div>
-          <div className="text-xs text-white/75">{target && use.consumes ? `Give it to ${target.name}: heal` : use.label}</div>
-          <div className="text-xs text-white/70">
+          <div className="font-semibold text-foreground">{item.name}</div>
+          <div className="text-sm text-muted-foreground">{target && use.consumes ? `Give it to ${target.name}: heal` : use.label}</div>
+          <div className="text-sm text-muted-foreground">
             {use.consumes ? `Used up${item.quantity > 1 ? ` (${item.quantity} left)` : ""}` : use.charges ? `${use.charges} charge${use.charges === 1 ? "" : "s"} · ${left ?? 0} left` : "No charge"}
             {use.roll ? ` · ${formatRoll(use.roll, false)} (${average(use.roll)} avg)` : ""}
           </div>
           {targets.length > 0 && (
-            <label className="mt-1.5 flex items-center gap-1.5 text-xs text-white/75">
+            <label className="mt-1.5 flex items-center gap-1.5 text-sm text-muted-foreground">
               On
               <select
                 value={on}
                 onChange={(e) => setOn(e.target.value)}
-                className="h-6 max-w-[12rem] rounded border border-white/15 bg-black/60 px-1 text-xs text-white"
+                className="h-6 max-w-[12rem] rounded border border-border bg-muted px-1 text-sm text-foreground"
                 aria-label={`Use ${item.name} on`}
               >
                 <option value="">yourself</option>
@@ -324,7 +324,7 @@ function ItemUseRow({
         </div>
         <Button
           size="sm"
-          className="h-7 bg-violet-500 text-white hover:bg-violet-400"
+          className="h-7 bg-violet-500 text-foreground hover:bg-violet-400"
           disabled={spent || blocked || noCharge || sending}
           title={noCharge ? "No charges left" : spent ? `Your ${slot.toLowerCase()} is used this turn` : undefined}
           onClick={onUse}
@@ -332,7 +332,7 @@ function ItemUseRow({
           Use
         </Button>
       </div>
-      {use.text && <p className="mt-1 text-xs text-white/70">{use.text}</p>}
+      {use.text && <p className="mt-1 text-sm text-muted-foreground">{use.text}</p>}
     </div>
   );
 }

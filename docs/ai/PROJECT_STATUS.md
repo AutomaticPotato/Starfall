@@ -10,3 +10,6 @@ Semantic themes/shared surfaces → spell selection → interactive sheet → ba
 
 ## Environment limitations
 Initial shell has Node 18, no dotnet on PATH, restricted DNS and Docker socket access denied. Existing frontend dependencies and Playwright package are available in local caches; test feasibility is being assessed. No production data or services may be changed to work around these limitations.
+
+## Implemented on the isolated frontend branch
+Three previewable persisted themes, responsive header menu, shared spell browser, learning/preparation counts and level navigation, duplicate printing consolidation, interactive sheet route and token-based battle presentation. No backend/database/rules engine changes. Full browser/build/runtime verification remains outstanding until the local toolchain is available; see handoff for exact test outcomes.

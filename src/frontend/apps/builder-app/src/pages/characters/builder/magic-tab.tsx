@@ -110,6 +110,7 @@ export function MagicTab({ characterId, spellChoices = [], renderChoice }: { cha
               <SlotRow
                 key={level}
                 label={`${ordinal(Number(level))} level`}
+                busy={save.isPending}
                 total={total}
                 spent={expended(magic, Number(level))}
                 onSpent={(n) => change((m) => setSpent(m, Number(level), n, total))}
@@ -118,6 +119,7 @@ export function MagicTab({ characterId, spellChoices = [], renderChoice }: { cha
             {pact && (
               <SlotRow
                 label={`Pact magic (${ordinal(pact.level)})`}
+                busy={save.isPending}
                 note="back after a short rest"
                 total={pact.count}
                 spent={magic.expendedPactSlots}
@@ -191,7 +193,7 @@ function SpellPicks({ choices, renderChoice }: { choices: BuilderChoice[]; rende
 }
 
 /** One level's slots as boxes to tick, like on the paper sheet: ticking the third box spends three slots. */
-function SlotRow({ label, note, total, spent, onSpent }: { label: string; note?: string; total: number; spent: number; onSpent: (spent: number) => void }) {
+function SlotRow({ label, note, total, spent, busy, onSpent }: { label: string; note?: string; total: number; spent: number; busy: boolean; onSpent: (spent: number) => void }) {
   return (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2">
       <span className="w-24 text-sm sm:w-36">
@@ -205,6 +207,7 @@ function SlotRow({ label, note, total, spent, onSpent }: { label: string; note?:
             <button
               key={i}
               type="button"
+              disabled={busy}
               aria-pressed={isSpent}
               aria-label={`${label} slot ${i + 1} of ${total}${isSpent ? ", spent" : ""}`}
               onClick={() => onSpent(isSpent ? i : i + 1)}

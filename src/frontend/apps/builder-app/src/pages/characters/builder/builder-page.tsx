@@ -300,7 +300,7 @@ function BuilderHeader({ characterId, choices, pending, guided }: { characterId:
           {!guided && (
             <>
               <Button variant="outline" asChild>
-                <Link to={`/characters/${characterId}/sheet`}>
+                <Link to={`/characters/${characterId}/play`}>
                   <FileTextIcon /> Character sheet
                 </Link>
               </Button>
