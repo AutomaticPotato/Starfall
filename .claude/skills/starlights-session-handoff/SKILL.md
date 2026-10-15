@@ -15,3 +15,8 @@ Update `docs/ai/CLAUDE_HANDOFF.md` (keep it under ~80 lines; replace stale lines
 Then commit the handoff with the work (WIP commits on your own branch are fine; squash before publishing).
 Durable facts that outlive the task (where things live, decisions) go into the matching skill or Codex's
 `docs/ai/DECISIONS.md`-style note once, not into the handoff. Never put secrets, tokens or player data in it.
+
+# Ending a mission (the owner's directive, section 9)
+Report, then stop and wait for approval before merging, pushing or deploying:
+branch and starting commit · changes completed · reused code and attribution · tests run and results · known
+limitations · database and compatibility risks · integration dependencies · review instructions.
