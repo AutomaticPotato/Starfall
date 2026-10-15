@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeftIcon, CoinsIcon, CrownIcon, DownloadIcon, EyeOffIcon, LockIcon, PencilIcon, PlusIcon, ScrollTextIcon, SearchIcon, SettingsIcon, SwordsIcon, Trash2Icon, UsersIcon } from "lucide-react";
-import { lazy, Suspense, useMemo, useState } from "react";
+import { ArrowLeftIcon, ChevronDownIcon, CoinsIcon, CrownIcon, DownloadIcon, EyeOffIcon, LockIcon, PencilIcon, PlusIcon, ScrollTextIcon, SearchIcon, SettingsIcon, SwordsIcon, Trash2Icon, UsersIcon } from "lucide-react";
+import { lazy, Suspense, useId, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +21,7 @@ import { DmNotes, EntryDialog, GiveDialog, Prose, ShareOutDialog, UnlockCampaign
 import { CODEX_KINDS, KIND_NAMES, textareaClass, useCampaignRestricted, whereaboutsLabel } from "./campaign-shared";
 import { PartySummary } from "./party-summary";
 import { CampaignNotes } from "./campaign-notes";
+import { campaignSessions, matchingSessions, sessionLabel } from "./session-navigation";
 
 type Editing = { kind: EntryKind; entry?: CampaignEntry | null } | null;
 
@@ -133,7 +134,7 @@ export function CampaignPage() {
           </TabsContent>
         )}
         <TabsContent value="sessions" className="mt-4">
-          <Sessions view={view} canEdit={canEdit} onEdit={edit} />
+          <Sessions key={`${id}:${canEdit ? "dm" : "player"}`} view={view} canEdit={canEdit} onEdit={edit} />
         </TabsContent>
         <TabsContent value="npcs" className="mt-4">
           <Codex view={view} canEdit={canEdit} onEdit={edit} kinds={["npc"]} />
@@ -251,30 +252,171 @@ function EditButton({ onClick, label }: { onClick: () => void; label: string }) 
 }
 
 function Sessions({ view, canEdit, onEdit }: TabProps) {
-  const sessions = view.entries.filter((e) => e.kind === "session").sort((a, b) => (b.number ?? 0) - (a.number ?? 0));
+  // Search only the current server-provided view. Never index the separately cached DM response.
+  const dmSide = canEdit && view.dm;
+  const sessions = useMemo(() => campaignSessions(view.entries, dmSide), [view.entries, dmSide]);
+  const [query, setQuery] = useState("");
+  const [expanded, setExpanded] = useState<Set<string>>(() => new Set(sessions.slice(0, 1).map((s) => s.id)));
+  const shown = useMemo(() => matchingSessions(sessions, query, dmSide), [sessions, query, dmSide]);
+  const prefix = useId();
+  const search = useRef<HTMLInputElement>(null);
+  const headings = useRef(new Map<string, HTMLButtonElement>());
+  const toggle = (id: string) =>
+    setExpanded((previous) => {
+      const next = new Set(previous);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  const jump = (id: string) => {
+    if (!id) return;
+    setExpanded((previous) => new Set(previous).add(id));
+    requestAnimationFrame(() => {
+      const heading = headings.current.get(id);
+      heading?.focus({ preventScroll: true });
+      heading?.scrollIntoView({ block: "start" });
+    });
+  };
+  const backToNavigation = () => {
+    search.current?.focus({ preventScroll: true });
+    search.current?.scrollIntoView({ block: "center" });
+  };
   return (
     <div className="space-y-3">
-      {canEdit && (
-        <Button size="sm" onClick={() => onEdit("session")}>
-          <PlusIcon /> Add a session
-        </Button>
-      )}
+      <div className="space-y-3 rounded-lg border bg-card p-3 sm:p-4" aria-label="Session navigation" role="search">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-sm text-muted-foreground" role="status">
+            {query.trim() ? `${shown.length} of ${sessions.length} sessions` : `${sessions.length} ${sessions.length === 1 ? "session" : "sessions"}`}
+          </p>
+          {canEdit && (
+            <Button size="sm" onClick={() => onEdit("session")}>
+              <PlusIcon /> Add a session
+            </Button>
+          )}
+        </div>
+        {sessions.length > 0 && (
+          <>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="min-w-0 space-y-1 text-sm font-medium" htmlFor={`${prefix}-search`}>
+                <span>Search sessions</span>
+                <Input
+                  ref={search}
+                  id={`${prefix}-search`}
+                  type="search"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder={dmSide ? "Title, notes or DM notes…" : "Title or notes…"}
+                  aria-describedby={`${prefix}-hint`}
+                />
+              </label>
+              <label className="min-w-0 space-y-1 text-sm font-medium" htmlFor={`${prefix}-jump`}>
+                <span>Jump to session</span>
+                <select
+                  id={`${prefix}-jump`}
+                  value=""
+                  onChange={(e) => jump(e.target.value)}
+                  disabled={shown.length === 0}
+                  className="h-9 w-full min-w-0 truncate rounded-md border border-input bg-background px-3 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:opacity-50 max-sm:min-h-11"
+                >
+                  <option value="">Choose a session…</option>
+                  {shown.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {sessionLabel(s)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            <p id={`${prefix}-hint`} className="text-xs text-muted-foreground">
+              Newest session first. Search also matches session numbers and dates{dmSide ? "; DM notes stay on the DM side" : ""}.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={shown.length === 0 || shown.every((s) => expanded.has(s.id))}
+                onClick={() => setExpanded((previous) => new Set([...previous, ...shown.map((s) => s.id)]))}
+              >
+                Expand shown
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={!shown.some((s) => expanded.has(s.id))}
+                onClick={() =>
+                  setExpanded((previous) => {
+                    const next = new Set(previous);
+                    for (const session of shown) next.delete(session.id);
+                    return next;
+                  })
+                }
+              >
+                Collapse shown
+              </Button>
+              {query && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    setQuery("");
+                    search.current?.focus();
+                  }}
+                >
+                  Clear search
+                </Button>
+              )}
+            </div>
+          </>
+        )}
+      </div>
       {sessions.length === 0 && <p className="text-sm text-muted-foreground">No sessions yet.</p>}
-      {sessions.map((s) => (
-        <article key={s.id} className="rounded-lg border p-4">
-          <div className="flex flex-wrap items-center gap-2">
-            <h3 className="font-heading text-lg">
-              {s.number != null && <span className="text-muted-foreground">Session {s.number} · </span>}
-              {s.title}
+      {sessions.length > 0 && shown.length === 0 && (
+        <p className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">No sessions match. Try another title or phrase, or clear the search.</p>
+      )}
+      {shown.map((s) => (
+        <article key={s.id} className="min-w-0 rounded-lg border bg-card p-3 sm:p-4" aria-labelledby={`${prefix}-${s.id}-heading`}>
+          <div className="flex items-start gap-2">
+            <h3 className="min-w-0 flex-1 font-heading text-lg">
+              <button
+                type="button"
+                id={`${prefix}-${s.id}-heading`}
+                ref={(node) => {
+                  if (node) headings.current.set(s.id, node);
+                  else headings.current.delete(s.id);
+                }}
+                aria-expanded={expanded.has(s.id)}
+                aria-controls={`${prefix}-${s.id}-body`}
+                onClick={() => toggle(s.id)}
+                className="flex min-h-11 w-full scroll-mt-24 items-start gap-2 rounded-md py-1.5 text-left outline-none hover:text-primary focus-visible:ring-[3px] focus-visible:ring-ring/50"
+              >
+                <ChevronDownIcon aria-hidden="true" className={cn("mt-1 size-4 shrink-0", !expanded.has(s.id) && "-rotate-90")} />
+                <span className="min-w-0 break-words">
+                  {s.number != null && <span className="text-muted-foreground">Session {s.number} · </span>}
+                  {s.title}
+                </span>
+              </button>
             </h3>
-            {s.occurredOn && <span className="text-xs text-muted-foreground">{s.occurredOn}</span>}
-            <HiddenBadge entry={s} canEdit={canEdit} />
             {canEdit && <EditButton onClick={() => onEdit("session", s)} label={`Edit ${s.title}`} />}
           </div>
-          {s.imageUrl && <img src={s.imageUrl} alt="" className="mt-3 max-h-64 rounded-md border object-cover" />}
-          <Prose text={s.body} className="mt-2" />
-          <EntryLinks entry={s} />
-          <DmNotes text={s.dmNotes} />
+          {(s.occurredOn || !s.visible) && (
+            <div className="flex flex-wrap items-center gap-2 pl-6">
+              {s.occurredOn && <span className="text-xs text-muted-foreground">{s.occurredOn}</span>}
+              <HiddenBadge entry={s} canEdit={canEdit} />
+            </div>
+          )}
+          <div id={`${prefix}-${s.id}-body`} hidden={!expanded.has(s.id)} className="min-w-0 break-words">
+            {expanded.has(s.id) && (
+              <>
+                {s.imageUrl && <img src={s.imageUrl} alt="" className="mt-3 max-h-64 max-w-full rounded-md border object-cover" />}
+                <Prose text={s.body} className="mt-2" />
+                <EntryLinks entry={s} />
+                {dmSide && <DmNotes text={s.dmNotes} />}
+                <Button size="sm" variant="ghost" className="mt-3" onClick={backToNavigation}>
+                  Back to session navigation
+                </Button>
+              </>
+            )}
+          </div>
         </article>
       ))}
     </div>
