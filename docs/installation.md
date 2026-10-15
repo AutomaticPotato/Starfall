@@ -3,10 +3,12 @@
 Starlights runs in your browser. Install it once on a computer that stays on while your group plays.
 The same `deploy/docker-compose.yml` runs on Linux and on Windows through WSL2. No desktop application is needed.
 
-**Validation status for Mission 008A:** installer contract tests run on Ubuntu 24.04 with disposable files and simulated
-Docker/API responses. Real Docker clean-install and recovery tests are pending because this development session cannot
-access the Docker socket. Windows Docker Desktop and PowerShell execution are also pending. The Windows instructions
-and launcher are implemented, but compatibility has not yet been verified on Windows hardware.
+**Validation status:** on Ubuntu 24.04 with real Docker (disposable installs, synthetic data, `--skip-content`): a
+clean install, a repeated setup, recovery with a stopped API, and backup, deep verification, restore, update and
+rollback with the maintenance tools, including a `.env` saved with Windows (CRLF) line endings. The installer's 39
+contract tests pass. **Not yet tested:** Windows (Docker Desktop, WSL2, the PowerShell launcher) on real Windows
+hardware, and a full content download through setup. The Windows instructions and launcher are implemented but
+unverified on Windows.
 
 ## Before you start
 
@@ -153,7 +155,8 @@ New installations save a unique project name in `.env`; older installations reta
 `data/.installer-project` prevents accidental reassignment after this installer has run; preserve it with your data.
 
 `./setup.sh --skip-content` starts the app without downloading content. Import it later through the **Content** page or rerun
-setup. Some character choices will be missing until import succeeds.
+setup. Some character choices will be missing until import succeeds, and saving homebrew fails (with an error, after
+the homebrew file itself is saved) until the content has been imported once.
 
 ## Timeouts and troubleshooting
 
