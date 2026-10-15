@@ -22,7 +22,7 @@ render, public door 401, anonymous homebrew write 403, no pending migrations. Co
   `/api/elements/homebrew/{spells,subclasses,classes}`, GET `/homebrew/subclass-targets`, DELETE
   `/homebrew/{kind}/{id}`); generated files are hidden/protected in the files tab (`HomebrewContent.IsManaged`).
 - Homebrew workshop, web: `lib/api/homebrew.ts`, `pages/homebrew/{Index.tsx,workshop-tabs.tsx,form-styles.ts}`,
-  `pages/landing/homebrew-section.tsx` (five tiles → `/homebrew?tab=X&new=1`).
+  a "Homebrew" picture tile on the home page (`pages/landing/Index.tsx`, art `/art/homebrew.webp`, outside git).
 - Integration: spells/classes/subclasses are Aurora elements in the homebrew book, so they reach the builder,
   Compendium, sheet and simulator like book content once a character's Sources (or a campaign's Use homebrew)
   switch the book on. Verified end to end in the builder (below); Compendium/simulator not separately checked.
@@ -47,7 +47,7 @@ Test copy torn down afterwards (copy DB dropped, its .bak and :test images delet
   `aurora-server`.
 
 ## Coordination (shared files touched)
-- `pages/landing/Index.tsx`: one import + `<HomebrewSection />` line (Codex's theme work owns the rest).
+- `pages/landing/Index.tsx`: the Homebrew tile in the tile grid (Battle | Homebrew row) and `imagePosition` on `LandingTile`; Codex's theme work owns the rest.
 - `pages/campaigns/encounter-page.tsx`: one import + `<EncounterDifficulty … />` line in the set-up `<details>`.
 - `pages/homebrew/homebrew-tabs.tsx`: `Field` exported; items/monsters accept `startNew`.
 - Spell selection redesign (D&D Beyond style) is Codex's (`codex/frontend-modernisation` fd6bd92); not touched.

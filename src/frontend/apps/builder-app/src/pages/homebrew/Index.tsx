@@ -133,7 +133,7 @@ function FilesTab() {
 const TABS = ["items", "monsters", "spells", "classes", "subclasses", "files"] as const;
 
 export function HomebrewPage() {
-  // ?tab=spells opens a tab, &new=1 its "new" form (the home page's homebrew section links here)
+  // ?tab=spells opens a tab, &new=1 its "new" form (links from elsewhere can open a form directly)
   const [params, setParams] = useSearchParams();
   const tab = (TABS as readonly string[]).includes(params.get("tab") ?? "") ? params.get("tab")! : "items";
   const startNew = params.get("new") === "1";

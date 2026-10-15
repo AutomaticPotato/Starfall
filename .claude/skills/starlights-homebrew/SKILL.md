@@ -29,7 +29,7 @@ description: Load before working on Starlights homebrew — the Homebrew page, h
   skill select lists skill ids joined with `|`; proficiencies carry `requirements="!{MULTICLASS id}"` except the
   multiclass subset; casting tables are copied from the 2024 Cleric/Paladin/Warlock. Build XML with `XElement`, allowlist enums, cap lengths, keep ids stable across edits.
 - Web: `pages/homebrew/{Index.tsx,homebrew-tabs.tsx,workshop-tabs.tsx,form-styles.ts}`, `lib/api/homebrew.ts`,
-  home tiles `pages/landing/homebrew-section.tsx` (`/homebrew?tab=spells&new=1` opens a new form).
+  one "Homebrew" picture tile on the home page (`pages/landing/Index.tsx`, art `/art/homebrew.webp`); `/homebrew?tab=spells&new=1` opens a new form.
 - End-to-end check on the test copy: `tmp/sec/hb_e2e.py`-style script (builds a level-5 character of a homebrew
   class and checks choices, slots, skills, subclass choice).
 - Status of the workshop (spells/classes/subclasses forms, home page tiles): see `docs/ai/CLAUDE_HANDOFF.md`.

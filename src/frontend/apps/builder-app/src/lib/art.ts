@@ -9,6 +9,7 @@ export const HOME_BACKGROUNDS = ["home-1.webp", "home-2.webp", "home-3.webp", "h
 
 export const LORE_BACKGROUND = `${ART_BASE}lore.webp`;
 export const BATTLE_BACKGROUND = `${ART_BASE}battle.webp`;
+export const HOMEBREW_TILE = `${ART_BASE}homebrew.webp`;
 
 /** The background for an hour: they take turns, a new one each hour. */
 export function homeBackgroundAt(date: Date): string {

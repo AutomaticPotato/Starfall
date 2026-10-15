@@ -1,14 +1,14 @@
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 import { HourlyBackdrop } from "@/components/hourly-backdrop";
-import { BATTLE_BACKGROUND, LORE_BACKGROUND } from "@/lib/art";
-import { HomebrewSection } from "./homebrew-section";
+import { BATTLE_BACKGROUND, HOMEBREW_TILE, LORE_BACKGROUND } from "@/lib/art";
 
 function LandingTile({
   title,
   description,
   url,
   image,
+  imagePosition = "object-center",
   size = "lg",
   tag = undefined,
   enabled = true,
@@ -17,6 +17,8 @@ function LandingTile({
   description: string;
   url: string;
   image?: string;
+  /** which part of the picture stays in view when the tile crops it */
+  imagePosition?: "object-center" | "object-top";
   size?: "sm" | "lg";
   tag?: string;
   enabled?: boolean;
@@ -34,7 +36,7 @@ function LandingTile({
             src={image}
             alt=""
             onError={(event) => { event.currentTarget.hidden = true; }}
-            className={`absolute inset-0 w-full h-full object-cover transition-transform duration-500 scale-100 group-hover:scale-105 ${
+            className={`absolute inset-0 w-full h-full object-cover ${imagePosition} transition-transform duration-500 scale-100 group-hover:scale-105 ${
               enabled ? "" : "grayscale-85 group-hover:grayscale-0 "
             }`}
           />
@@ -103,6 +105,13 @@ const tiles = [
     url: "/lore",
     image: LORE_BACKGROUND,
   },
+  {
+    title: "Homebrew",
+    description: "Make monsters, magic items, classes, subclasses and spells for your table.",
+    url: "/homebrew",
+    image: HOMEBREW_TILE,
+    imagePosition: "object-top" as const,
+  },
 ];
 
 export function LandingPage2() {
@@ -123,8 +132,13 @@ export function LandingPage2() {
         <div className="h-72 sm:col-span-3 sm:row-span-2 sm:h-auto">
           <LandingTile {...tiles[0]} />
         </div>
-        <div className="h-44 sm:col-span-2 sm:h-auto">
-          <LandingTile {...tiles[1]} size="sm" />
+        <div className="grid grid-cols-1 gap-4 sm:col-span-2 sm:grid-cols-2">
+          <div className="h-44 sm:h-auto">
+            <LandingTile {...tiles[1]} size="sm" />
+          </div>
+          <div className="h-44 sm:h-auto">
+            <LandingTile {...tiles[4]} size="sm" />
+          </div>
         </div>
         <div className="grid grid-cols-1 gap-4 sm:col-span-2 sm:grid-cols-2">
           <div className="h-44 sm:h-auto">
@@ -135,8 +149,6 @@ export function LandingPage2() {
           </div>
         </div>
       </div>
-
-      <HomebrewSection />
 
       <section className="my-12 grid gap-6 sm:grid-cols-3">
         {[
