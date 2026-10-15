@@ -28,6 +28,13 @@ public interface ICharactersRepository : IRepository
     Task<bool> DeleteCharacterAsync(CharacterId identifier);
 
     /// <summary>
+    /// Holds the characters' rows until the lock is committed or disposed, in one transaction: a request that reads
+    /// a character, checks it (a revision, a purse) and writes it waits while another does the same, and then reads
+    /// what that one saved, so neither overwrites the other. Take it before loading those characters.
+    /// </summary>
+    Task<ICharacterLock> LockAsync(params Guid[] characterIds);
+
+    /// <summary>
     /// The characters' names and fight state (hit points lost, conditions…) without loading the rest of them, for a
     /// DM's fight board that refreshes every few seconds.
     /// </summary>

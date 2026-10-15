@@ -38,8 +38,7 @@ public sealed class CreateCharacterEndpoint : Endpoint<CreateCharacterRequest, C
         using var _ = CharactersInstrumentation.StartActivity(nameof(CreateCharacterEndpoint));
 
         // a password-locked player's characters can only be created with their unlock token
-        if (!string.IsNullOrWhiteSpace(req.PlayerName) && await _access.IsLockedAsync(req.PlayerName) &&
-            !_access.HasToken(HttpContext.Request.Headers[PlayerAccess.TokenHeader], req.PlayerName))
+        if (!string.IsNullOrWhiteSpace(req.PlayerName) && !await _access.CanActAsAsync(HttpContext.Request.Headers[PlayerAccess.TokenHeader], req.PlayerName))
         {
             await Send.UnauthorizedAsync(ct);
             return;

@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Nodes;
 using FastEndpoints;
 using Microsoft.AspNetCore.Http;
@@ -43,7 +43,7 @@ internal static class CampaignFights
     }
 
     public static bool CanRead(HttpContext context, PlayerAccess access, Campaign campaign) =>
-        CampaignAccess.CanOpen(context, access, campaign) || CampaignAccess.IsDm(context, access, campaign.Id);
+        CampaignAccess.CanOpen(context, access, campaign) || CampaignAccess.IsDm(context, access, campaign);
 }
 
 /// <summary>An encounter's fight: the DM's whole of it; for players, only while it runs and without its secrets.</summary>
@@ -80,7 +80,7 @@ public sealed class GetFightEndpoint : EndpointWithoutRequest<FightResponse>
             await Send.UnauthorizedAsync(ct);
             return;
         }
-        var dm = CampaignAccess.IsDm(HttpContext, _access, campaign.Id);
+        var dm = CampaignAccess.IsDm(HttpContext, _access, campaign);
         if (!dm && !FightView.Active(FightView.Parse(entry.Fight)))
         {
             await Send.NotFoundAsync(ct);
@@ -111,7 +111,7 @@ public sealed class SaveFightEndpoint : Endpoint<SaveFightRequest, FightResponse
 
     public override async Task HandleAsync(SaveFightRequest req, CancellationToken ct)
     {
-        if (!CampaignAccess.IsDm(HttpContext, _access, Route<Guid>("campaignId")))
+        if (!await CampaignAccess.IsDmAsync(HttpContext, _access, Route<Guid>("campaignId")))
         {
             await Send.ForbiddenAsync(ct);
             return;
@@ -180,7 +180,7 @@ public sealed class MarkFightEndpoint : Endpoint<MarkFightRequest, FightResponse
             await Send.NotFoundAsync(ct);
             return;
         }
-        var dm = CampaignAccess.IsDm(HttpContext, _access, campaign.Id);
+        var dm = CampaignAccess.IsDm(HttpContext, _access, campaign);
         if (!dm && (!CampaignFights.CanRead(HttpContext, _access, campaign) || !campaign.Party.Contains(req.CharacterId) || !await CampaignAccess.CanEditCharacter(HttpContext, _access, req.CharacterId)))
         {
             await Send.ForbiddenAsync(ct);
@@ -236,7 +236,7 @@ public sealed class GetActiveFightsEndpoint : EndpointWithoutRequest<ActiveFight
             {
                 continue;
             }
-            var dm = CampaignAccess.IsDm(HttpContext, _access, campaign.Id);
+            var dm = CampaignAccess.IsDm(HttpContext, _access, campaign);
             foreach (var entry in await campaigns.GetEntriesAsync(campaign.Id))
             {
                 if (entry.Kind == "encounter" && FightView.Active(FightView.Parse(entry.Fight)))

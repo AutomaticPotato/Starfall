@@ -1,4 +1,4 @@
-using FastEndpoints;
+﻿using FastEndpoints;
 using Starlights.Modules.Characters.Services.Players;
 
 namespace Starlights.Modules.Characters.Endpoints.Characters.Players;
@@ -17,10 +17,12 @@ public sealed record AdminUnlockResponse(string Token);
 public sealed class AdminUnlockEndpoint : Endpoint<AdminUnlockRequest, AdminUnlockResponse>
 {
     private readonly PlayerAccess _access;
+    private readonly UnlockLimiter _limiter;
 
-    public AdminUnlockEndpoint(PlayerAccess access)
+    public AdminUnlockEndpoint(PlayerAccess access, UnlockLimiter limiter)
     {
         _access = access;
+        _limiter = limiter;
     }
 
     public override void Configure()
@@ -31,6 +33,10 @@ public sealed class AdminUnlockEndpoint : Endpoint<AdminUnlockRequest, AdminUnlo
 
     public override async Task HandleAsync(AdminUnlockRequest req, CancellationToken ct)
     {
+        if (!await UnlockThrottle.TryAsync(_limiter, HttpContext, UnlockLimiter.Admin, ct))
+        {
+            return;
+        }
         var token = _access.UnlockAdmin(req.Password);
         if (token is null)
         {

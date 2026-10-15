@@ -20,6 +20,7 @@ internal class CharactersModule : IPlatformServiceComponent
     {
         builder.Services.AddScoped<IRegistrationProcessor, RegistrationProcessor>();
         builder.Services.AddScoped<PlayerAccess>();
+        builder.Services.AddSingleton<UnlockLimiter>();
         builder.Services.AddSingleton(new PlayerAccessOptions(
             builder.Configuration["Players:TokenKey"] ?? builder.Configuration["Admin:Key"] ?? string.Empty,
             builder.Configuration["Admin:MasterPassword"]));

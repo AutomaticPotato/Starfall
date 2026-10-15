@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using FastEndpoints;
 using Microsoft.AspNetCore.Http;
 using Starlights.Modules.Characters.Data;
@@ -54,13 +54,15 @@ public sealed class TradeEndpoint : Endpoint<TradeRequest, TradeResponse>
             await Send.NotFoundAsync(ct);
             return;
         }
-        var dm = CampaignAccess.IsDm(HttpContext, _access, campaign.Id);
+        var dm = CampaignAccess.IsDm(HttpContext, _access, campaign);
         if (!dm && (!CampaignAccess.CanOpen(HttpContext, _access, campaign) || !await CampaignAccess.CanEditCharacter(HttpContext, _access, req.FromCharacterId)))
         {
             await Send.ForbiddenAsync(ct);
             return;
         }
         var characters = _persistence.GetRepository<ICharactersRepository>();
+        // both purses are read, checked and written while no other request can change them (two trades at once)
+        await using var locked = await characters.LockAsync(req.FromCharacterId, req.ToCharacterId);
         var from = await characters.GetCharacterAsync(req.FromCharacterId);
         var to = await characters.GetCharacterAsync(req.ToCharacterId);
         if (from is null || to is null || req.FromCharacterId == req.ToCharacterId || !campaign.Party.Contains(req.FromCharacterId) || !campaign.Party.Contains(req.ToCharacterId))
@@ -76,6 +78,27 @@ public sealed class TradeEndpoint : Endpoint<TradeRequest, TradeResponse>
             AddError(problem);
             await Send.ErrorsAsync(cancellation: ct);
             return;
+        }
+
+        // a trade is kept whatever the builder does: an open builder's snapshot gets it too, so discarding there neither
+        // gives the item back to the giver nor takes it from the taker. When the giver's snapshot can't (the item or the
+        // coins came in the builder, or the item's rules are in the snapshot), the trade waits for Save or Discard.
+        var snapshots = _persistence.GetRepository<ICharacterSnapshotsRepository>();
+        if (await snapshots.GetAsync(from.Id.Value) is { } fromSnapshot)
+        {
+            var saved = InventoryTrade.Move(BuilderSnapshotInventory.Read(fromSnapshot.Data), new Domain.Characters.CharacterInventory(), req.ItemId, req.Quantity, req.Coins ?? []);
+            if (saved.Problem is not null || saved.Moved.Any(i => i.RegistrationId is not null))
+            {
+                AddError($"{from.Name} has unsaved changes in the builder: save or discard them first, then trade.");
+                await Send.ErrorsAsync(StatusCodes.Status409Conflict, ct);
+                return;
+            }
+            fromSnapshot.Update(BuilderSnapshotInventory.Write(fromSnapshot.Data, saved.From));
+        }
+        if (await snapshots.GetAsync(to.Id.Value) is { } toSnapshot)
+        {
+            var saved = InventoryTrade.Move(from.Inventory, BuilderSnapshotInventory.Read(toSnapshot.Data), req.ItemId, req.Quantity, req.Coins ?? []);
+            toSnapshot.Update(BuilderSnapshotInventory.Write(toSnapshot.Data, saved.To));
         }
 
         // what was active on the giver (equipped, attuned) takes its rules with it
@@ -102,6 +125,7 @@ public sealed class TradeEndpoint : Endpoint<TradeRequest, TradeResponse>
             JsonSerializer.Serialize(new { coins, to = to.Id.Value.ToString(), items = itemName is null ? Array.Empty<string>() : [given.Split(" and ")[0]] }), 0);
         campaigns.Add(line);
         await _persistence.SaveChangesAsync();
+        await locked.CommitAsync();
         if (removed.Count > 0 || result.Moved.Any(i => i.Equipped is not null))
         {
             await _processor.ReproccessRegistrations(from.Id);

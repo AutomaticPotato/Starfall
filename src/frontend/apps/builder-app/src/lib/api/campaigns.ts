@@ -187,7 +187,12 @@ export function useCampaignActions(campaignId?: string) {
       onSettled: refresh,
     }),
     setDm: useMutation({
-      mutationFn: (body: { name: string; password: string }) => apiClient.put<typeof body, Campaign>(`${base}/dm`, body),
+      mutationFn: async (body: { name: string; password: string }) => {
+        const saved = await apiClient.put<typeof body, Campaign>(`${base}/dm`, body);
+        // a new DM password ends the old DM tokens; the server sends one for the new password
+        if (saved.dmToken && campaignId) saveCampaignDmToken(campaignId, saved.dmToken);
+        return saved;
+      },
       onSettled: refresh,
     }),
     update: useMutation({

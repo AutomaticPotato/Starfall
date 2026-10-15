@@ -1,4 +1,4 @@
-using FastEndpoints;
+﻿using FastEndpoints;
 using Starlights.Modules.Characters.Data;
 using Starlights.Modules.Characters.Domain.Characters;
 using Starlights.Modules.Characters.Services.Processing;
@@ -136,6 +136,8 @@ public sealed class DiscardBuilderSessionEndpoint : EndpointWithoutRequest<Build
     public override async Task HandleAsync(CancellationToken ct)
     {
         var id = Route<Guid>("characterId");
+        // no trade or gift lands halfway through putting the character back
+        await using var locked = await _persistence.GetRepository<ICharactersRepository>().LockAsync(id);
         var snapshots = _persistence.GetRepository<ICharacterSnapshotsRepository>();
         var snapshot = await snapshots.GetAsync(id);
         if (snapshot is null)
@@ -147,6 +149,7 @@ public sealed class DiscardBuilderSessionEndpoint : EndpointWithoutRequest<Build
         await snapshots.RestoreAsync(id, snapshot.Data);
         snapshots.Remove(snapshot);
         await _persistence.SaveChangesAsync();
+        await locked.CommitAsync();
         // the derived numbers settle as they would after any change
         await _processor.ReproccessRegistrations(new CharacterId(id));
         await Send.OkAsync(new BuilderSessionModel(false, null, false), ct);

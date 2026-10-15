@@ -1,4 +1,4 @@
-using Starlights.Modules.Characters.Domain.Players;
+﻿using Starlights.Modules.Characters.Domain.Players;
 using Starlights.Platform.Data;
 
 namespace Starlights.Modules.Characters.Data;
@@ -16,6 +16,11 @@ public interface IPlayersRepository : IRepository
     /// The names of the players that locked their characters with a password.
     /// </summary>
     Task<List<string>> GetLockedPlayerNamesAsync();
+
+    /// <summary>
+    /// The players that locked their characters, with their password hashes.
+    /// </summary>
+    Task<List<KeyValuePair<string, string>>> GetLockedPlayerHashesAsync();
 
     /// <summary>
     /// The player a character is filed under, without loading the character ("" when unassigned, null when missing).

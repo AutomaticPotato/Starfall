@@ -1,4 +1,4 @@
-using FastEndpoints;
+﻿using FastEndpoints;
 using Microsoft.AspNetCore.Http;
 using Starlights.Modules.Characters.Data;
 using Starlights.Modules.Characters.Domain.Characters;
@@ -66,7 +66,10 @@ public sealed class UpdateCharacterCombatEndpoint : Endpoint<CharacterCombat>
             return;
         }
 
-        var character = await _persistence.GetRepository<ICharactersRepository>().GetCharacterAsync(new CharacterId(Route<Guid>("characterId")));
+        // the Received check and the write happen while no other request (a party member's potion) can change the character
+        var characters = _persistence.GetRepository<ICharactersRepository>();
+        await using var locked = await characters.LockAsync(Route<Guid>("characterId"));
+        var character = await characters.GetCharacterAsync(new CharacterId(Route<Guid>("characterId")));
         if (character is null)
         {
             await Send.NotFoundAsync(ct);
@@ -82,6 +85,7 @@ public sealed class UpdateCharacterCombatEndpoint : Endpoint<CharacterCombat>
 
         character.UpdateCombat(req with { Version = 1, Received = character.Combat.Received });
         await _persistence.SaveChangesAsync();
+        await locked.CommitAsync();
         await Send.OkAsync(character.Combat, ct);
     }
 }

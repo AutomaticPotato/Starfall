@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 using System.Text.Json;
 using FastEndpoints;
 using Microsoft.AspNetCore.Builder;
@@ -11,6 +11,7 @@ using Starlights.Modules.Characters.Domain.Classes;
 using Starlights.Modules.Characters.Domain.Progression;
 using Starlights.Modules.Characters.Endpoints.Characters.Portraits;
 using Starlights.Modules.Characters.Services.Campaigns;
+using Starlights.Modules.Characters.Endpoints.Characters.Players;
 using Starlights.Modules.Characters.Services.Players;
 using Starlights.Platform.Data;
 
@@ -59,9 +60,13 @@ internal static class CampaignAccess
     public static bool IsAdmin(HttpContext context, PlayerAccess access) =>
         access.HasAdminToken(context.Request.Headers[PlayerAccess.TokenHeader]);
 
-    /// <summary>Whether the reader is this campaign's DM: its DM token (from its DM password), or the admin token.</summary>
-    public static bool IsDm(HttpContext context, PlayerAccess access, Guid campaignId) =>
-        access.HasCampaignDmToken(context.Request.Headers[PlayerAccess.TokenHeader], campaignId);
+    /// <summary>Whether the reader is this campaign's DM: a DM token for its current DM password, or the admin token.</summary>
+    public static bool IsDm(HttpContext context, PlayerAccess access, Campaign campaign) =>
+        access.HasCampaignDmToken(context.Request.Headers[PlayerAccess.TokenHeader], campaign.Id, campaign.DmPasswordHash);
+
+    /// <summary>As <see cref="IsDm(HttpContext, PlayerAccess, Campaign)"/> for a campaign not loaded yet (false when there is none).</summary>
+    public static Task<bool> IsDmAsync(HttpContext context, PlayerAccess access, Guid campaignId) =>
+        access.HasCampaignDmTokenAsync(context.Request.Headers[PlayerAccess.TokenHeader], campaignId);
 
     public static string Folder(IConfiguration config, Guid campaignId) =>
         Path.Combine(PortraitFiles.Folder(config), "campaigns", campaignId.ToString("N"));
@@ -82,7 +87,7 @@ internal static class CampaignAccess
 
     /// <summary>Whether the reader may read the campaign: it is open, or they gave its password, or they are the DM.</summary>
     public static bool CanOpen(HttpContext context, PlayerAccess access, Campaign c) =>
-        c.PasswordHash is null || access.HasCampaignToken(context.Request.Headers[PlayerAccess.TokenHeader], c.Id);
+        c.PasswordHash is null || access.HasCampaignToken(context.Request.Headers[PlayerAccess.TokenHeader], c.Id, c.PasswordHash);
 
     /// <summary>The header a reader names their player in (for their own notes).</summary>
     public const string PlayerHeader = "X-Player-Name";
@@ -98,7 +103,7 @@ internal static class CampaignAccess
         {
             return null;
         }
-        return !await access.IsLockedAsync(name) || access.HasToken(context.Request.Headers[PlayerAccess.TokenHeader], name) ? name : null;
+        return await access.CanActAsAsync(context.Request.Headers[PlayerAccess.TokenHeader], name) ? name : null;
     }
 
     /// <summary>A party member's level, classes ("Fighter 3 / Wizard 2" when multiclassed) and portrait, as the party shows them.</summary>
@@ -121,7 +126,7 @@ internal static class CampaignAccess
     public static async Task<bool> CanEditCharacter(HttpContext context, PlayerAccess access, Guid characterId)
     {
         var player = await access.GetCharacterPlayerAsync(characterId);
-        return string.IsNullOrEmpty(player) || !await access.IsLockedAsync(player) || access.HasToken(context.Request.Headers[PlayerAccess.TokenHeader], player);
+        return string.IsNullOrEmpty(player) || await access.CanActAsAsync(context.Request.Headers[PlayerAccess.TokenHeader], player);
     }
 }
 
@@ -148,8 +153,8 @@ public sealed class GetCampaignsEndpoint : EndpointWithoutRequest<CampaignsRespo
     {
         var campaigns = await _persistence.GetRepository<ICampaignsRepository>().GetCampaignsAsync();
         await Send.OkAsync(new CampaignsResponse(
-            campaigns.Select(c => CampaignAccess.CanOpen(HttpContext, _access, c) || CampaignAccess.IsDm(HttpContext, _access, c.Id)
-                ? new CampaignSummaryModel(c.Id, c.Name, c.Description, c.CoverUrl, c.Party, c.PasswordHash is not null, true, c.UpdatedAt, c.DmName, CampaignAccess.IsDm(HttpContext, _access, c.Id))
+            campaigns.Select(c => CampaignAccess.CanOpen(HttpContext, _access, c) || CampaignAccess.IsDm(HttpContext, _access, c)
+                ? new CampaignSummaryModel(c.Id, c.Name, c.Description, c.CoverUrl, c.Party, c.PasswordHash is not null, true, c.UpdatedAt, c.DmName, CampaignAccess.IsDm(HttpContext, _access, c))
                 : new CampaignSummaryModel(c.Id, c.Name, string.Empty, null, [], true, false, c.UpdatedAt, c.DmName)).ToList(),
             CampaignAccess.IsAdmin(HttpContext, _access)), ct);
     }
@@ -187,18 +192,18 @@ public sealed class GetCampaignEndpoint : EndpointWithoutRequest<CampaignRespons
             return;
         }
 
-        if (!CampaignAccess.CanOpen(HttpContext, _access, campaign) && !CampaignAccess.IsDm(HttpContext, _access, campaign.Id))
+        if (!CampaignAccess.CanOpen(HttpContext, _access, campaign) && !CampaignAccess.IsDm(HttpContext, _access, campaign))
         {
             HttpContext.Response.StatusCode = StatusCodes.Status401Unauthorized;
             await HttpContext.Response.WriteAsJsonAsync(new { locked = campaign.Name }, ct);
             return;
         }
 
-        var dm = CampaignAccess.IsDm(HttpContext, _access, campaign.Id);
+        var dm = CampaignAccess.IsDm(HttpContext, _access, campaign);
         var entries = await campaigns.GetEntriesAsync(campaign.Id);
 
         var characters = _persistence.GetRepository<ICharactersRepository>();
-        var locked = await _access.GetLockedPlayersAsync();
+        var locked = await _access.GetLockedPlayerHashesAsync();
         var tokens = HttpContext.Request.Headers[PlayerAccess.TokenHeader].ToString();
         var party = new List<PartyMemberModel>();
         var equipment = new List<(Guid, string, Domain.Characters.CharacterInventory)>();
@@ -211,7 +216,7 @@ public sealed class GetCampaignEndpoint : EndpointWithoutRequest<CampaignRespons
                 continue;
             }
             equipment.Add((id, character.Name, character.Inventory));
-            if (locked.Contains(character.PlayerName) && !_access.HasToken(tokens, character.PlayerName))
+            if (locked.TryGetValue(character.PlayerName, out var hash) && !_access.HasPlayerToken(tokens, character.PlayerName, hash))
             {
                 party.Add(new PartyMemberModel(id, character.Name, character.PlayerName, null, null, null, true, false));
                 continue;
@@ -269,7 +274,7 @@ public sealed class CreateCampaignEndpoint : Endpoint<SaveCampaignRequest, Campa
         campaign.SetDm(req.DmName, dmPassword.Length > 0 ? PlayerAccess.HashPassword(dmPassword) : null);
         campaigns.Add(campaign);
         await _persistence.SaveChangesAsync();
-        await Send.OkAsync(CampaignAccess.Model(campaign) with { DmToken = _access.IssueCampaignDmToken(campaign.Id) }, ct);
+        await Send.OkAsync(CampaignAccess.Model(campaign) with { DmToken = _access.IssueCampaignDmToken(campaign.Id, campaign.DmPasswordHash) }, ct);
     }
 }
 
@@ -294,7 +299,7 @@ public sealed class UpdateCampaignEndpoint : Endpoint<SaveCampaignRequest, Campa
 
     public override async Task HandleAsync(SaveCampaignRequest req, CancellationToken ct)
     {
-        if (!CampaignAccess.IsDm(HttpContext, _access, Route<Guid>("campaignId")))
+        if (!await CampaignAccess.IsDmAsync(HttpContext, _access, Route<Guid>("campaignId")))
         {
             await Send.ForbiddenAsync(ct);
             return;
@@ -348,7 +353,7 @@ public sealed class DeleteCampaignEndpoint : EndpointWithoutRequest
 
     public override async Task HandleAsync(CancellationToken ct)
     {
-        if (!CampaignAccess.IsDm(HttpContext, _access, Route<Guid>("campaignId")))
+        if (!await CampaignAccess.IsDmAsync(HttpContext, _access, Route<Guid>("campaignId")))
         {
             await Send.ForbiddenAsync(ct);
             return;
@@ -393,7 +398,7 @@ public sealed class CreateCampaignEntryEndpoint : Endpoint<SaveEntryRequest, Cam
 
     public override async Task HandleAsync(SaveEntryRequest req, CancellationToken ct)
     {
-        if (!CampaignAccess.IsDm(HttpContext, _access, Route<Guid>("campaignId")))
+        if (!await CampaignAccess.IsDmAsync(HttpContext, _access, Route<Guid>("campaignId")))
         {
             await Send.ForbiddenAsync(ct);
             return;
@@ -448,7 +453,7 @@ public sealed class UpdateCampaignEntryEndpoint : Endpoint<SaveEntryRequest, Cam
 
     public override async Task HandleAsync(SaveEntryRequest req, CancellationToken ct)
     {
-        if (!CampaignAccess.IsDm(HttpContext, _access, Route<Guid>("campaignId")))
+        if (!await CampaignAccess.IsDmAsync(HttpContext, _access, Route<Guid>("campaignId")))
         {
             await Send.ForbiddenAsync(ct);
             return;
@@ -499,7 +504,7 @@ public sealed class DeleteCampaignEntryEndpoint : EndpointWithoutRequest
 
     public override async Task HandleAsync(CancellationToken ct)
     {
-        if (!CampaignAccess.IsDm(HttpContext, _access, Route<Guid>("campaignId")))
+        if (!await CampaignAccess.IsDmAsync(HttpContext, _access, Route<Guid>("campaignId")))
         {
             await Send.ForbiddenAsync(ct);
             return;
@@ -540,7 +545,7 @@ public sealed class UploadCampaignImageEndpoint : Endpoint<UploadPortraitRequest
 
     public override async Task HandleAsync(UploadPortraitRequest req, CancellationToken ct)
     {
-        if (!CampaignAccess.IsDm(HttpContext, _access, Route<Guid>("campaignId")))
+        if (!await CampaignAccess.IsDmAsync(HttpContext, _access, Route<Guid>("campaignId")))
         {
             await Send.ForbiddenAsync(ct);
             return;
@@ -601,10 +606,13 @@ public sealed class UnlockCampaignEndpoint : Endpoint<CampaignPasswordRequest, C
     private readonly IPersistence _persistence;
     private readonly PlayerAccess _access;
 
-    public UnlockCampaignEndpoint(IPersistence persistence, PlayerAccess access)
+    private readonly UnlockLimiter _limiter;
+
+    public UnlockCampaignEndpoint(IPersistence persistence, PlayerAccess access, UnlockLimiter limiter)
     {
         _persistence = persistence;
         _access = access;
+        _limiter = limiter;
     }
 
     public override void Configure()
@@ -622,13 +630,18 @@ public sealed class UnlockCampaignEndpoint : Endpoint<CampaignPasswordRequest, C
             await Send.NotFoundAsync(ct);
             return;
         }
+        // only a campaign with a password counts tries (opening an open one is no guess)
+        if (campaign.PasswordHash is not null && !await UnlockThrottle.TryAsync(_limiter, HttpContext, UnlockLimiter.Campaign(campaign.Id), ct))
+        {
+            return;
+        }
         if (campaign.PasswordHash is not null && !PlayerAccess.VerifyPassword(req.Password ?? string.Empty, campaign.PasswordHash))
         {
             AddError("That is not the campaign's password.");
             await Send.ErrorsAsync(StatusCodes.Status401Unauthorized, ct);
             return;
         }
-        await Send.OkAsync(new CampaignUnlockResponse(_access.IssueCampaignToken(campaign.Id)), ct);
+        await Send.OkAsync(new CampaignUnlockResponse(_access.IssueCampaignToken(campaign.Id, campaign.PasswordHash)), ct);
     }
 }
 
@@ -653,7 +666,7 @@ public sealed class SetCampaignPasswordEndpoint : Endpoint<CampaignPasswordReque
 
     public override async Task HandleAsync(CampaignPasswordRequest req, CancellationToken ct)
     {
-        if (!CampaignAccess.IsDm(HttpContext, _access, Route<Guid>("campaignId")))
+        if (!await CampaignAccess.IsDmAsync(HttpContext, _access, Route<Guid>("campaignId")))
         {
             await Send.ForbiddenAsync(ct);
             return;
@@ -752,7 +765,7 @@ public sealed class LeaveCampaignEndpoint : EndpointWithoutRequest
             return;
         }
         var characterId = Route<Guid>("characterId");
-        if (!CampaignAccess.IsDm(HttpContext, _access, Route<Guid>("campaignId")) && !await CampaignAccess.CanEditCharacter(HttpContext, _access, characterId))
+        if (!await CampaignAccess.IsDmAsync(HttpContext, _access, Route<Guid>("campaignId")) && !await CampaignAccess.CanEditCharacter(HttpContext, _access, characterId))
         {
             await Send.ForbiddenAsync(ct);
             return;
@@ -795,14 +808,16 @@ public sealed class GiveEndpoint : Endpoint<GiveRequest, GiveResponse>
 
     public override async Task HandleAsync(GiveRequest req, CancellationToken ct)
     {
-        if (!CampaignAccess.IsDm(HttpContext, _access, Route<Guid>("campaignId")))
+        if (!await CampaignAccess.IsDmAsync(HttpContext, _access, Route<Guid>("campaignId")))
         {
             await Send.ForbiddenAsync(ct);
             return;
         }
         var campaigns = _persistence.GetRepository<ICampaignsRepository>();
         var campaign = await campaigns.GetCampaignAsync(Route<Guid>("campaignId"));
-        var character = await _persistence.GetRepository<ICharactersRepository>().GetCharacterAsync(req.CharacterId);
+        var characters = _persistence.GetRepository<ICharactersRepository>();
+        await using var locked = await characters.LockAsync(req.CharacterId);
+        var character = await characters.GetCharacterAsync(req.CharacterId);
         if (campaign is null || character is null || !campaign.Party.Contains(req.CharacterId))
         {
             AddError("Give only to a character in this campaign's party.");
@@ -898,18 +913,21 @@ public sealed class GiveEndpoint : Endpoint<GiveRequest, GiveResponse>
             return;
         }
 
-        var inventory = character.Inventory;
-        var purse = new Dictionary<string, int>(inventory.Coins);
-        foreach (var (kind, n) in coins)
+        Domain.Characters.CharacterInventory With(Domain.Characters.CharacterInventory inventory)
         {
-            purse[kind] = purse.GetValueOrDefault(kind) + n;
+            var purse = new Dictionary<string, int>(inventory.Coins);
+            foreach (var (kind, n) in coins)
+            {
+                purse[kind] = purse.GetValueOrDefault(kind) + n;
+            }
+            return inventory with
+            {
+                Revision = inventory.Revision + 1,
+                Items = item is null ? inventory.Items : [.. inventory.Items, item],
+                Coins = purse,
+            };
         }
-        var updated = inventory with
-        {
-            Revision = inventory.Revision + 1,
-            Items = item is null ? inventory.Items : [.. inventory.Items, item],
-            Coins = purse,
-        };
+        var updated = With(character.Inventory);
         if (updated.Validate() is { } problem)
         {
             AddError(problem);
@@ -917,6 +935,12 @@ public sealed class GiveEndpoint : Endpoint<GiveRequest, GiveResponse>
             return;
         }
         character.UpdateInventory(updated);
+        // a gift is kept whatever the builder does: an open builder's snapshot gets it too, so discarding there keeps it
+        var snapshots = _persistence.GetRepository<ICharacterSnapshotsRepository>();
+        if (await snapshots.GetAsync(character.Id.Value) is { } snapshot)
+        {
+            snapshot.Update(BuilderSnapshotInventory.Write(snapshot.Data, With(BuilderSnapshotInventory.Read(snapshot.Data))));
+        }
 
         // the Gold tab's record of it
         var itemName = item?.Name ?? (item?.ElementId is { } id ? (await _catalog.GetAsync(ct)).Find(id)?.Name : null);
@@ -933,6 +957,7 @@ public sealed class GiveEndpoint : Endpoint<GiveRequest, GiveResponse>
             campaigns.Add(fundLine);
         }
         await _persistence.SaveChangesAsync();
+        await locked.CommitAsync();
         await Send.OkAsync(new GiveResponse(given, CampaignView.Entry(line, dm: true)), ct);
     }
 }
@@ -945,10 +970,13 @@ public sealed class UnlockCampaignDmEndpoint : Endpoint<CampaignPasswordRequest,
     private readonly IPersistence _persistence;
     private readonly PlayerAccess _access;
 
-    public UnlockCampaignDmEndpoint(IPersistence persistence, PlayerAccess access)
+    private readonly UnlockLimiter _limiter;
+
+    public UnlockCampaignDmEndpoint(IPersistence persistence, PlayerAccess access, UnlockLimiter limiter)
     {
         _persistence = persistence;
         _access = access;
+        _limiter = limiter;
     }
 
     public override void Configure()
@@ -966,12 +994,16 @@ public sealed class UnlockCampaignDmEndpoint : Endpoint<CampaignPasswordRequest,
             await Send.NotFoundAsync(ct);
             return;
         }
+        if (!await UnlockThrottle.TryAsync(_limiter, HttpContext, UnlockLimiter.CampaignDm(campaign.Id), ct))
+        {
+            return;
+        }
         if (campaign.DmPasswordHash is null || string.IsNullOrEmpty(req.Password) || !PlayerAccess.VerifyPassword(req.Password, campaign.DmPasswordHash))
         {
             await Send.UnauthorizedAsync(ct);
             return;
         }
-        await Send.OkAsync(new CampaignUnlockResponse(_access.IssueCampaignDmToken(campaign.Id)), ct);
+        await Send.OkAsync(new CampaignUnlockResponse(_access.IssueCampaignDmToken(campaign.Id, campaign.DmPasswordHash)), ct);
     }
 }
 
@@ -996,7 +1028,7 @@ public sealed class SetCampaignDmEndpoint : Endpoint<CampaignDmRequest, Campaign
 
     public override async Task HandleAsync(CampaignDmRequest req, CancellationToken ct)
     {
-        if (!CampaignAccess.IsDm(HttpContext, _access, Route<Guid>("campaignId")))
+        if (!await CampaignAccess.IsDmAsync(HttpContext, _access, Route<Guid>("campaignId")))
         {
             await Send.ForbiddenAsync(ct);
             return;
@@ -1016,6 +1048,9 @@ public sealed class SetCampaignDmEndpoint : Endpoint<CampaignDmRequest, Campaign
         }
         campaign.SetDm(req.Name, password.Length > 0 ? PlayerAccess.HashPassword(password) : campaign.DmPasswordHash);
         await _persistence.SaveChangesAsync();
-        await Send.OkAsync(CampaignAccess.Model(campaign), ct);
+        // a new DM password ends the DM tokens given for the old one: this device gets one for the new password
+        await Send.OkAsync(password.Length > 0
+            ? CampaignAccess.Model(campaign) with { DmToken = _access.IssueCampaignDmToken(campaign.Id, campaign.DmPasswordHash) }
+            : CampaignAccess.Model(campaign), ct);
     }
 }

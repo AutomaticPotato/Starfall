@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using FastEndpoints;
 using Starlights.Modules.Characters.Data;
 using Starlights.Modules.Characters.Domain.Characters;
@@ -76,7 +76,10 @@ public sealed class UpdateCharacterInventoryEndpoint : Endpoint<CharacterInvento
             return;
         }
 
-        var character = await _persistence.GetRepository<ICharactersRepository>().GetCharacterAsync(new CharacterId(Route<Guid>("characterId")));
+        // the read, the revision check and the write happen while no other request can change the character
+        var characters = _persistence.GetRepository<ICharactersRepository>();
+        await using var locked = await characters.LockAsync(Route<Guid>("characterId"));
+        var character = await characters.GetCharacterAsync(new CharacterId(Route<Guid>("characterId")));
         if (character is null)
         {
             await Send.NotFoundAsync(ct);
@@ -122,6 +125,7 @@ public sealed class UpdateCharacterInventoryEndpoint : Endpoint<CharacterInvento
 
         character.UpdateInventory(req with { Version = 1, Revision = character.Inventory.Revision + 1, Items = items });
         await _persistence.SaveChangesAsync();
+        await locked.CommitAsync();
 
         // an item's rules came or went: work the character out again now, so the sheet is right when this returns
         // (the background processing that follows finds nothing left to change)

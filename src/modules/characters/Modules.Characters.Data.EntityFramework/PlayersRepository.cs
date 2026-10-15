@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Starlights.Modules.Characters.Domain.Characters;
 using Starlights.Modules.Characters.Domain.Players;
 using Starlights.Platform.Components.Data.EntityFramework;
@@ -15,6 +15,10 @@ internal class PlayersRepository : RepositoryBase<Player>, IPlayersRepository
 
     public Task<List<string>> GetLockedPlayerNamesAsync() =>
         Entities.AsNoTracking().Where(p => p.PasswordHash != null).Select(p => p.Name).ToListAsync();
+
+    public async Task<List<KeyValuePair<string, string>>> GetLockedPlayerHashesAsync() =>
+        (await Entities.AsNoTracking().Where(p => p.PasswordHash != null).Select(p => new { p.Name, p.PasswordHash }).ToListAsync())
+            .ConvertAll(p => new KeyValuePair<string, string>(p.Name, p.PasswordHash!));
 
     public Task<string?> GetCharacterPlayerNameAsync(Guid characterId) =>
         Context.Set<Character>().AsNoTracking()

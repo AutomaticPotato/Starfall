@@ -1,4 +1,4 @@
-using Starlights.Platform.Domain;
+﻿using Starlights.Platform.Domain;
 
 namespace Starlights.Modules.Characters.Domain.Characters;
 
@@ -21,4 +21,7 @@ public sealed class CharacterSnapshot : EntityBase<Guid>
     public DateTimeOffset TakenAt { get; private set; }
 
     public static CharacterSnapshot Take(Guid characterId, string data) => new(characterId, data, DateTimeOffset.UtcNow);
+
+    /// <summary>Puts a change that is kept whatever the builder does (a trade, a gift) into the snapshot too.</summary>
+    public void Update(string data) => Data = data;
 }

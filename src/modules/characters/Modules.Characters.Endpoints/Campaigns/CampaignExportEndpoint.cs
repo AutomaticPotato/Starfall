@@ -1,4 +1,4 @@
-using System.IO.Compression;
+﻿using System.IO.Compression;
 using System.Text;
 using System.Text.Json;
 using FastEndpoints;
@@ -59,7 +59,7 @@ public sealed class ExportCampaignEndpoint : EndpointWithoutRequest
             await Send.NotFoundAsync(ct);
             return;
         }
-        if (!CampaignAccess.IsDm(HttpContext, _access, campaign.Id))
+        if (!CampaignAccess.IsDm(HttpContext, _access, campaign))
         {
             await Send.ForbiddenAsync(ct);
             return;
@@ -68,7 +68,7 @@ public sealed class ExportCampaignEndpoint : EndpointWithoutRequest
         var entries = await campaigns.GetEntriesAsync(campaign.Id);
         var characters = _persistence.GetRepository<ICharactersRepository>();
         var snapshots = _persistence.GetRepository<ICharacterSnapshotsRepository>();
-        var locked = await _access.GetLockedPlayersAsync();
+        var locked = await _access.GetLockedPlayerHashesAsync();
         var tokens = HttpContext.Request.Headers[PlayerAccess.TokenHeader].ToString();
         var portraitsFolder = PortraitFiles.Folder(Config);
 
@@ -98,7 +98,7 @@ public sealed class ExportCampaignEndpoint : EndpointWithoutRequest
                 continue;
             }
             equipment.Add((id, character.Name, character.Inventory));
-            if (locked.Contains(character.PlayerName) && !_access.HasToken(tokens, character.PlayerName))
+            if (locked.TryGetValue(character.PlayerName, out var hash) && !_access.HasPlayerToken(tokens, character.PlayerName, hash))
             {
                 party.Add(new ExportedCharacter(id, character.Name, character.PlayerName, Locked: true, Missing: false));
                 continue;

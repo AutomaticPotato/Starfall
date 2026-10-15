@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 using FastEndpoints;
 using Starlights.Modules.Characters.Data;
 using Starlights.Modules.Characters.Domain;
@@ -50,9 +50,9 @@ sealed class GetCharactersEndpoint : Endpoint<GetCharactersRequest, GetCharacter
         }
 
         // characters of password-locked players only with their unlock token
-        var locked = await _access.GetLockedPlayersAsync();
+        var locked = await _access.GetLockedPlayerHashesAsync();
         var tokens = HttpContext.Request.Headers[PlayerAccess.TokenHeader].ToString();
-        characters = characters.Where(c => !locked.Contains(c.PlayerName) || _access.HasToken(tokens, c.PlayerName)).ToList();
+        characters = characters.Where(c => !locked.TryGetValue(c.PlayerName, out var hash) || _access.HasPlayerToken(tokens, c.PlayerName, hash)).ToList();
 
         var models = new List<CharacterDetailsDataModel>();
 

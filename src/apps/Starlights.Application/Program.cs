@@ -1,7 +1,6 @@
-using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+﻿using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using System.Security.Cryptography;
 using System.Text;
-using System.Text.RegularExpressions;
 using Starlights.Modules.Characters.Services.Players;
 using Scalar.AspNetCore;
 using Starlights.Modules.Characters.Data.EntityFramework;
@@ -21,8 +20,25 @@ namespace Starlights.Application;
 
 public sealed partial class Program
 {
-    [GeneratedRegex("^/api/characters/([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})(/|$)")]
-    private static partial Regex LockedCharacterRoute();
+    /// <summary>
+    /// The character a request under /api/characters is about: the route's parsed characterId when an endpoint
+    /// matched, else the path's next segment if it reads as an id. Routes ignore letter case and accept every way of
+    /// writing a GUID, so the check must too (it fails closed: an id-like segment is checked even without a match).
+    /// </summary>
+    internal static Guid? LockedCharacterId(HttpContext context)
+    {
+        var path = context.Request.Path;
+        if (!path.StartsWithSegments("/api/characters", StringComparison.OrdinalIgnoreCase, out var rest))
+        {
+            return null;
+        }
+        if (context.GetRouteValue("characterId") is { } routed && Guid.TryParse(routed.ToString(), out var id))
+        {
+            return id;
+        }
+        var segment = rest.Value?.TrimStart('/').Split('/', 2)[0];
+        return Guid.TryParse(Uri.UnescapeDataString(segment ?? string.Empty), out id) ? id : null;
+    }
 
 
     public static void Main(string[] args)
@@ -127,13 +143,11 @@ public sealed partial class Program
         // (lists and creation check it in their endpoints)
         app.Use(async (context, next) =>
         {
-            var match = LockedCharacterRoute().Match(context.Request.Path.Value ?? string.Empty);
-            if (match.Success)
+            if (LockedCharacterId(context) is { } characterId)
             {
                 var access = context.RequestServices.GetRequiredService<PlayerAccess>();
-                var player = await access.GetCharacterPlayerAsync(Guid.Parse(match.Groups[1].Value));
-                if (!string.IsNullOrEmpty(player) && await access.IsLockedAsync(player) &&
-                    !access.HasToken(context.Request.Headers[PlayerAccess.TokenHeader], player))
+                var player = await access.GetCharacterPlayerAsync(characterId);
+                if (!string.IsNullOrEmpty(player) && !await access.CanActAsAsync(context.Request.Headers[PlayerAccess.TokenHeader], player))
                 {
                     context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                     await context.Response.WriteAsJsonAsync(new { locked = player });

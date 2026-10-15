@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using FastEndpoints;
 using Microsoft.AspNetCore.Http;
 using Starlights.Modules.Characters.Data;
@@ -26,9 +26,9 @@ internal static class CampaignNotes
     {
         if (scope == "dm")
         {
-            return CampaignAccess.IsDm(context, access, campaign.Id) ? "DM" : null;
+            return CampaignAccess.IsDm(context, access, campaign) ? "DM" : null;
         }
-        if (!CampaignAccess.CanOpen(context, access, campaign) && !CampaignAccess.IsDm(context, access, campaign.Id))
+        if (!CampaignAccess.CanOpen(context, access, campaign) && !CampaignAccess.IsDm(context, access, campaign))
         {
             return null;
         }
@@ -171,7 +171,7 @@ public sealed class DeleteCampaignNoteEndpoint : EndpointWithoutRequest
         var (scope, author) = CampaignView.NoteOf(note);
         var me = await CampaignNotes.Author(HttpContext, _access, campaign, scope);
         var mine = me is not null && string.Equals(me, author, StringComparison.OrdinalIgnoreCase);
-        if (!mine && !(scope != "private" && CampaignAccess.IsDm(HttpContext, _access, campaign.Id)))
+        if (!mine && !(scope != "private" && CampaignAccess.IsDm(HttpContext, _access, campaign)))
         {
             await Send.ForbiddenAsync(ct);
             return;

@@ -1,4 +1,4 @@
-using System.Data;
+﻿using System.Data;
 using System.Data.Common;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
@@ -94,6 +94,9 @@ internal class CharacterSnapshotsRepository : RepositoryBase<CharacterSnapshot>,
         var columns = await ColumnsAsync(connection);
 
         var sql = new StringBuilder();
+        // the inventory's revision as it is now: the restored one comes after it, so an app holding a copy from before
+        // the restore can't save over it
+        sql.AppendLine("DECLARE @revision int = (SELECT TRY_CAST(JSON_VALUE(inventory, '$.Revision') AS int) FROM characters.character WHERE id = @id);");
         // what the character has now goes (the component and registration tables take their children with them)
         sql.AppendLine("DELETE FROM characters.registration WHERE character_id = @id;");
         foreach (var (table, _) in Tables.Where(t => t.Table.StartsWith("component_", StringComparison.Ordinal)))
@@ -105,6 +108,9 @@ internal class CharacterSnapshotsRepository : RepositoryBase<CharacterSnapshot>,
         sql.Append(" FROM characters.character c CROSS JOIN OPENJSON(@data, '$.character') WITH (");
         sql.Append(string.Join(", ", CharacterColumns.Select(n => $"[{n}] {columns["character"][n]} '$.{n}'")));
         sql.AppendLine(") j WHERE c.id = @id;");
+        sql.AppendLine("UPDATE characters.character SET inventory = JSON_MODIFY(inventory, '$.Revision', " +
+            "(SELECT MAX(v) FROM (VALUES (ISNULL(@revision, 0)), (ISNULL(TRY_CAST(JSON_VALUE(inventory, '$.Revision') AS int), 0))) AS r(v)) + 1) " +
+            "WHERE id = @id AND ISJSON(inventory) = 1;");
         // and every row as it was, with the same ids
         foreach (var (table, _) in Tables)
         {

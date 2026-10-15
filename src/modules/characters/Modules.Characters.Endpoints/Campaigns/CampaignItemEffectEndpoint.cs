@@ -1,4 +1,4 @@
-using FastEndpoints;
+﻿using FastEndpoints;
 using Microsoft.AspNetCore.Http;
 using Starlights.Modules.Characters.Data;
 using Starlights.Modules.Characters.Services.Campaigns;
@@ -44,13 +44,14 @@ public sealed class ItemEffectEndpoint : Endpoint<ItemEffectRequest, ItemEffectR
             await Send.NotFoundAsync(ct);
             return;
         }
-        var dm = CampaignAccess.IsDm(HttpContext, _access, campaign.Id);
+        var dm = CampaignAccess.IsDm(HttpContext, _access, campaign);
         if (!dm && (!CampaignAccess.CanOpen(HttpContext, _access, campaign) || !await CampaignAccess.CanEditCharacter(HttpContext, _access, req.FromCharacterId)))
         {
             await Send.ForbiddenAsync(ct);
             return;
         }
         var characters = _persistence.GetRepository<ICharactersRepository>();
+        await using var locked = await characters.LockAsync(req.FromCharacterId, req.ToCharacterId);
         var problem = PartyItemEffect.Validate(campaign, req.FromCharacterId, req.ToCharacterId, req.Kind, req.Amount);
         var to = problem is null ? await characters.GetCharacterAsync(req.ToCharacterId) : null;
         if (problem is not null || to is null || await characters.GetCharacterAsync(req.FromCharacterId) is null)
@@ -62,6 +63,7 @@ public sealed class ItemEffectEndpoint : Endpoint<ItemEffectRequest, ItemEffectR
 
         to.UpdateCombat(PartyItemEffect.Apply(to.Combat, req.Kind!, req.Amount));
         await _persistence.SaveChangesAsync();
+        await locked.CommitAsync();
         await Send.OkAsync(new ItemEffectResponse(to.Name), ct);
     }
 }

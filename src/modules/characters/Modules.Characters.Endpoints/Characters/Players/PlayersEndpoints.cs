@@ -1,4 +1,4 @@
-using FastEndpoints;
+﻿using FastEndpoints;
 using Starlights.Modules.Characters.Data;
 using Starlights.Modules.Characters.Domain;
 using Starlights.Modules.Characters.Domain.Characters;
@@ -36,14 +36,14 @@ public sealed class GetPlayersEndpoint : EndpointWithoutRequest<GetPlayersRespon
     public override async Task HandleAsync(CancellationToken ct)
     {
         var characters = await _persistence.GetRepository<ICharactersRepository>().GetCharactersAsync();
-        var locked = await _access.GetLockedPlayersAsync();
+        var locked = await _access.GetLockedPlayerHashesAsync();
         var tokens = HttpContext.Request.Headers[PlayerAccess.TokenHeader].ToString();
 
         var counts = characters
             .Where(c => !string.IsNullOrWhiteSpace(c.PlayerName))
             .GroupBy(c => c.PlayerName, StringComparer.OrdinalIgnoreCase)
             .ToDictionary(g => g.First().PlayerName, g => g.Count(), StringComparer.OrdinalIgnoreCase);
-        foreach (var name in locked.Where(n => !counts.ContainsKey(n)))
+        foreach (var name in locked.Keys.Where(n => !counts.ContainsKey(n)))
         {
             counts[name] = 0;
         }
@@ -51,8 +51,8 @@ public sealed class GetPlayersEndpoint : EndpointWithoutRequest<GetPlayersRespon
         var players = counts
             .Select(p =>
             {
-                var isLocked = locked.Contains(p.Key);
-                return new PlayerModel(p.Key, isLocked && !_access.HasToken(tokens, p.Key) ? 0 : p.Value, isLocked);
+                var isLocked = locked.TryGetValue(p.Key, out var hash);
+                return new PlayerModel(p.Key, isLocked && !_access.HasPlayerToken(tokens, p.Key, hash!) ? 0 : p.Value, isLocked);
             })
             .OrderBy(p => p.Name, StringComparer.OrdinalIgnoreCase)
             .ToList();
@@ -76,9 +76,12 @@ public sealed class UnlockPlayerEndpoint : Endpoint<UnlockPlayerRequest, UnlockP
 {
     private readonly PlayerAccess _access;
 
-    public UnlockPlayerEndpoint(PlayerAccess access)
+    private readonly UnlockLimiter _limiter;
+
+    public UnlockPlayerEndpoint(PlayerAccess access, UnlockLimiter limiter)
     {
         _access = access;
+        _limiter = limiter;
     }
 
     public override void Configure()
@@ -90,6 +93,10 @@ public sealed class UnlockPlayerEndpoint : Endpoint<UnlockPlayerRequest, UnlockP
 
     public override async Task HandleAsync(UnlockPlayerRequest req, CancellationToken ct)
     {
+        if (!await UnlockThrottle.TryAsync(_limiter, HttpContext, UnlockLimiter.Player(req.Name), ct))
+        {
+            return;
+        }
         var token = await _access.UnlockAsync(req.Name, req.Password);
         if (token is null)
         {
@@ -147,14 +154,15 @@ public sealed class SetPlayerPasswordEndpoint : Endpoint<SetPlayerPasswordReques
             return;
         }
 
-        if (await _access.IsLockedAsync(name) && !_access.HasToken(HttpContext.Request.Headers[PlayerAccess.TokenHeader], name))
+        if (!await _access.CanActAsAsync(HttpContext.Request.Headers[PlayerAccess.TokenHeader], name))
         {
             await Send.UnauthorizedAsync(ct);
             return;
         }
 
-        var stored = await _access.SetPasswordAsync(name, req.Password);
-        await Send.OkAsync(new UnlockPlayerResponse(stored, req.Password.Length > 0 ? _access.IssueToken(stored) : string.Empty), ct);
+        // the old password's tokens stop working; this device gets one for the new password
+        var (stored, token) = await _access.SetPasswordAsync(name, req.Password);
+        await Send.OkAsync(new UnlockPlayerResponse(stored, token), ct);
     }
 }
 
@@ -202,7 +210,7 @@ public sealed class AssignPlayerEndpoint : Endpoint<AssignPlayerRequest>
             return;
         }
 
-        if (await _access.IsLockedAsync(req.PlayerName) && !_access.HasToken(HttpContext.Request.Headers[PlayerAccess.TokenHeader], req.PlayerName))
+        if (!await _access.CanActAsAsync(HttpContext.Request.Headers[PlayerAccess.TokenHeader], req.PlayerName))
         {
             await Send.UnauthorizedAsync(ct);
             return;
