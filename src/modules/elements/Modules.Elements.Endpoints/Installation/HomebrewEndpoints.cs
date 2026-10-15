@@ -1,4 +1,4 @@
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Linq;
 using FastEndpoints;
@@ -50,7 +50,7 @@ public sealed class GetHomebrewEndpoint : EndpointWithoutRequest<GetHomebrewResp
         if (Directory.Exists(folder))
         {
             // the magic items made on the page are edited there, not as a file
-            foreach (var path in Directory.EnumerateFiles(folder, "*.xml").Where(p => Path.GetFileName(p) != HomebrewContent.ItemsFile).Order())
+            foreach (var path in Directory.EnumerateFiles(folder, "*.xml").Where(p => !HomebrewContent.IsManaged(Path.GetFileName(p))).Order())
             {
                 try
                 {
@@ -126,9 +126,9 @@ public sealed class UploadHomebrewEndpoint : Endpoint<UploadHomebrewRequest>
         var folder = HomebrewFiles.Folder(Config);
         Directory.CreateDirectory(folder);
         var name = HomebrewFiles.SafeName(req.FileName);
-        if (name == HomebrewContent.ItemsFile)
+        if (HomebrewContent.IsManaged(name))
         {
-            AddError(r => r.FileName, "That name is kept for the magic items made on the Homebrew page; rename the file.");
+            AddError(r => r.FileName, "That name is kept for what the Homebrew page makes (items, spells, subclasses, classes); rename the file.");
             await Send.ErrorsAsync(cancellation: ct);
             return;
         }
@@ -159,7 +159,7 @@ public sealed class DeleteHomebrewEndpoint : EndpointWithoutRequest
     {
         var name = HomebrewFiles.SafeName(Route<string>("file") ?? string.Empty);
         var path = Path.Combine(HomebrewFiles.Folder(Config), name);
-        if (!File.Exists(path) || name == HomebrewContent.ItemsFile)
+        if (!File.Exists(path) || HomebrewContent.IsManaged(name))
         {
             await Send.NotFoundAsync(ct);
             return;

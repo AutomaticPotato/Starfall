@@ -2,6 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 import { HourlyBackdrop } from "@/components/hourly-backdrop";
 import { BATTLE_BACKGROUND, LORE_BACKGROUND } from "@/lib/art";
+import { HomebrewSection } from "./homebrew-section";
 
 function LandingTile({
   title,
@@ -129,6 +130,8 @@ export function LandingPage2() {
           </div>
         </div>
       </div>
+
+      <HomebrewSection />
 
       <section className="my-12 grid gap-6 sm:grid-cols-3">
         {[

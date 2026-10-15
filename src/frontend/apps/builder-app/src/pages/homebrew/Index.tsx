@@ -2,8 +2,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { FlaskConicalIcon, Trash2Icon, UploadIcon } from "lucide-react";
 import { useRef } from "react";
 import { HomebrewItems, HomebrewMonsters } from "./homebrew-tabs";
+import { HomebrewClasses, HomebrewSpells, HomebrewSubclasses } from "./workshop-tabs";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -55,7 +56,7 @@ function FilesTab() {
     <div className="space-y-6">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <p className="max-w-2xl text-sm text-muted-foreground">
-          Your group's own species, classes, subclasses, backgrounds and feats, as Aurora element files (.xml). They appear in the builder under the
+          Your group's own species, backgrounds, feats and anything else, as Aurora element files (.xml). Spells, classes and subclasses can also be made on their tabs. They appear in the builder under the
           Homebrew books, for characters that tick Homebrew in their Sources.
         </p>
         {admin ? (
@@ -129,7 +130,14 @@ function FilesTab() {
  * The group's homebrew: magic items and monsters made here, and uploaded Aurora files for anything else. Homebrew is
  * off unless switched on: a character ticks Homebrew in its Sources; a campaign switches on "Use homebrew".
  */
+const TABS = ["items", "monsters", "spells", "classes", "subclasses", "files"] as const;
+
 export function HomebrewPage() {
+  // ?tab=spells opens a tab, &new=1 its "new" form (the home page's homebrew section links here)
+  const [params, setParams] = useSearchParams();
+  const tab = (TABS as readonly string[]).includes(params.get("tab") ?? "") ? params.get("tab")! : "items";
+  const startNew = params.get("new") === "1";
+  const open = (t: string) => setParams(t === "items" ? {} : { tab: t }, { replace: true });
   return (
     <div className="space-y-6 pb-16">
       <header className="space-y-1">
@@ -139,17 +147,31 @@ export function HomebrewPage() {
           Sources, and a DM switches on Use homebrew in the campaign's settings.
         </p>
       </header>
-      <Tabs defaultValue="items">
-        <TabsList>
-          <TabsTrigger value="items">Magic items</TabsTrigger>
-          <TabsTrigger value="monsters">Monsters</TabsTrigger>
-          <TabsTrigger value="files">Classes, species & more (files)</TabsTrigger>
-        </TabsList>
+      <Tabs value={tab} onValueChange={open}>
+        <div className="max-w-full overflow-x-auto">
+          <TabsList>
+            <TabsTrigger value="items">Magic items</TabsTrigger>
+            <TabsTrigger value="monsters">Monsters</TabsTrigger>
+            <TabsTrigger value="spells">Spells</TabsTrigger>
+            <TabsTrigger value="classes">Classes</TabsTrigger>
+            <TabsTrigger value="subclasses">Subclasses</TabsTrigger>
+            <TabsTrigger value="files">Species & more (files)</TabsTrigger>
+          </TabsList>
+        </div>
         <TabsContent value="items" className="mt-4">
-          <HomebrewItems />
+          <HomebrewItems startNew={startNew && tab === "items"} />
         </TabsContent>
         <TabsContent value="monsters" className="mt-4">
-          <HomebrewMonsters />
+          <HomebrewMonsters startNew={startNew && tab === "monsters"} />
+        </TabsContent>
+        <TabsContent value="spells" className="mt-4">
+          <HomebrewSpells startNew={startNew && tab === "spells"} />
+        </TabsContent>
+        <TabsContent value="classes" className="mt-4">
+          <HomebrewClasses startNew={startNew && tab === "classes"} />
+        </TabsContent>
+        <TabsContent value="subclasses" className="mt-4">
+          <HomebrewSubclasses startNew={startNew && tab === "subclasses"} />
         </TabsContent>
         <TabsContent value="files" className="mt-4">
           <FilesTab />

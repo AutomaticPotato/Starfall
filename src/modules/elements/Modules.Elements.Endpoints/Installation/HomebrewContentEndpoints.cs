@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
@@ -19,6 +19,10 @@ internal static partial class HomebrewContent
 {
     public const string ItemsFile = "starlights-items.xml";
     public const string MonstersFile = "starlights-monsters.json";
+
+    /// <summary>The files the Homebrew page's forms write: not listed, uploaded over or removed as files.</summary>
+    public static bool IsManaged(string fileName) =>
+        fileName is ItemsFile or HomebrewWorkshop.SpellsFile or HomebrewWorkshop.SubclassesFile or HomebrewWorkshop.ClassesFile;
     public static readonly SemaphoreSlim Gate = new(1, 1);
 
     public static readonly Dictionary<string, string> KindCategory = new(StringComparer.OrdinalIgnoreCase)

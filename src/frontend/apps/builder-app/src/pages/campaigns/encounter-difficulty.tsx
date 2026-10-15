@@ -61,7 +61,8 @@ function useCombatantCrs(meta: LoreMeta | undefined, monsters: Combatant[], home
       staleTime: Infinity,
     })),
   });
-  return useMemo(() => {
+  // a handful of creatures: worked out on every render, no memo needed
+  {
     const crs = new Map<string, string>();
     for (const c of monsters) {
       let cr: string | null = null;
@@ -74,8 +75,7 @@ function useCombatantCrs(meta: LoreMeta | undefined, monsters: Combatant[], home
       if (cr) crs.set(c.id, cr);
     }
     return crs;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [monsters, homebrew, ...chunks.map((q) => q.data)]);
+  }
 }
 
 function Tick({ on, onChange, children, title }: { on: boolean; onChange: (on: boolean) => void; children: React.ReactNode; title?: string }) {

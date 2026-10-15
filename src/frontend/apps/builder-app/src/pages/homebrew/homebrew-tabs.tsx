@@ -16,13 +16,12 @@ import { useHomebrewActions, useHomebrewItems, useHomebrewMonsters, type Homebre
 import { isAdmin } from "@/lib/player";
 import { ABILITY_KEYS, EMPTY_MONSTER, type HomebrewMonster } from "@/lib/rules/homebrew";
 import { cn } from "@/lib/utils";
+import { area, select } from "./form-styles";
 
 const KINDS = ["Wondrous Item", "Weapon", "Armor", "Ring", "Potion", "Scroll", "Staff", "Wand", "Rod"];
 const RARITIES = ["Common", "Uncommon", "Rare", "Very Rare", "Legendary", "Artifact"];
-const area = "w-full rounded-md border bg-background px-3 py-2 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50";
-const select = cn(area, "h-9 py-1");
 
-function Field({ label, hint, children, wide }: { label: string; hint?: string; children: ReactNode; wide?: boolean }) {
+export function Field({ label, hint, children, wide }: { label: string; hint?: string; children: ReactNode; wide?: boolean }) {
   return (
     <label className={cn("block space-y-1 text-sm", wide && "sm:col-span-2")}>
       <span className="font-medium">{label}</span>
@@ -34,10 +33,11 @@ function Field({ label, hint, children, wide }: { label: string; hint?: string; 
 
 const NEW_ITEM: HomebrewItem = { name: "", source: "Homebrew", kind: "Wondrous Item", rarity: "Uncommon", attunement: false, description: "" };
 
-export function HomebrewItems() {
+export function HomebrewItems({ startNew }: { startNew?: boolean } = {}) {
   const { data, isLoading } = useHomebrewItems();
   const { saveItem, deleteItem } = useHomebrewActions();
-  const [editing, setEditing] = useState<HomebrewItem | null>(null);
+  // a tab mounts when it is shown: ?new=1 opens its form once
+  const [editing, setEditing] = useState<HomebrewItem | null>(() => (startNew && isAdmin() ? { ...NEW_ITEM } : null));
   const admin = isAdmin();
   const items = data ?? [];
   const books = [...new Set(items.map((i) => i.source ?? "Homebrew"))].sort();
@@ -200,10 +200,11 @@ function ItemDialog({ item, busy, onClose, onSave }: { item: HomebrewItem; busy:
   );
 }
 
-export function HomebrewMonsters() {
+export function HomebrewMonsters({ startNew }: { startNew?: boolean } = {}) {
   const { data, isLoading } = useHomebrewMonsters();
   const { saveMonster, deleteMonster } = useHomebrewActions();
-  const [editing, setEditing] = useState<HomebrewMonster | null>(null);
+  // a tab mounts when it is shown: ?new=1 opens its form once
+  const [editing, setEditing] = useState<HomebrewMonster | null>(() => (startNew && isAdmin() ? { ...EMPTY_MONSTER, abilities: { ...EMPTY_MONSTER.abilities } } : null));
   const admin = isAdmin();
   const monsters = [...(data ?? [])].sort((a, b) => a.name.localeCompare(b.name));
   return (
