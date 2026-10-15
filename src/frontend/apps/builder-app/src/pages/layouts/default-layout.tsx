@@ -3,7 +3,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import { BookOpenIcon, CrownIcon, DatabaseIcon, FlaskConicalIcon, LibraryBigIcon, MenuIcon, OrbitIcon, ScrollTextIcon, SwordsIcon, UserIcon } from "lucide-react";
+import { BookOpenIcon, CrownIcon, DatabaseIcon, FlaskConicalIcon, LibraryBigIcon, MenuIcon, ScrollTextIcon, SwordsIcon, UserIcon } from "lucide-react";
 import { Link, NavLink, Outlet } from "react-router-dom";
 import { ModeToggle } from "@/components/mode-toggle";
 import { GitHubIconButton } from "@/components/navigation/github-icon-button";
@@ -107,8 +107,8 @@ export function MainNavigation() {
     <>
       <nav className="flex items-center justify-between h-16 ">
         <div className="flex items-center justify-start gap-2 ">
-          <Link to="/" className=" flex items-center font-heading relative">
-            <OrbitIcon className="size-6 mr-3 stroke-starlights-purple-600" />
+          <Link to="/" aria-label="Project Starlights home" className="flex items-center font-heading relative">
+            <img src="/branding/starlights-emblem.webp" alt="" width={44} height={44} className="size-11 rounded-lg border border-border" />
             <span className="hidden 2xl:inline tracking-widest mt-0.5">Project Starlights</span>
             <span className="hidden xl:inline 2xl:hidden tracking-widest mt-0.5">Starlights</span>
           </Link>
