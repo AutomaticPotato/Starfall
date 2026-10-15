@@ -20,7 +20,7 @@ and launcher are implemented, but compatibility has not yet been verified on Win
 - At least **10 GB free** on the installation filesystem and Docker image storage; **20 GB or more** is recommended for
   builds, downloaded content and growth. Docker Desktop storage is inside its VM and may need a separate space check.
 - Internet access for source, container images, package builds and content downloads. The first setup may take 20–40 minutes.
-- `git` and Python 3 in Linux/WSL. `curl` and `openssl` remain useful for the existing maintenance tools but are not needed
+- `git` and Python 3 in Linux/WSL, and `curl` for the maintenance tools (backups, updates). `openssl` is not needed
   by the new setup helper. Run setup as your normal user, with permission to use Docker.
 
 Setup checks prerequisites, creates private credentials once, prepares data permissions, builds the images, starts the
@@ -202,14 +202,11 @@ temporary checkout, uses unique test image/project names and a loopback-only hig
 survives a repeated setup. It never uses a live data directory. See its `--help` before running it on a Docker-capable host.
 A complete content download and browser character-creation check still need to be performed in that disposable installation.
 
-This mission leaves `admin.sh`, backup/restore/update scripts, the shared Compose file and production configuration unchanged.
-Maintenance tools should read the saved `.env`, including `COMPOSE_PROJECT_NAME`, and preserve `data/.installer-project`.
-The one reported shared-file change is `.dockerignore`: installation secrets, temporary credential files and `deploy/data/`
-are excluded from Docker build contexts. Claude's in-progress `feature/maintenance-recovery` files were inspected read-only:
-its Compose wrapper already reads the project name from Compose configuration, and its in-place user-folder restore leaves
-the installer marker alone. No overlapping files were found at review time; neither mission has been integrated.
-One coordination item remains: maintenance's current `env_value` helper uses `grep`/`cut`, which retains CR characters
-in a Windows-edited CRLF `.env`. Setup generates LF files and accepts CRLF itself; keep `.env` in LF format when using
-the current maintenance/admin scripts. Their owner should review CRLF parsing before advertising Windows maintenance support.
-The README still describes the older installer (3 GB disk, printed password and indefinite API wait); it needs a follow-up
-link to this guide by the owner of that shared file. Its statements do not describe this installer.
+### After installing: backups, restores and updates
+
+Backups, restores and updates are done with `deploy/maintenance/` (`backup.sh`, `verify.sh`, `restore.sh`,
+`update.sh`, `rollback.sh`); see [maintenance.md](maintenance.md). They work on the install setup made: they read the
+same `.env` (including `COMPOSE_PROJECT_NAME`, LF or CRLF line endings), keep their backups in `data/backups/`
+(which setup never touches), and leave `data/.installer-project` alone. `admin.sh` also accepts a CRLF `.env`.
+Docker images are named after `COMPOSE_PROJECT_NAME`, so separate installations on one computer do not share images.
+`.dockerignore` keeps `deploy/.env` and all of `deploy/data/` (including backups) out of Docker build contexts.

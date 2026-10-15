@@ -43,36 +43,46 @@
 
 ## Install with Docker
 
+The full, step-by-step guide is **[docs/installation.md](docs/installation.md)**; this is the short version.
+
 ### What you need
 
 - A computer that stays on while you play: a home server, a spare PC or a NAS that runs Docker.
-  - **64-bit Intel/AMD (x86-64) only.** The database (Microsoft SQL Server) has no ARM version, so a Raspberry Pi
-    won't work; an Apple Silicon Mac only through Docker Desktop's x86 emulation, slowly.
-  - **4 GB of RAM** or more (the database takes up to 2 GB) and **about 3 GB of disk** (more with portraits).
-- **Linux** (or Windows with WSL 2 and Docker Desktop), with **Docker and its compose plugin**, `git`, `curl`,
-  `openssl` and `python3`. On Ubuntu or Debian: `sudo apt install git curl openssl python3` and Docker from
-  [docs.docker.com/engine/install](https://docs.docker.com/engine/install/).
-- An internet connection for the first setup (the app downloads about 200 MB of content, plus the Docker images).
+  - **64-bit Intel/AMD (x86-64) only.** The database (Microsoft SQL Server) has no ARM version: no Raspberry Pi,
+    no Windows on ARM.
+  - **4 GB of RAM** for Docker (8 GB recommended) and **at least 10 GB free disk** (20 GB recommended).
+- **Linux** (Ubuntu or Debian) with Docker Engine and its Compose plugin, or **Windows** with WSL2 and Docker Desktop.
+  `git` and `python3` in Linux/WSL. Your user must be able to run `docker info` without sudo.
+- An internet connection for the first setup (the Docker images and about 200 MB of content).
 
-### Setting it up
+### Linux
 
 ```bash
-git clone -b aurora-server https://github.com/CHassapis/starlights.git
+cd ~
+git clone --branch aurora-server https://github.com/CHassapis/starlights.git
 cd starlights/deploy
+./setup.sh --check     # checks Docker, memory, disk and the port; changes nothing
 ./setup.sh
 ```
 
-The first run takes 10 to 20 minutes (building the app is the slow part). `setup.sh` is safe to run again; it skips what
-is done. It:
+### Windows (Docker Desktop + WSL2)
 
-1. writes `deploy/.env` with random passwords. Your **admin password** is `STARLIGHTS_MASTER_PASSWORD` in that file;
-2. builds and starts three containers: the database, the API and the web app;
-3. has the app download Aurora Legacy's elements and the 5etools data from GitHub, import them (about 14,000 elements)
-   and build the Compendium of Lore. It shows each step as it goes.
+Install WSL2 with Ubuntu and Docker Desktop (WSL2 backend, Linux containers, WSL integration for Ubuntu switched on),
+then run the same commands **in the Ubuntu terminal**, with the checkout in your Linux home (`~/starlights`), never on
+`C:\` or `/mnt/c`. Open **http://localhost:8093** in your Windows browser. A PowerShell launcher (`deploy/setup.ps1`)
+does the same from PowerShell; see [docs/installation.md](docs/installation.md#windows-docker-desktop-and-wsl2).
 
-When it finishes it prints the address, `http://<this machine>:8093` (for example `http://192.168.1.20:8093`), and the
-admin password. Everyone on your home network can open that address in a browser, on a phone too. The site restarts by
-itself after a reboot.
+### What setup does
+
+It checks the prerequisites, writes `deploy/.env` once with random passwords (never printed; your **admin password**
+is `STARLIGHTS_MASTER_PASSWORD` in that file), builds and starts the database, API and web app, and has the app
+download and import Aurora Legacy and the 5etools data (20–40 minutes the first time). Running `./setup.sh` again
+is safe: it never replaces `.env` and never deletes anything in `data/`, including your backups.
+
+Open `http://localhost:8093` on that computer, or `http://<its LAN address>:8093` from phones and other computers at
+home. The site restarts by itself after a reboot (on Windows, while Docker Desktop runs).
+
+**Then make your first backup**: `maintenance/backup.sh` (see [Backups and restoring](#backups-and-restoring)).
 
 ## Using it
 
@@ -184,14 +194,21 @@ Installed before the sheet was built in? The `deploy/data/aurora-sheets` folder 
 
 ## Updating
 
-New code:
+New code, from the `deploy/` folder:
 
 ```bash
-cd starlights && git pull
-cd deploy && STARLIGHTS_COMMIT=$(git rev-parse --short HEAD) docker compose build && docker compose up -d
+maintenance/update.sh --check     # what the update brings and whether it changes the database; changes nothing
+maintenance/update.sh             # asks, backs up, keeps the running version for a rollback, then updates
 ```
 
-This version changes how content is imported (Aurora's appends, what each option needs, and what 5etools has that Aurora Legacy lacks), so import it again once and update the characters, while nobody is using the site: `./admin.sh import AuroraLegacy.index --replace`, then `./admin.sh import homebrew --replace` if you have homebrew, then `./admin.sh import 5etools --replace`, `./admin.sh import starlights --replace` and `./admin.sh reprocess`. Characters keep their picks. Coming from a version before the sheet was built in: nothing is needed from Aurora any more, and the
+It refuses to run with local code changes or anything but a straight fast-forward, makes a verified backup first,
+builds the new version while the old one keeps running, and afterwards checks that the site works and that no
+characters, campaigns, players, portraits or homebrew went missing. If something goes wrong it says exactly how to go
+back: `maintenance/rollback.sh <old version>` (program only) or, when the update changed the database, a restore of
+the backup it made. Details: [docs/maintenance.md](docs/maintenance.md#updating-to-a-new-version). Don't update with a
+bare `git pull` + `docker compose build`: that has no backup and no way back once the database has changed.
+
+Coming from a version before October 2026: this version changes how content is imported (Aurora's appends, what each option needs, and what 5etools has that Aurora Legacy lacks), so import it again once and update the characters, while nobody is using the site: `./admin.sh import AuroraLegacy.index --replace`, then `./admin.sh import homebrew --replace` if you have homebrew, then `./admin.sh import 5etools --replace`, `./admin.sh import starlights --replace` and `./admin.sh reprocess`. Characters keep their picks. Coming from a version before the sheet was built in: nothing is needed from Aurora any more, and the
 `deploy/data/aurora-sheets` folder can be deleted.
 
 New content: press **Save and update now** on the Content page, or run `./admin.sh update`. The database changes a new
@@ -212,29 +229,28 @@ version needs are applied by themselves when it starts. To get new content every
 
 ## Backups and restoring
 
-Your group's data is the database, the portraits and the homebrew in `deploy/data` (the content clones can always be
-downloaded again). Keep `deploy/.env` with the backup: the database only opens with its password. The files belong to
-the containers' users, so the commands use a small helper container:
+Your group's data is the database (characters, campaigns, players, imported content and homebrew) and the portraits,
+campaign pictures, homebrew files and artwork in `deploy/data`. The downloaded books can always be downloaded again.
+From the `deploy/` folder, while the site runs:
 
 ```bash
-cd starlights/deploy
-docker compose stop
-docker run --rm -v "$PWD/data:/data" -v "$PWD:/backup" alpine \
-  tar czf /backup/starlights-$(date +%F).tgz -C /data mssql portraits homebrew
-docker compose start
+maintenance/backup.sh                      # SQL Server's own backup (checked by SQL Server) + the folders
+maintenance/verify.sh --deep               # proof the newest backup restores (in a throwaway database, not your site)
+maintenance/restore.sh data/backups/<folder>
 ```
 
-To restore (replaces what is there now):
+A backup is a folder in `deploy/data/backups/` that only your user can read: the database backup, the folders, a
+manifest of what is in it and checksums. **Copy it to another disk or computer** too. Don't back up by copying
+`data/mssql`: SQL Server's files copied while it runs can be broken without anyone noticing.
 
-```bash
-cd starlights/deploy
-docker compose down
-docker run --rm -v "$PWD/data:/data" -v "$PWD:/backup" alpine sh -c \
-  'rm -rf /data/mssql /data/portraits /data/homebrew && tar xzf /backup/starlights-2026-01-31.tgz -C /data'
-docker compose up -d
-```
+`restore.sh` replaces what is there now, so it checks the backup fully first, refuses one made by a newer version,
+asks you to type the install's name, makes a safety backup of the current state, and moves the current folders aside
+instead of deleting them. Moving to a new computer: install there with `setup.sh`, copy the backup folder into its
+`deploy/data/backups/`, restore. Everything else (nightly backups, what each message means):
+[docs/maintenance.md](docs/maintenance.md).
 
-Copy the `.tgz` files somewhere else too (another disk, cloud storage).
+These scripts are for installs made from `deploy/` (by `setup.sh`). A server set up some other way (the project's
+own server is one) needs its own backup routine.
 
 ## Playing away from home
 
@@ -246,7 +262,8 @@ personal use): install it on the server and on each player's device, then open `
 
 | Problem | What to do |
 |---|---|
-| `setup.sh` waits forever for the API | `docker compose logs starlights-api starlights-db`. The most common causes: less than 2 GB of free RAM, or an ARM computer. |
+| `setup.sh` stops with an error | It names the step and what to do; rerunning it is safe. More in [docs/installation.md](docs/installation.md#timeouts-and-troubleshooting). |
+| A backup, restore or update stops | It says why and what to do; nothing was half-done without saying so. See [docs/maintenance.md](docs/maintenance.md#when-something-goes-wrong). |
 | "port is already allocated" | Another program uses 8093: set `STARLIGHTS_PORT=8094` (or another) in `.env` and run `docker compose up -d`. |
 | The Compendium of Lore says it isn't set up | On the Content page press **Download everything again** (or `./admin.sh update --force`). |
 | The content update stopped | The Content page shows the step and the reason. "GitHub did not answer" usually means its limit of 60 checks an hour: try again later. |
@@ -257,11 +274,13 @@ personal use): install it on the server and on each player's device, then open `
 
 ## Removing it
 
+First copy anything in `data/backups/` you want to keep somewhere else: the last command deletes it too.
+
 ```bash
 cd starlights/deploy
 docker compose down
-docker run --rm -v "$PWD:/d" alpine rm -rf /d/data     # deletes everything, including characters and campaigns
-docker rmi starlights/backend starlights/web
+docker rmi $(docker compose config --images | grep -v mssql)   # this install's own images
+docker run --rm -v "$PWD:/d" alpine rm -rf /d/data     # deletes everything, including characters, campaigns and backups
 ```
 
 ## Credits and legal

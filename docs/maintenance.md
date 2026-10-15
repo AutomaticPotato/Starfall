@@ -84,9 +84,11 @@ Players need to unlock their characters again only if you restore onto a new ser
 
 ### Moving to a new computer
 
-1. Install Starlights on the new computer with `setup.sh` (or copy your old `deploy/.env` there first if you want
-   to keep the same admin password).
-2. Copy the backup folder over, into its `deploy/data/backups/`.
+1. Install Starlights on the new computer with `setup.sh` (see [installation.md](installation.md)). To keep the same
+   admin password, put your old `.env` there **before** running setup: `cp env.backup deploy/.env && chmod 600
+   deploy/.env` (from a backup made with `--include-env`; setup refuses a `.env` other users can read).
+2. Copy the backup folder over, into its `deploy/data/backups/` (after setup: setup refuses to start on a `data/`
+   folder that already has files but no `.env`).
 3. `maintenance/restore.sh data/backups/<folder>`.
 
 ## Updating to a new version
@@ -117,6 +119,15 @@ The update itself:
    files went missing
 
 If anything fails it stops and prints exactly what to do. Players with the site open should reload it once.
+
+Each install has its own images, named after its Compose project (`COMPOSE_PROJECT_NAME` in `.env`, which
+`setup.sh` makes unique), and its rollback copies are tagged on those names. So two installs on one computer (say a
+test copy next to your real one) never build over each other or roll back into each other's version. An install
+whose `.env` has no `COMPOSE_PROJECT_NAME` (made before the current `setup.sh`) is named after its folder,
+`deploy`: its images become `deploy/backend` and `deploy/web` with this version (before, every install shared
+`starlights/backend` and `starlights/web`; `update.sh` keeps the rollback copy under both names, and the old
+`starlights/*` images can be removed once you are happy with the update). Two such installs both in folders named
+`deploy` would be the same Compose project: give each its own `COMPOSE_PROJECT_NAME` in `.env`.
 
 ## Going back after an update
 

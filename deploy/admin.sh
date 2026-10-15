@@ -11,8 +11,9 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 [ -f .env ] || { echo "no .env here: run ./setup.sh first" >&2; exit 1; }
-KEY=$(grep -E '^STARLIGHTS_ADMIN_KEY=' .env | cut -d= -f2-)
-PORT=$(grep -E '^STARLIGHTS_PORT=' .env | cut -d= -f2-)
+# tr drops the CR of a .env saved with Windows line endings
+KEY=$(grep -E '^STARLIGHTS_ADMIN_KEY=' .env | cut -d= -f2- | tr -d '\r')
+PORT=$(grep -E '^STARLIGHTS_PORT=' .env | cut -d= -f2- | tr -d '\r')
 BASE="${STARLIGHTS_API:-http://localhost:${PORT:-8093}/api}"
 api() { curl -fsS -H "X-Admin-Key: $KEY" -H 'Content-Type: application/json' "$@"; }
 

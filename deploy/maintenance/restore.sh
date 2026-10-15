@@ -93,7 +93,7 @@ dc exec -T starlights-db rm -f "$inner"
 step "6. Restoring portraits, homebrew and art"
 aside="$DATA_DIR/.before-restore-$stamp"
 uid=$(id -u)
-docker run --rm -v "$DATA_DIR:/d" -v "$backup:/b:ro" alpine sh -c '
+docker run --rm --network none --security-opt no-new-privileges -v "$DATA_DIR:/d" -v "$backup:/b:ro" alpine:3.21 sh -c '
   set -e
   mkdir -p "/d/.before-restore-'"$stamp"'"
   for f in '"${USER_FOLDERS[*]}"'; do [ -e "/d/$f" ] && mv "/d/$f" "/d/.before-restore-'"$stamp"'/$f"; done

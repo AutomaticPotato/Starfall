@@ -3,3 +3,6 @@ setup.sh text eol=lf
 installer.py text eol=lf
 setup.ps1 text eol=crlf
 installer-tests/*.py text eol=lf
+# every shell script runs inside Linux/WSL: admin.sh and maintenance/*.sh too
+*.sh text eol=lf
+.env.example text eol=lf

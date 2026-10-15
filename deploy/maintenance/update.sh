@@ -80,7 +80,8 @@ backup=$(newest_backup)
 before_counts=$(db_counts); before_prints=$(folder_fingerprints)
 
 step "4. Keeping the running version for a rollback"
-for img in starlights/backend starlights/web; do
+backend_image=$(compose_image starlights-api); web_image=$(compose_image starlights-web)
+for img in "$backend_image" "$web_image"; do
   docker image inspect "$img:latest" >/dev/null 2>&1 && docker tag "$img:latest" "$img:rollback-$from" && say "kept $img:rollback-$from"
 done
 mkdir -p "$DATA_DIR/maintenance"
@@ -89,10 +90,18 @@ printf '{"from":"%s","to":"%s","backup":"%s","started":"%s","new_migrations":%s}
 
 step "5. Moving the code to $to and building"
 git -C "$REPO_DIR" merge --ff-only -q "$target"
+# if the new version names its images differently (older versions used starlights/backend and starlights/web for
+# every install), keep the rollback copies under the new names too, so rollback.sh from the new code finds them
+for pair in "$backend_image:$(compose_image starlights-api)" "$web_image:$(compose_image starlights-web)"; do
+  old_name=${pair%%:*}; new_name=${pair#*:}
+  if [ "$old_name" != "$new_name" ] && docker image inspect "$old_name:rollback-$from" >/dev/null 2>&1; then
+    docker tag "$old_name:rollback-$from" "$new_name:rollback-$from" && say "the new version names its images $new_name; kept $new_name:rollback-$from too"
+  fi
+done
 if ! STARLIGHTS_COMMIT="$to" dc build -q; then
   die "the new version did not build. The site is still running the old version ($from); nothing live changed." "To put the code back as it was:
   git -C $REPO_DIR reset --keep $from
-  docker tag starlights/backend:rollback-$from starlights/backend:latest; docker tag starlights/web:rollback-$from starlights/web:latest"
+  docker tag $backend_image:rollback-$from $backend_image:latest; docker tag $web_image:rollback-$from $web_image:latest"
 fi
 
 step "6. Starting the new version"

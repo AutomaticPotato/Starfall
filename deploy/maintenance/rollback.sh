@@ -26,8 +26,9 @@ while [ $# -gt 0 ]; do
   esac
 done
 require_install
-[ -n "$old" ] || die "say which version to go back to." "Kept versions: $(docker images --format '{{.Repository}}:{{.Tag}}' | grep -E '^starlights/(web|backend):rollback-' | sed 's/.*rollback-//' | sort -u | tr '\n' ' ')"
-images=(starlights/web); $web_only || images=(starlights/backend starlights/web)
+backend_image=$(compose_image starlights-api); web_image=$(compose_image starlights-web)
+[ -n "$old" ] || die "say which version to go back to." "Kept versions: $(docker images --format '{{.Repository}}:{{.Tag}}' | grep -F "$web_image:rollback-" | sed 's/.*rollback-//' | sort -u | tr '\n' ' ')"
+images=("$web_image"); $web_only || images=("$backend_image" "$web_image")
 for img in "${images[@]}"; do
   docker image inspect "$img:rollback-$old" >/dev/null 2>&1 || die "there is no kept image $img:rollback-$old." "Kept versions: $(docker images --format '{{.Repository}}:{{.Tag}}' | grep -E "^$img:rollback-" | tr '\n' ' ')"
 done

@@ -59,6 +59,12 @@ env_value() {
 
 site_port() { local p; p=$(env_value STARLIGHTS_PORT || true); echo "${p:-8093}"; }
 
+# the image a service of this install uses, as docker-compose.yml names it (per Compose project, e.g.
+# starlights-1a2b3c4d5e/backend; installs without COMPOSE_PROJECT_NAME: starlights/backend)
+compose_image() {
+  dc config --format json 2>/dev/null | python3 -c 'import json,sys; print(json.load(sys.stdin)["services"][sys.argv[1]]["image"])' "$1"
+}
+
 # state of a service: "running healthy", "running", "exited 0", "" (no container)
 service_state() {
   dc ps -a --format json "$1" 2>/dev/null | python3 -c '
@@ -110,7 +116,7 @@ db_counts() { printf '%s\n' "$DATA_COUNTS_SQL" | sql | sed '/^\s*$/d'; }
 # per user folder: number of files and a fingerprint of their names, sizes and contents ("folder|files|sha256")
 folder_fingerprints() {
   local root="${1:-$DATA_DIR}"
-  docker run --rm -v "$root:/d:ro" alpine sh -c '
+  docker run --rm --network none --security-opt no-new-privileges -v "$root:/d:ro" alpine:3.21 sh -c '
     for f in '"${USER_FOLDERS[*]}"'; do
       if [ -d "/d/$f" ]; then
         n=$(find "/d/$f" -type f | wc -l)

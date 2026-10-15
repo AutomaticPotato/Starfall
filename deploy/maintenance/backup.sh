@@ -63,7 +63,7 @@ chmod 600 "$work/database.bak"
 
 step "Backing up portraits, homebrew and artwork"
 uid=$(id -u); gid=$(id -g)
-docker run --rm -v "$DATA_DIR:/d:ro" -v "$work:/out" alpine sh -c '
+docker run --rm --network none --security-opt no-new-privileges -v "$DATA_DIR:/d:ro" -v "$work:/out" alpine:3.21 sh -c '
   set -e; cd /d; dirs=""
   for f in '"${USER_FOLDERS[*]}"'; do [ -d "$f" ] && dirs="$dirs $f"; done
   tar czf /out/files.tar.gz --numeric-owner $dirs

@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 # Community installer for Linux and Windows through WSL2. See docs/installation.md.
+# After setup: back up with maintenance/backup.sh, update with maintenance/update.sh (see docs/maintenance.md).
+# Running setup again never deletes .env or anything in data/ (including data/backups/).
 # Disable inherited tracing before handling configuration; credentials never enter shell variables.
 set +x
 set -euo pipefail

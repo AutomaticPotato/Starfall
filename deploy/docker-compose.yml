@@ -4,6 +4,12 @@
 #
 # ./data holds the books' content and your group's data (database, portraits, homebrew). It is never part of the
 # repository; keep the site on your own network (or behind a password), not open to the internet.
+# Backups, restores and updates: deploy/maintenance/ (see docs/maintenance.md).
+#
+# Images are named after the Compose project (COMPOSE_PROJECT_NAME in .env, which setup.sh makes unique per
+# install), so two installs on one computer never build over each other's images. Without COMPOSE_PROJECT_NAME
+# the project is the folder's name (deploy), so the images are deploy/backend and deploy/web; versions before
+# this one used starlights/backend and starlights/web for every install.
 
 x-db: &db
   ConnectionStrings__starlights-db: "Server=starlights-db;Database=starlights;User Id=sa;Password=${STARLIGHTS_SA_PASSWORD};TrustServerCertificate=True"
@@ -28,7 +34,7 @@ services:
 
   # the database migrations run once at every start, before the API
   starlights-migrate-elements:
-    image: starlights/backend
+    image: ${COMPOSE_PROJECT_NAME:-starlights}/backend
     build:
       context: ..
       dockerfile: deploy/backend.Dockerfile
@@ -44,7 +50,7 @@ services:
     restart: "no"
 
   starlights-migrate-characters:
-    image: starlights/backend
+    image: ${COMPOSE_PROJECT_NAME:-starlights}/backend
     working_dir: /app/migrate-characters
     entrypoint: ["dotnet", "Modules.Characters.Data.EntityFramework.MigrationService.dll"]
     environment: *db
@@ -54,7 +60,7 @@ services:
     restart: "no"
 
   starlights-api:
-    image: starlights/backend
+    image: ${COMPOSE_PROJECT_NAME:-starlights}/backend
     init: true
     environment:
       <<: *db
@@ -82,7 +88,7 @@ services:
     restart: unless-stopped
 
   starlights-web:
-    image: starlights/web
+    image: ${COMPOSE_PROJECT_NAME:-starlights}/web
     build:
       context: ..
       dockerfile: deploy/frontend.Dockerfile

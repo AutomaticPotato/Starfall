@@ -373,6 +373,9 @@ done
                 stage = 'content import'
                 self.content()
             emit('Setup complete. Keep .env and data/ together; rerunning setup does not reset them.')
+            emit('Back up your group\'s data (characters, campaigns, homebrew, portraits) regularly, from this deploy folder:')
+            emit('  maintenance/backup.sh            (copy the folder it makes in data/backups/ to another disk too)')
+            emit('Restoring and updating: maintenance/restore.sh and maintenance/update.sh; see docs/maintenance.md.')
             return 0
         except (SetupError, OSError, ValueError, KeyError, subprocess.SubprocessError) as exc:
             # Only our own messages are safe to print; HTTP/Compose errors may contain secrets or response bodies.

@@ -51,9 +51,12 @@ def main():
         deploy = checkout / 'deploy'
         config = deploy / 'docker-compose.yml'
         text = config.read_text()
-        for old, new in [('image: starlights/backend', f'image: {project}/backend'),
-                         ('image: starlights/web', f'image: {project}/web'),
-                         ('"${STARLIGHTS_PORT:-8093}:80"', '"127.0.0.1:${STARLIGHTS_PORT:-8093}:80"')]:
+        # Images are named after COMPOSE_PROJECT_NAME (set to this test's unique project below), so the test images
+        # are {project}/backend and {project}/web without rewriting; refuse to run if that isolation is gone.
+        if ('image: ${COMPOSE_PROJECT_NAME:-starlights}/backend' not in text
+                or 'image: ${COMPOSE_PROJECT_NAME:-starlights}/web' not in text):
+            raise RuntimeError('Compose images are not named per project; review smoke-test isolation before proceeding.')
+        for old, new in [('"${STARLIGHTS_PORT:-8093}:80"', '"127.0.0.1:${STARLIGHTS_PORT:-8093}:80"')]:
             if old not in text:
                 raise RuntimeError('Compose layout changed; review smoke-test isolation before proceeding.')
             text = text.replace(old, new)
