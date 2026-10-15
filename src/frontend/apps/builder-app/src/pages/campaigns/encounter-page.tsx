@@ -25,6 +25,7 @@ import { modifier, saveBonuses, type HomebrewMonster } from "@/lib/rules/homebre
 import { areaDamage } from "@/lib/rules/monster-actions";
 import { cn } from "@/lib/utils";
 import { UnlockCampaign } from "./campaign-dialogs";
+import { EncounterDifficulty } from "./encounter-difficulty";
 import { MonsterPanel } from "./monster-panel";
 
 const CompendiumPicker = lazy(() => import("@/components/lore/compendium-picker").then((m) => ({ default: m.CompendiumPicker })));
@@ -211,6 +212,7 @@ export function EncounterPage() {
             Type the players' initiative rolls in the order below. Players never see a monster's hit points, its notes or what it really is; hide a creature (the eye) until it shows itself.
             Point at (or tap) a creature's name for its stat block, and open its Actions to roll them; tick creatures to damage several at once.
           </p>
+          <EncounterDifficulty party={view.party} combatants={f.combatants} homebrew={homebrew.data} meta={lore.data} />
         </section>
         </details>
       )}
