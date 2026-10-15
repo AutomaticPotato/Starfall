@@ -191,7 +191,7 @@ cd starlights && git pull
 cd deploy && STARLIGHTS_COMMIT=$(git rev-parse --short HEAD) docker compose build && docker compose up -d
 ```
 
-This version changes how content is imported (Aurora's appends, and what each option needs), so import it again once and update the characters: `./admin.sh import AuroraLegacy.index --replace`, then `./admin.sh import homebrew --replace` if you have homebrew, then `./admin.sh reprocess`. Characters keep their picks. Coming from a version before the sheet was built in: nothing is needed from Aurora any more, and the
+This version changes how content is imported (Aurora's appends, what each option needs, and what 5etools has that Aurora Legacy lacks), so import it again once and update the characters, while nobody is using the site: `./admin.sh import AuroraLegacy.index --replace`, then `./admin.sh import homebrew --replace` if you have homebrew, then `./admin.sh import 5etools --replace`, `./admin.sh import starlights --replace` and `./admin.sh reprocess`. Characters keep their picks. Coming from a version before the sheet was built in: nothing is needed from Aurora any more, and the
 `deploy/data/aurora-sheets` folder can be deleted.
 
 New content: press **Save and update now** on the Content page, or run `./admin.sh update`. The database changes a new
