@@ -32,7 +32,10 @@ clean on changed files; web image build (tsc) passes. Test copy, `tmp/sec/hb_e2e
 content; save/list; bad subclass target 400; non-admin 403; homebrew class offers its homebrew subclass; every
 level-5 choice has options; homebrew cantrip with the Wizard list; slots 4/3/2 + prepared; skill choice exactly the
 class's three; book-class subclass). Browser (`~/.cache/starlights-test/pw/workshop-shots.mjs`, 390/360/1280,
-dark+light): no page errors, no sideways scroll on home, homebrew tabs + new dialogs, encounter panel.
+dark+light via `starlights-ui-theme`): no page errors, no sideways scroll on home, homebrew tabs + new dialogs,
+encounter panel. CoS fight (4 PCs lvl 5–6, 6 creatures, 4,750 XP): 2014 Deadly (×2 = 9,500 vs 5,300), 2024 High
+(vs 5,300), both checked by hand; with injected items Fedra → 5.75 (uncommon + carried rare; stored rare and potion
+excluded). The real party carries no magic items (checked read-only), so live shows "no magic items counted".
 Test copy torn down afterwards (copy DB dropped, its .bak and :test images deleted).
 
 ## Not done / known limits
