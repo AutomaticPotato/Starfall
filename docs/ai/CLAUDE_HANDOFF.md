@@ -12,6 +12,17 @@ Rollback: images `starlights-{web,backend}:rollback-6a6aea2`, backup
 `starlights-20261015-142434-pre-homebrew-workshop.bak` (verified). Deploy checks: snapshot identical, 11 sheets
 render, public door 401, anonymous homebrew write 403, no pending migrations. Codex: `~/starlights-frontend`, `codex/frontend-modernisation`.
 
+## Mission 008B (branch `feature/maintenance-recovery`, from 1f9f681; not merged)
+- `deploy/maintenance/{lib,backup,verify,restore,update,rollback}.sh` + `docs/maintenance.md`, for the `deploy/`
+  (setup.sh) layout. SQL Server BACKUP WITH CHECKSUM + VERIFYONLY, files tar, manifest (commit, SQL version,
+  migrations, counts, folder fingerprints), SHA256SUMS; restore = verify --deep, refuses newer migrations/SQL,
+  typed confirmation, pre-restore safety backup, old folders moved aside; update = preflight, migration
+  classification, backup, :rollback-<commit> images, build before switching, health + data-loss checks.
+- Tests: `~/.cache/starlights-test/maintenance/{make-test-install,run-tests}.sh` (disposable install
+  `starlights-mtest` on :8187 seeded from a copy of the pre-deploy backup): 53/53.
+- For Codex (owns setup.sh/README install docs): README "Updating" and "Backups and restoring" should point to
+  docs/maintenance.md (the README restore uses `rm -rf` with no safety copy; its backup copies raw mssql files).
+
 ## Status: done and live
 - Encounter difficulty: `lib/rules/encounter-difficulty.ts` (+test, the 2014 DMG's worked example) and
   `pages/campaigns/encounter-difficulty.tsx` in the encounter set-up (DM only, nothing saved to the fight). The
