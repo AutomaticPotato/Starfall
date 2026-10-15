@@ -26,12 +26,13 @@ function LandingTile({
     <>
       <Link
         to={url}
-        className={`block h-full relative overflow-hidden rounded-xl group border-4 border-double shadow-lg ${enabled ? "" : "pointer-events-none"} `}
+        className={`block h-full relative overflow-hidden rounded-xl group border border-border bg-[#101827] shadow-sm ${enabled ? "" : "pointer-events-none"} `}
       >
         {image ? (
           <img
             src={image}
-            alt={title}
+            alt=""
+            onError={(event) => { event.currentTarget.hidden = true; }}
             className={`absolute inset-0 w-full h-full object-cover transition-transform duration-500 scale-100 group-hover:scale-105 ${
               enabled ? "" : "grayscale-85 group-hover:grayscale-0 "
             }`}
@@ -40,7 +41,7 @@ function LandingTile({
           <div className="absolute inset-0 bg-linear-to-br from-muted to-background" />
         )}
 
-        <div className="absolute inset-0 bg-linear-to-tr from-black/40 group-hover:from-black/20 to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-tr from-black/80 group-hover:from-black/70 to-transparent" />
         {/* 
         <div className="absolute rounded-lg rotate-160 w-20 h-20 -top-7 -right-5 bg-accent shadow-2xl"></div>
         <SwordsIcon className="absolute  top-1 right-4 size-6 rotate-0 opacity-20 mt-2.5 ms-2.5" /> */}

@@ -28,10 +28,10 @@ import { Vitals, Status, RestDialog } from "@/pages/battle/battle-page";
 import { MagicTab } from "../builder/magic-tab";
 import { EquipmentTab } from "../builder/equipment-tab";
 
-function Section({ id, title, children, open = true }: { id: string; title: string; children: ReactNode; open?: boolean }) {
+function Section({ id, title, children, open, onToggle }: { id: string; title: string; children: ReactNode; open: boolean; onToggle: (open: boolean) => void }) {
   return (
     <section id={id} className="surface p-4 sm:p-5">
-      <details open={open}>
+      <details open={open} onToggle={(event) => onToggle(event.currentTarget.open)}>
         <summary className="section-heading py-2">{title}</summary>
         <div className="mt-4">{children}</div>
       </details>
@@ -48,6 +48,12 @@ export function InteractiveSheetPage() {
   const casting = useSpellcasting(id);
   const saveCombat = useSaveCombat(id);
   const saveMagic = useSaveMagic(id);
+  // Keep navigation state above loading guards: preparing spells can refresh dependent sheet queries.
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({ abilities: true, skills: true, attacks: true, resources: true });
+  const sectionProps = (sectionId: string) => ({
+    open: expanded[sectionId] ?? false,
+    onToggle: (open: boolean) => setExpanded((previous) => previous[sectionId] === open ? previous : { ...previous, [sectionId]: open }),
+  });
   const [rest, setRest] = useState<"short" | "long" | null>(null);
   if (sheet.error || combat.error || magic.error || casting.error)
     return (
@@ -119,13 +125,17 @@ export function InteractiveSheetPage() {
       </header>
       <nav aria-label="Sheet sections" className="sheet-navigation grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-7">
         {sections.map((name) => (
-          <a key={name} href={`#${name.toLowerCase()}`}>
+          <a key={name} href={`#${name.toLowerCase()}`} onClick={() => {
+            setExpanded((previous) => ({ ...previous, [name.toLowerCase()]: true }));
+          }}>
             {name}
           </a>
         ))}
       </nav>
       <p className="text-sm text-muted-foreground" role="status">
-        {busy ? "Saving changes…" : "Play state is shared with the battle simulator. Changes save automatically."}
+        {busy ? "Saving changes…" : saveCombat.isError || saveMagic.isError
+          ? "A change could not be saved. Check your connection and try again."
+          : "Play state is shared with the battle simulator. Changes save automatically."}
       </p>
       <fieldset disabled={busy} className="min-w-0 space-y-5">
         <legend className="sr-only">Character play state</legend>
@@ -154,7 +164,7 @@ export function InteractiveSheetPage() {
           </p>
         )}
         <div className="grid items-start gap-5 lg:grid-cols-2">
-          <Section id="abilities" title="Abilities & saving throws">
+          <Section {...sectionProps("abilities")} id="abilities" title="Abilities & saving throws">
             <p className="mb-3 text-sm">
               Proficiency bonus <strong>{signed(data.proficiencyBonus)}</strong> · Initiative <strong>{signed(data.initiative)}</strong>
             </p>
@@ -167,7 +177,7 @@ export function InteractiveSheetPage() {
                 </div>
               ))}
             </div>
-            <dl className="mt-4 grid gap-2 sm:grid-cols-2">
+            <dl className="mt-4 grid gap-x-6 gap-y-2 sm:grid-cols-2">
               {data.saves.map((s) => (
                 <div key={s.name} className="flex justify-between gap-2 text-sm">
                   <dt>
@@ -180,8 +190,8 @@ export function InteractiveSheetPage() {
             </dl>
             <p className="mt-3 text-sm text-muted-foreground">Saving throw bonuses before temporary situational effects.</p>
           </Section>
-          <Section id="skills" title="Skills & senses">
-            <dl className="grid gap-2 sm:grid-cols-2">
+          <Section {...sectionProps("skills")} id="skills" title="Skills & senses">
+            <dl className="grid gap-x-6 gap-y-3 sm:grid-cols-2">
               {data.skills.map((s) => (
                 <div key={s.name} className="flex items-start justify-between gap-2 text-sm">
                   <dt>
@@ -201,7 +211,7 @@ export function InteractiveSheetPage() {
             <p className="mt-2 text-sm text-muted-foreground">Languages: {data.languages.join(", ") || "None selected"}</p>
           </Section>
         </div>
-        <Section id="attacks" title="Attacks">
+        <Section {...sectionProps("attacks")} id="attacks" title="Attacks">
           <div className="grid gap-3 sm:grid-cols-2">
             {data.attacks.map((a, i) => (
               <details key={`${a.name}:${i}`} className="rounded-lg bg-muted p-3">
@@ -225,13 +235,13 @@ export function InteractiveSheetPage() {
             for rolls, conditions, targets and action economy.
           </p>
         </Section>
-        <Section id="spellcasting" title="Spellcasting" open={false}>
+        <Section {...sectionProps("spellcasting")} id="spellcasting" title="Spellcasting">
           <MagicTab characterId={id} />
         </Section>
-        <Section id="inventory" title="Inventory" open={false}>
+        <Section {...sectionProps("inventory")} id="inventory" title="Inventory">
           <EquipmentTab characterId={id} />
         </Section>
-        <Section id="features" title="Features & traits" open={false}>
+        <Section {...sectionProps("features")} id="features" title="Features & traits">
           <div className="grid items-start gap-3 sm:grid-cols-2">
             {[...data.speciesTraits, ...data.features, ...(data.backgroundFeature ? [data.backgroundFeature] : [])].map((f, i) => (
               <details key={`${f.title}:${i}`} className="rounded-lg bg-muted p-3">
@@ -253,7 +263,7 @@ export function InteractiveSheetPage() {
             ) : null,
           )}
         </Section>
-        <Section id="resources" title="Resources & rests">
+        <Section {...sectionProps("resources")} id="resources" title="Resources & rests">
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" onClick={() => setRest("short")}>
               Short rest

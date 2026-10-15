@@ -1756,7 +1756,7 @@ export function RestDialog({ kind, onClose, ctx, totalHitDice }: { kind: "short"
       return multi && dice > 0 ? { ...rested, uses: { ...rested.uses, [key(die)]: (rested.uses[key(die)] ?? 0) + dice } } : rested;
     });
     if (ctx.pact) ctx.updateMagic(slotsShort);
-    toast.success(`Short rest: ${healed} hit points back${shortBack.length ? `, ${shortBack.map((f) => f.title).join(", ")} back` : ""}${ctx.pact ? ", pact slots back" : ""}.`);
+    toast("Saving short rest…");
     close();
   };
   const finishLong = () => {
@@ -1776,7 +1776,7 @@ export function RestDialog({ kind, onClose, ctx, totalHitDice }: { kind: "short"
       return { ...rested, uses };
     });
     ctx.updateMagic(slotsLong);
-    toast.success("Long rest: hit points, spell slots and features are back.");
+    toast("Saving long rest…");
     close();
   };
   return (

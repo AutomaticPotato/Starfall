@@ -98,7 +98,7 @@ export function MagicTab({ characterId, spellChoices = [], renderChoice }: { cha
                 disabled={save.isPending}
                 onClick={() => {
                   change(longRest);
-                  toast.success("Every slot is back");
+                  toast("Saving restored spell slots…");
                 }}
               >
                 <MoonIcon /> Restore all slots
