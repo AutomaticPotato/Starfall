@@ -43,7 +43,19 @@ require_install() {
   [ -f "$DEPLOY_DIR/.env" ] || die "no .env in $DEPLOY_DIR: this folder is not a Starlights install (run ./setup.sh first)."
 }
 
-env_value() { grep -E "^$1=" "$DEPLOY_DIR/.env" | tail -1 | cut -d= -f2-; }
+# a value from deploy/.env as docker compose reads it: the last KEY=value line wins, an "export " prefix is allowed,
+# Windows line endings (CRLF, e.g. after editing in Notepad) and surrounding quotes are dropped. Empty when absent.
+env_value() {
+  local line value
+  line=$({ grep -E "^[[:space:]]*(export[[:space:]]+)?$1=" "$DEPLOY_DIR/.env" 2>/dev/null || true; } | tail -1)
+  [ -n "$line" ] || return 0
+  value=${line#*=}
+  value=${value%$'\r'}
+  if [ "${#value}" -ge 2 ]; then
+    case "$value" in \"*\"|\'*\') value=${value:1:${#value}-2} ;; esac
+  fi
+  printf '%s' "$value"
+}
 
 site_port() { local p; p=$(env_value STARLIGHTS_PORT || true); echo "${p:-8093}"; }
 
