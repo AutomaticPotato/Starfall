@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { SpellOptionDataModel } from "@starlights/api-client";
 import { castingKind, facetValues, filterOptions, SPELL_FACETS, spellDetails, spellFacets, spellHint, spellKind, toggleFacet } from "./option-filters";
 
-const fireball: SpellOptionDataModel = { level: 3, school: "Evocation", castingTime: "1 action", range: "150 feet", duration: "Instantaneous", components: "V, S, M", lists: ["Sorcerer", "Wizard"] };
+const fireball: SpellOptionDataModel = { level: 3, school: "Evocation", castingTime: "1 action", range: "150 feet", duration: "Instantaneous", components: "V, S, M", lists: ["Wizard", "Sorcerer", "Damaging Spell", "Spell Saving Throw", "UA Wizard"] };
 const shield: SpellOptionDataModel = { level: 1, school: "Abjuration", castingTime: "1 reaction", range: "Self", duration: "1 round" };
 const detect: SpellOptionDataModel = { level: 1, school: "Divination", castingTime: "1 action", concentration: true, ritual: true };
 const light: SpellOptionDataModel = { level: 0, school: "Evocation", castingTime: "1 action" };

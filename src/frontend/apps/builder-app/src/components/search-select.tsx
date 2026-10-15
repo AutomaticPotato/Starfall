@@ -159,8 +159,13 @@ export function SearchSelect({
           <ChevronsUpDownIcon className="size-4 shrink-0 opacity-50" />
         </button>
       </PopoverTrigger>
-      <PopoverContent align="start" className="w-[var(--radix-popover-trigger-width)] min-w-72 max-w-[calc(100vw-2rem)] p-0">
-        <div className="flex items-center gap-2 border-b px-3">
+      <PopoverContent
+        align="start"
+        collisionPadding={8}
+        // never taller than the room on screen: the search and filters stay in view, the list scrolls
+        className="flex max-h-[var(--radix-popover-content-available-height)] w-[var(--radix-popover-trigger-width)] min-w-72 max-w-[calc(100vw-2rem)] flex-col p-0"
+      >
+        <div className="flex shrink-0 items-center gap-2 border-b px-3">
           <SearchIcon className="size-4 shrink-0 text-muted-foreground" />
           <input
             autoFocus
@@ -188,7 +193,7 @@ export function SearchSelect({
           )}
         </div>
         {hasFilters && showFilters && (
-          <div className="flex max-h-44 flex-col gap-1.5 overflow-y-auto border-b px-3 py-2">
+          <div className="flex max-h-44 shrink-0 flex-col gap-1.5 overflow-y-auto border-b px-3 py-2">
             {groups.map(({ facet, values }) => (
               <div key={facet.key} className="flex items-center gap-1.5">
                 <span className="w-14 shrink-0 text-[11px] uppercase tracking-wide text-muted-foreground">{facet.label}</span>
@@ -255,7 +260,7 @@ export function SearchSelect({
         ) : shown.length === 0 ? (
           <p className="p-4 text-center text-sm text-muted-foreground">{ticked > 0 || query ? "Nothing matches; change the filters or the search." : "No options"}</p>
         ) : (
-          <ul ref={listRef} role="listbox" className="max-h-72 overflow-y-auto py-1">
+          <ul ref={listRef} role="listbox" className="max-h-72 min-h-16 flex-1 overflow-y-auto py-1">
             {shown.map((option, i) => (
               <li
                 key={option.id}
@@ -295,7 +300,7 @@ export function SearchSelect({
           </ul>
         )}
         {hasDetails && current && (current.kind || current.details?.length || current.needs) && (
-          <div aria-live="polite" className="max-h-40 overflow-y-auto border-t bg-muted/40 px-3 py-2 text-xs">
+          <div aria-live="polite" data-option-details className="max-h-40 shrink-0 overflow-y-auto border-t bg-muted/40 px-3 py-2 text-xs">
             <p className="font-medium text-foreground">
               {current.name}
               {current.kind && <span className="font-normal text-muted-foreground"> · {current.kind}</span>}
@@ -319,7 +324,7 @@ export function SearchSelect({
           </div>
         )}
         {filtered.length > MAX_SHOWN && (
-          <p className="border-t px-3 py-1.5 text-xs text-muted-foreground">
+          <p className="shrink-0 border-t px-3 py-1.5 text-xs text-muted-foreground">
             Showing {MAX_SHOWN} of {filtered.length}. Type to narrow down.
           </p>
         )}
@@ -330,7 +335,7 @@ export function SearchSelect({
               changeOpen(false);
               onClear();
             }}
-            className="flex w-full items-center gap-2 border-t px-3 py-2 text-left text-sm text-muted-foreground hover:bg-muted"
+            className="flex w-full shrink-0 items-center gap-2 border-t px-3 py-2 text-left text-sm text-muted-foreground hover:bg-muted"
           >
             <XIcon className="size-4" /> Clear choice
           </button>

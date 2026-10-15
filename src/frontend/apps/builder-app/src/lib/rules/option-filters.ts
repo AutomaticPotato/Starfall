@@ -103,7 +103,15 @@ export function spellDetails(spell: SpellOptionDataModel): { label: string; valu
     ["Range", spell.range],
     ["Duration", spell.duration],
     ["Components", spell.components],
-    ["Spell lists", spell.lists?.length ? spell.lists.join(", ") : null],
+    ["Spell lists", classLists(spell).join(", ") || null],
   ];
   return rows.filter((r): r is [string, string] => !!r[1]).map(([label, value]) => ({ label, value }));
+}
+
+/**
+ * The class lists a spell is on. Aurora's supports also carry tags for its own lists ("Damaging Spell", "Spell
+ * Saving Throw") and playtest copies ("UA Artificer"), which a player doesn't pick by.
+ */
+export function classLists(spell: SpellOptionDataModel): string[] {
+  return [...new Set((spell.lists ?? []).filter((l) => !/\bspells?\b/i.test(l) && !/^UA\b/.test(l)))].sort((a, b) => a.localeCompare(b));
 }
