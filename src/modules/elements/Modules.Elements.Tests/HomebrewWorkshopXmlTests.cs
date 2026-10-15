@@ -142,7 +142,7 @@ public class HomebrewWorkshopXmlTests
                 """<element name="Level 3: Fighter Subclass" type="Class Feature" id="ID_FIGHTER_SUB"><rules><select type="Archetype" name="Fighter Subclass" supports="Martial Archetype||Fighter Subclass" level="3" /></rules></element>"""),
             ("Class", "ID_NOSUB", "Sidekick", "Test", """<element name="Sidekick" type="Class" id="ID_NOSUB" />"""),
         ]);
-        targets.Should().Equal(new SubclassTarget("Fighter", "Player’s Handbook (2024)", "Martial Archetype"));
+        targets.Should().Equal(new SubclassTarget("Fighter", "Player’s Handbook (2024)", "Fighter Subclass"));
     }
 
     [TestMethod]

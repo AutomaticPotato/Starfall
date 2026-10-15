@@ -282,7 +282,7 @@ public static partial class HomebrewWorkshopXml
 
     /// <summary>
     /// The classes a subclass can be made for, read from the content: each Class, through the Class Features it grants,
-    /// to its subclass choice (select type="Archetype"); the first of that choice's supports is what a subclass names.
+    /// to its subclass choice (select type="Archetype"); the last of that choice's alternatives is what a subclass names.
     /// </summary>
     public static List<SubclassTarget> SubclassTargets(IEnumerable<(string Type, string AuroraId, string Name, string? Source, string RawXml)> elements)
     {
@@ -293,7 +293,9 @@ public static partial class HomebrewWorkshopXml
             var select = Parse(feature.RawXml)?.Descendants("select").FirstOrDefault(s => (string?)s.Attribute("type") == "Archetype");
             if ((string?)select?.Attribute("supports") is { Length: > 0 } supports)
             {
-                archetypeSupports[feature.AuroraId] = supports.Split("||")[0].Split('|')[0].Trim();
+                // the last alternative is the one only this class's choice has ("Martial Archetype||Fighter Subclass":
+                // the 2024 Fighter's own; the 2014 Fighter's choice has only "Martial Archetype", which the 2024 one also takes)
+                archetypeSupports[feature.AuroraId] = supports.Split("||")[^1].Split('|')[0].Trim();
             }
         }
         var targets = new List<SubclassTarget>();
