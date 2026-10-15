@@ -5,10 +5,12 @@ on:
   push:
     branches:
       - dev
+      - aurora-server
   pull_request:
     branches:
       - main
       - dev
+      - aurora-server
 
 permissions:
   id-token: write
@@ -51,6 +53,10 @@ jobs:
       - name: Build Frontend
         working-directory: src/frontend
         run: npm run build
+
+      - name: Run Frontend Unit Tests
+        working-directory: src/frontend
+        run: npm test -w apps/builder-app
 
       - name: Run Unit Tests
         run: dotnet test --configuration Release --no-build
