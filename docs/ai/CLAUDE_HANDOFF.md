@@ -7,11 +7,12 @@ Homebrew workshop (create spells, subclasses, classes besides items/monsters; ho
 difficulty (pick characters/creatures; 2014 + 2024 DMG; optional magic-item estimate). Plus project memory.
 
 ## Where
-Branch `homebrew-workshop` (7 commits on `aurora-server` 6a6aea2 = live = GitHub), worktree
-`/home/chassapis/.claude/jobs/f4aa8337/tmp/wt-hb` (a job folder: if it is gone, the branch is in `~/starlights`).
-Not pushed, not merged, not deployed. Codex: `~/starlights-frontend`, `codex/frontend-modernisation`.
+Merged into `aurora-server` (fast-forward from 6a6aea2), LIVE and pushed to `mine` as 4752dfa on 2026-10-15 14:25.
+Rollback: images `starlights-{web,backend}:rollback-6a6aea2`, backup
+`starlights-20261015-142434-pre-homebrew-workshop.bak` (verified). Deploy checks: snapshot identical, 11 sheets
+render, public door 401, anonymous homebrew write 403, no pending migrations. Codex: `~/starlights-frontend`, `codex/frontend-modernisation`.
 
-## Status: done, waiting for the user's go-ahead to merge + deploy
+## Status: done and live
 - Encounter difficulty: `lib/rules/encounter-difficulty.ts` (+test, the 2014 DMG's worked example) and
   `pages/campaigns/encounter-difficulty.tsx` in the encounter set-up (DM only, nothing saved to the fight). The
   2014 and 2024 results are separate; the magic-item estimate is its own labelled section, weights in
@@ -52,10 +53,8 @@ Test copy torn down afterwards (copy DB dropped, its .bak and :test images delet
 - Spell selection redesign (D&D Beyond style) is Codex's (`codex/frontend-modernisation` fd6bd92); not touched.
 - Merge order: either; the two branches touch different lines. Re-run web tests after both merge.
 
-## Deploy (when approved)
-Deployment skill: active-device check, verified backup + rollback tags, build, `up -d --force-recreate`. No
-content re-import needed (importer unchanged; homebrew imports on save). Publish checks, then
-`git push mine aurora-server` only.
+## Next
+Nothing pending from this task. Candidates if asked: custom-monster CR calculator; Mystic Arcanum / third-casters.
 
 ## Blockers
-None. No push/merge/deploy without the user's go-ahead.
+None. Future pushes/deploys still need the user's go-ahead.
