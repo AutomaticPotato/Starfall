@@ -7,36 +7,52 @@ Homebrew workshop (create spells, subclasses, classes besides items/monsters; ho
 difficulty (pick characters/creatures; 2014 + 2024 DMG; optional magic-item estimate). Plus project memory.
 
 ## Where
-Branch `homebrew-workshop`, worktree `/home/chassapis/.claude/jobs/f4aa8337/tmp/wt-hb`, base `aurora-server`
-6a6aea2 (= live and GitHub). Codex works in `~/starlights-frontend` on `codex/frontend-modernisation`
-(themes, navigation, spell selection = the D&D Beyond-style list the user asked for, sheet, battle visuals).
+Branch `homebrew-workshop` (7 commits on `aurora-server` 6a6aea2 = live = GitHub), worktree
+`/home/chassapis/.claude/jobs/f4aa8337/tmp/wt-hb` (a job folder: if it is gone, the branch is in `~/starlights`).
+Not pushed, not merged, not deployed. Codex: `~/starlights-frontend`, `codex/frontend-modernisation`.
 
-## Recovered state (start of this session)
-Interrupted work had produced no code: the worktree was clean at 6a6aea2. Research was done (Aurora XML shapes
-for class/archetype/spell, multiclass slot grant ids exist: `ID_INTERNAL_GRANT_MULTICLASS_SPELLCASTING_SLOTS_{FULL,
-HALF,HALF_UP,SOLO}`).
+## Status: done, waiting for the user's go-ahead to merge + deploy
+- Encounter difficulty: `lib/rules/encounter-difficulty.ts` (+test, the 2014 DMG's worked example) and
+  `pages/campaigns/encounter-difficulty.tsx` in the encounter set-up (DM only, nothing saved to the fight). The
+  2014 and 2024 results are separate; the magic-item estimate is its own labelled section, weights in
+  localStorage. A creature with no known CR asks for one; no result until then.
+- Homebrew workshop, server: `Modules.Elements.Domain/Homebrew/HomebrewWorkshopXml.cs` (spell/subclass/class ↔ Aurora
+  XML), `Modules.Elements.Endpoints/Installation/HomebrewWorkshopEndpoints.cs` (GET/PUT
+  `/api/elements/homebrew/{spells,subclasses,classes}`, GET `/homebrew/subclass-targets`, DELETE
+  `/homebrew/{kind}/{id}`); generated files are hidden/protected in the files tab (`HomebrewContent.IsManaged`).
+- Homebrew workshop, web: `lib/api/homebrew.ts`, `pages/homebrew/{Index.tsx,workshop-tabs.tsx,form-styles.ts}`,
+  `pages/landing/homebrew-section.tsx` (five tiles → `/homebrew?tab=X&new=1`).
+- Integration: spells/classes/subclasses are Aurora elements in the homebrew book, so they reach the builder,
+  Compendium, sheet and simulator like book content once a character's Sources (or a campaign's Use homebrew)
+  switch the book on. Verified end to end in the builder (below); Compendium/simulator not separately checked.
 
-## Status
-- Done, tested (unit): `lib/rules/encounter-difficulty.ts` + test (7, incl. the 2014 DMG's own worked example).
-- Done, type-checked, not yet tried in a browser: `pages/campaigns/encounter-difficulty.tsx`, wired into
-  `encounter-page.tsx` set-up (one import + one line).
-- Done: `CLAUDE.md`, `.claude/skills/starlights-{architecture,homebrew,encounters,dnd-rules,database,deployment,
-  session-handoff}`.
-- Not started: homebrew spells/subclasses/classes (server generators + endpoints + tabs), home-page section.
+## Tests run (this branch)
+Characters 299 pass; Elements 186 pass / 8 skipped (6 new workshop tests); web 190 pass / 5 skipped; ESLint
+clean on changed files; web image build (tsc) passes. Test copy, `tmp/sec/hb_e2e.py`: 11/11 (targets from
+content; save/list; bad subclass target 400; non-admin 403; homebrew class offers its homebrew subclass; every
+level-5 choice has options; homebrew cantrip with the Wizard list; slots 4/3/2 + prepared; skill choice exactly the
+class's three; book-class subclass). Browser (`~/.cache/starlights-test/pw/workshop-shots.mjs`, 390/360/1280,
+dark+light): no page errors, no sideways scroll on home, homebrew tabs + new dialogs, encounter panel.
+Test copy torn down afterwards (copy DB dropped, its .bak and :test images deleted).
 
-## Next step
-Server: `Modules.Elements.Endpoints/Installation/HomebrewContentEndpoints.cs` — add spell model + `ToXml/FromXml`
-(file `starlights-spells.xml`), GET/PUT/DELETE `/api/elements/homebrew/spells`; then subclass (targets read from
-content: class → granted Class Feature with `select type="Archetype"` supports), then class (proficiencies with
-the multiclass pattern, features by level, subclass level, ASI feats, optional full/half/pact casting with an
-existing spell list). Tests: round trip + import (`AuroraImporterAppendTests` setup) + `AuroraChoicesAuditTests`.
+## Not done / known limits
+- Custom-monster CR calculator (DMG "creating a monster" CR from HP/AC/damage): a separate feature, not built.
+- Homebrew classes: no Mystic Arcanum, no third-casters (Eldritch Knight style), no custom resource pools.
+- Simulator charge edits made while a builder tab is open aren't reconciled (pre-existing).
+- Open dependency notes: pdfjs-dist 5.7.284 → ≥ 6.2.108; shadcn in runtime deps; CI skips Vitest and
+  `aurora-server`.
 
-## Tests run
-Web unit tests for the difficulty rules; web image build (tsc). Not yet: full web suite, browser check of the panel.
+## Coordination (shared files touched)
+- `pages/landing/Index.tsx`: one import + `<HomebrewSection />` line (Codex's theme work owns the rest).
+- `pages/campaigns/encounter-page.tsx`: one import + `<EncounterDifficulty … />` line in the set-up `<details>`.
+- `pages/homebrew/homebrew-tabs.tsx`: `Field` exported; items/monsters accept `startNew`.
+- Spell selection redesign (D&D Beyond style) is Codex's (`codex/frontend-modernisation` fd6bd92); not touched.
+- Merge order: either; the two branches touch different lines. Re-run web tests after both merge.
 
-## Coordination
-Landing page (`pages/landing/Index.tsx`) is shared with Codex's theme work: add the homebrew section as its own
-component file and a one-line insertion only. Don't touch spell selection components.
+## Deploy (when approved)
+Deployment skill: active-device check, verified backup + rollback tags, build, `up -d --force-recreate`. No
+content re-import needed (importer unchanged; homebrew imports on save). Publish checks, then
+`git push mine aurora-server` only.
 
 ## Blockers
-None. No push/deploy without the user's go-ahead.
+None. No push/merge/deploy without the user's go-ahead.
