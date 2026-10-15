@@ -2,11 +2,11 @@
 export const CHARACTER_ID = "11111111-1111-4111-8111-111111111111";
 export function fixture() {
   const base = `/api/characters/${CHARACTER_ID}`;
-  const sources = ["Player's Handbook", "Player's Handbook (2024)", "Test Supplement"];
+  const sources = ["Player's Handbook", "Player's Handbook (2024)", "Test Supplement (2024)"];
   const spells = Array.from({ length: 12 }, (_, i) => ({
     id: `spell-${i}`,
     elementId: `spell-${i}`,
-    auroraId: `TEST_SPELL_${i}`,
+    auroraId: `ID_WOTC_PHB24_SPELL_TEST_${i}`,
     name: ["Arc Light", "Beacon", "Circle of Shelter", "Drift", "Echo", "Feather", "Glimmer", "Haven", "Illumination", "Jolt", "Kindle", "Lantern"][i],
     source: sources[1],
     level: i < 2 ? 0 : 1,
@@ -142,11 +142,14 @@ export function fixture() {
         isRitual: String(s.ritual),
         isConcentration: String(s.concentration),
       },
+      supports: s.lists,
+      stats: [],
       sheet: null,
       spellcasting: null,
       description: `<p>${s.name} is a synthetic testing spell. No copyrighted rules text.</p>`,
     })),
   ];
+  entries.push({ ...entries.find(e => e.id === "spell-2"), id: "spell-reprint", source: sources[2] });
   const registrations = [
     {
       registrationId: "class-reg",
@@ -175,10 +178,13 @@ export function fixture() {
       return magic;
     },
     choices,
+    options,
+    entries,
+    sources,
     resolve(url, method, body) {
       const path = new URL(url).pathname;
       if (path === "/api/elements/sources")
-        return { sources: sources.map((name) => ({ name, group: name.includes("Supplement") ? "supplements" : "core", elements: 12 })) };
+        return { sources: sources.map((name) => ({ name, group: name.includes("Homebrew") ? "homebrew" : name.includes("Supplement") ? "supplements" : "core", elements: 12 })) };
       if (path === "/api/elements/spell-index") return { version: 1, spells };
       if (path === "/api/elements/items") return { version: 1, items: [] };
       if (path === "/api/elements/compendium/batch") return { entries };
