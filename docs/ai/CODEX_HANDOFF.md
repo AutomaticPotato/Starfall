@@ -1,68 +1,87 @@
-# Codex handoff — frontend modernization
+# Codex handoff — frontend QA complete
 
-Updated 2026-10-15. Implementation finished on `codex/frontend-modernisation` in `/home/chassapis/starlights-frontend`. Awaiting owner review and integration approval. **Do not merge, push or deploy.** Read AGENTS.md and DEVELOPMENT_DIRECTIVE.md before further work.
+Updated 2026-10-15. Integrate **`codex/frontend-qa`**, not just `codex/frontend-modernisation`. Owner approval is still required before integration; no merge, push or deployment was performed. Follow `AGENTS.md` and `DEVELOPMENT_DIRECTIVE.md`.
 
-## Preservation and commits
-Original branch base: `6a6aea2`. Resume started at `fd6bd9234310db48d0b72c32baa6fe234bf806dc`.
-All 24 unfinished source/docs/test files were inspected for secrets/generated/unrelated content and preserved in `cc9ca8d6689ec6a8c9b55289f92f97e002ee32f2` before further editing. Main/Claude working trees were not modified, reset or stashed.
-- `fb54b51`: project knowledge and five local skills.
-- `f09f4b2`: semantic themes and responsive navigation.
-- `fd6bd92`: shared spell browser, selection and reprint consolidation.
-- `cc9ca8d`: preservation of interactive sheet, battle styling and tests.
-- `44bf88f`: separate official branding commit.
-- `5df27f7`: interaction fixes and isolated workflow validation.
-- Final documentation commit: find with `git log -1` (this file is in that commit).
+## Commits and preservation
 
-## Delivered
-Paths below are relative to `src/frontend/apps/builder-app/src`.
-- `styles/themes.css`, `lib/themes.ts`, `components/{theme-provider,mode-toggle}.tsx`: Porcelain/Slate/Midnight, persisted legacy-compatible settings, preview/cancel/save, focus return and reduced motion. Shared UI button/dialog/toast tokens; localhost-only Vite.
-- `components/spells/spell-browser.tsx`: search, level/school/source filters, eight-card pagination, inline descriptions, casting/component/concentration/ritual details and explicit actions.
-- `lib/rules/spell-options.ts`, `pages/characters/builder/spell-choice.tsx`: one card per normalized spell name, exact selected IDs preserved, alternate 2014/2024 printings in details, same-feature duplicate learning prevented. Server eligibility and progression unchanged.
-- `pages/characters/builder/{builder-page,magic-tab,wizard}.tsx`: readable level/choice counts, wrapped navigation, known/prepared distinctions, selection feedback, shared per-class preparation and slot display.
-- `/characters/:id/play`, `pages/characters/sheet/interactive-sheet.tsx`: identity, abilities/saves/skills, attacks, inventory, features, HP/temp HP, conditions, resources and rests. Shares existing combat/magic/inventory endpoints and battle components. Section navigation opens collapsed panels; expansion survives dependent query refresh. Failure feedback and rollback tested. Resources are spent through existing battle controls; no duplicate mechanics.
-- `pages/battle/{battle-page,battle-index,prepare-spells,items,companions}.tsx`: semantic surfaces, readable typography, responsive actions and shared spell presentation. Exported Vitals/Status/RestDialog are reused by the sheet. Rest and slot notices no longer claim success before writes finish.
-- `/characters/:id/sheet` remains Aurora PDF. Only a reciprocal link changed; generation and PDF.js interface/dependencies unchanged.
-- `pages/landing/Index.tsx`, `pages/layouts/default-layout.tsx`, `../public/branding`, `../index.html`: supplied logo, real compass crop, favicon 16/32/48 + ICO, 180px touch icon. Fixed dimensions and intentional navy framing. Missing tile artwork has a readable fallback.
+- Original modernization base: `6a6aea2`; earlier resume point: `fd6bd9234310db48d0b72c32baa6fe234bf806dc`.
+- Modernization finished at `a9a305f`; QA starts from that commit and ends its implementation at **`5d991a8e898e394f536b1329772cbe6075dca0b4`**.
+- This finalization started at `5d991a8` with a clean tree. All QA source/tests were already committed. Only this handoff changed during finalization.
+- The ending handoff commit is the commit containing this revision, titled `docs: finalize frontend QA and integration handoff`; obtain its exact ID with `git log -1 --format=%H -- docs/ai/CODEX_HANDOFF.md`. The final owner report supplies the branch-tip hash.
+- QA retains the complete ancestry: knowledge `fb54b51`, themes `f09f4b2`, spell browser `fd6bd92`, preservation `cc9ca8d`, official branding **`44bf88f`**, interaction fixes `5df27f7`, modernization handoff **`a9a305f`**, spell correction **`5d991a8`**. No resets, discarded work, amended commits or changes to Claude's worktrees.
 
-Original logo preserved at `/home/chassapis/homelab/config/copyparty/data/Project Starlights Celestial Emblem.png`; SHA256 and deterministic reproduction in `public/branding/README.md` and `tools/frontend/branding.mjs`.
+## Delivered and corrected
 
-## Validation evidence
-Artifacts are ignored, outside the live web directory: `/home/chassapis/starlights-frontend/.artifacts/`.
-- Supported Node 24: workspace packages and TypeScript/Vite production build PASS. Existing large-chunk warning remains (~2.19 MB main chunk).
-- Frontend Vitest: **188 passed; 5 optional real-data tests skipped**, 21 passing files. `unit-final.log`.
-- Attempt with `LORE_SRC=/home/chassapis/5etools`: suite initialization fails because this content-only checkout lacks `js/parser.js`; the other 188 tests pass. `unit-content.log`. Requires a complete 5etools-src checkout; no importer changes made.
-- .NET 10 character tests: **299 passed, zero failed/skipped**. Existing duplicate MSTest package-reference warnings. No auth-test repair work attempted.
-- Full ESLint: **38 errors, 1 warning**; comparison of each affected file against base `6a6aea2` finds the same 38 errors. `lint.log`, `lint-baseline.json`. Targeted final modified functional files pass (`lint-targeted.log`). Existing Button mixed-export lint error also remains unchanged.
-- `tools/frontend/smoke.mjs`: **90** checks across homepage, creation, spell selection, sheet, battle × Porcelain/Slate/Midnight × 320/360/390/768/1024/1440. No horizontal overflow or app/unmocked-API errors. Checks learning, duplicate reprints, builder Save, HP writes, theme cancellation and save/reload. `screenshots/results.json`, `browser.log`.
-- Screenshots visually inspected: mobile creation/magic/sheet, desktop sheet/battle/home, all three palettes, emblem and favicon. Final sheet spacing additionally checked at 390/1440 in all themes. These are representative manual checks, not a comprehensive WCAG audit. Palette checks previously measured minimum 5.69:1 for tested text/status pairs; dark destructive button now uses the full semantic color.
-- `tools/frontend/workflows.mjs`: **real isolated SQL/API**, browser creation of Fighter 2014 and Wizards 2014/2024; API class selection, scores, Wizard level 3 and Cleric multiclass; browser spell learning/Save, HP/temp HP, reload, short/long rests. `workflows/results.json`.
-- `tools/frontend/complete-characters.mjs`: selected other eligible required options through real rules APIs: 13 Fighter, 36 Wizard 2024, 33 Wizard 2014. **Alignment has no options in the fresh import**, so these builds retain that outstanding choice. `workflows/completion.json`.
-- `tools/frontend/play-checks.mjs`: real battle Dash/used-state/reload/next turn; Second Wind spend/short-rest recovery; Wizard cantrip casting, preparation/removal, shared slot persistence and long-rest restoration; actual PDF generation/download and rendered pages for all three characters. `workflows/play-results.json`, PDFs and screenshots.
-- `tools/frontend/accessibility.mjs`: keyboard sheet navigation, theme preview/Escape/focus return, injected HP-save failure/rollback and successful retry. `accessibility.log`.
-- Five skill frontmatters validated; `git diff --check` passes.
+- Porcelain/Slate/Midnight themes, persisted legacy settings, keyboard-accessible preview/cancel/save, responsive navigation and semantic shared controls.
+- Official celestial landing logo, navigation compass, favicon/touch assets; responsive tile fallback. Source attribution/hash and crop reproduction remain in `public/branding/README.md` and `tools/frontend/branding.mjs`.
+- Filtered, paginated spell cards, inline details and explicit Learn/Remove actions; clearer builder progression, known/prepared spells and shared slot presentation.
+- Interactive `/characters/:id/play` sheet reuses existing combat, inventory and magic APIs; section expansion survives query refresh; save failure rollback and pending-write feedback. Original Aurora PDF route remains intact with a reciprocal link.
+- **QA correction:** names and casting summaries cannot establish spell identity. Only verified identical official same-edition printings consolidate, using full descriptions, setters, lists and stats from the existing read-only compendium batch endpoint. Only page metadata/tag ordering are ignored. 2014/2024 versions, changed effects, homebrew, custom IDs and uncertain provenance remain separate. Failed identity lookup leaves entries separate.
+- Exact saved spell IDs remain unchanged; no references or choices are manufactured, migrated or deleted. Same-feature duplicate prevention compares verified identity, including saved printings absent from the current options. Other classes/features retain their existing choices. Fourteen regressions cover these rules.
+- Missing alignment choices were traced to the isolated test-content import, not the UI. No fabricated options, backend fix or database change was introduced.
 
-## Test isolation and reproduction
-Host Node 18 is insufficient. `.tooling/bin/node` is Node 24 copied from the existing `node:24-slim` Docker image. No system packages installed. Playwright module: `/home/chassapis/.cache/starlights-test/pw/node_modules/playwright/index.mjs`; installed headless Chromium works. Prefix npm commands with `PATH=/home/chassapis/starlights-frontend/.tooling/bin:$PATH`.
+## Final validation
 
-For fixture-only checks, start `VITE_API_BASE='' npm run dev -- --host 127.0.0.1 --port 55052 --strictPort` in builder-app, then from repository root run `PLAYWRIGHT_MODULE=/home/chassapis/.cache/starlights-test/pw/node_modules/playwright/index.mjs SCREENSHOT_DIR=/home/chassapis/starlights-frontend/.artifacts/screenshots .tooling/bin/node tools/frontend/smoke.mjs`. Run accessibility.mjs the same way. API interception matches pathname `/api/` only; matching `**/api/**` also intercepts Vite source imports and breaks loading.
+Local evidence is ignored and retained at **`/home/chassapis/starlights-frontend/.artifacts/`**. Commands run from `src/frontend` with `PATH=/home/chassapis/starlights-frontend/.tooling/bin:$PATH` (Node **24.21.0**; system Node 18 is insufficient).
 
-Real tests used only newly created `starlights-codex-api` and `starlights-codex-db` containers, an internal dedicated DB network, a dedicated localhost publishing network, and **127.0.0.1:55053**. SQL used disposable tmpfs; only synthetic player `Codex Synthetic`. Existing Aurora content was mounted read-only; no production database was read/copied. Published API/migrations live in ignored `.tooling`; migrations ran only against this disposable database. Test containers/networks and Vite are stopped/removed on completion; real tests require recreating this isolated environment, importing core 2014/2024 indices, then workflows → complete-characters → play-checks. Never use homelab test-copy scripts: they copy real production data. No preview server is left running.
+| Check | Final result | Evidence relative to `.artifacts/` |
+| --- | --- | --- |
+| `npm run build:packages` | PASS | `handoff-build-packages.log` |
+| `npm run build -w apps/builder-app` | PASS, TypeScript + Vite; existing large-chunk warning (main 2,191.57 kB) | `handoff-build-app.log` |
+| `npm run test -w apps/builder-app` | **197 passed, 0 failed, 5 skipped**; 21 files passed, 1 skipped, 22 total; 202 tests collected | `handoff-unit.log` |
+| Same test command with `-- src/lib/rules/spell-options.test.ts --reporter=verbose` | **14 passed, 0 failed/skipped**, 1 file; included in the 197, not additional | `handoff-spell-identity.log` |
+| ESLint, all 4 QA TS/TSX files | **0 errors, 0 warnings** | `handoff-lint-qa.json` |
+| ESLint, all 26 modified app TS/TSX files since `6a6aea2` | **1 pre-existing error, 0 warnings**: `components/ui/button.tsx:52`, mixed component/variant exports (`react-refresh/only-export-components`) | `handoff-lint-modified.json` |
+| Full app ESLint | **38 errors, 1 warning**; every rule/file occurrence matches the previously verified baseline, no new findings | `handoff-lint-full.json`, `lint-baseline.json` |
 
-## Limits and integration
-No backend changes required by the implemented UI. No live players were opened. Auth/campaign/homebrew/encounter/backup code was not changed. Tests cover representative classes and existing calculations, not every supported class/content combination. Missing imported alignment options and incomplete optional lore fixtures remain content/test-environment issues; no fabricated choices or bypasses were added. Existing lint debt and bundle warning remain.
+Do not claim every modified file or full lint is clean: the shared Button exception predates this work. No unrelated lint repairs were made. The five skipped tests are `lore-ingest/real-data.test.ts`, requiring a complete 5etools-src fixture. The earlier content-only checkout lacked `js/parser.js`, causing suite initialization failure when explicitly enabled; this environment issue was not rerun.
 
-Claude branches were inspected read-only, never merged/cherry-picked:
-- `feature/homebrew-home-tile`: overlap in `src/frontend/apps/builder-app/src/pages/landing/Index.tsx`. Preserve Claude's Homebrew tile/section/import and this branch's logo header/readable tile fallback. Do not replace the whole file.
-- `security/pdfjs-6.2.108`: owns builder package.json, frontend package-lock.json and lib/pdf-view.ts. This branch leaves those unchanged; preserve security changes during integration and rerun PDF checks.
-- `ci/aurora-server-vitest` and Mission 006B `fix/backend-auth-tests`: leave their tests/CI ownership intact.
-- `docs/ai/DEVELOPMENT_DIRECTIVE.md` copied verbatim from the user's main worktree so this isolated branch is self-contained.
+**188 versus 190 resolved:** the common frontend suite has **183 passing tests** (`qa/baseline-tests.log`, excluding spell-options). Modernization had five spell tests: **183 + 5 = 188 passes**, plus five skips (`unit-final.log`). Claude's handoff reports **190 passes** on its branch: **183 + 7 encounter-difficulty tests**, plus five skips. Those seven are in `encounter-difficulty.test.ts`, added after the common base on `aurora-server`; they are absent from this isolated Codex branch. QA replaces the five spell tests with fourteen: **183 + 14 = 197 passes**. After combining the current branches, expect **204 passes + 5 skips** (209 collected), subject to Claude's later changes; this is a prediction, not an integrated test result. The baseline log's **188 total** means 183 passes + 5 skips, a different number from modernization's 188 passes.
 
-After explicit approval, create an integration worktree from the then-current local `aurora-server`, merge this branch there with `--no-commit --no-ff`, resolve only reviewed overlaps, and rerun package/app builds, unit/browser/PDF checks against synthetic data. Coordinate Claude's pending branches independently; do not overwrite/cherry-pick them. Review the full integration diff and commit only after acceptance. Push/deploy require separate explicit approval. Do not integrate inside the production working tree.
+Prior evidence was preserved, not extensively rerun during this documentation-only finalization:
 
-Approved-integration commands (documented only; **not executed**):
-```bash
-git -C ~/starlights status --short
-git -C ~/starlights worktree add -b integration/frontend-review ~/starlights-integration aurora-server
-git -C ~/starlights-integration merge --no-commit --no-ff codex/frontend-modernisation
-```
-Inspect and resolve conflicts without resetting either branch; retain Claude's Homebrew tile and PDF.js security changes. Run the documented validation in the integration worktree, review `git diff --cached`, then make a local integration commit if the approved scope permits it. No push or deployment is included.
+- `screenshots/results.json`, `browser.log`: **90** responsive/theme checks across six widths (320/360/390/768/1024/1440), three themes and five journeys; no overflow or app/unmocked-API errors.
+- `qa/browser-results.json`: **14 successful flags** (7 at each of 360/390): identity, preview without writes, multiclass, replacement/save/reload, explicit removal, play state and themes. `qa/accessibility.log`: keyboard navigation, theme Escape/focus return, HP-save failure rollback/retry pass.
+- `workflows/results.json`, `completion.json`, `play-results.json`: synthetic Fighter 2014 and Wizards 2014/2024; multiclass, spell learning, saves/reloads, HP, rests, resources, preparation, slots and PDF rendering/download, using isolated SQL/API. Required-choice completion filled 13/36/33 options respectively, except missing imported alignments.
+- Earlier character backend suite: **299 passed, 0 failed/skipped**; not rerun here. Mission 006B/auth fixes remain Claude's responsibility.
+
+## Screenshots
+
+All paths below are relative to the artifact directory above; files were verified present. These are existing evidence, not newly captured images.
+
+- QA spells: `qa/spell-identity-360.png`, `qa/spell-identity-390.png`.
+- QA sheets: `qa/sheet-play-360.png`, `qa/sheet-play-390.png`.
+- Branding: `qa/logo-{porcelain,slate,midnight}-{360,390}.png` (six images).
+- Full matrix: `screenshots/` (homepage, creation, spell selection, sheet, battle across themes/widths; names and results in `screenshots/results.json`).
+- Real synthetic workflows: `workflows/{Fighter-2014,Wizard-2014,Wizard-2024}-{sheet,battle,pdf}.png`, plus their `.pdf` files and `wizard-{2014,2024}-magic.png`.
+
+## Integration review — no integration performed
+
+Branch tips inspected locally: PDF.js `ac2bd9e`, Homebrew tile `9f32e6d`, CI `a7b58d6`, Mission 006B `fix/backend-auth-tests` at `db02a74`. The latter worktree was clean when inspected read-only; ongoing or later backend work is not validated by this handoff.
+
+- **Confirmed textual conflict:** `pages/landing/Index.tsx` against `feature/homebrew-home-tile`. A three-way text comparison used scratch artifact copies only, without a Git merge or index/worktree changes. Preserve Codex's celestial logo/header, theme tokens and readable image fallback AND Claude's **single Tasha-themed Homebrew tile**. Retain `HOMEBREW_TILE`, `imagePosition="object-top"`, `/homebrew`, and Claude's Battle/Homebrew grid placement. Remove the old `HomebrewSection` import/render; do not recreate the five workshop tiles or replace the entire landing file. Preserve Claude's homebrew page, art constant and section deletion. `/art/homebrew.webp` is an existing external asset, not supplied by this Codex branch.
+- **`security/pdfjs-6.2.108`:** its changes to builder `package.json`, frontend lockfile and `lib/pdf-view.ts` do not overlap Codex changes. Preserve all three; rerun PDF generation/rendering after integration. This branch alone still has the older dependency.
+- **`ci/aurora-server-vitest`:** no direct workflow overlap. Preserve frontend Vitest and `aurora-server` CI triggers; its full frontend build/backend tests exceed this final builder-only validation. Keep all test files, including Claude's seven encounter tests.
+- **Mission 006B:** no backend/test-file overlap from Codex. Do not treat the earlier character-suite pass as validation of Claude's ongoing auth/backend fixes. Reinspect its final committed state before integration.
+- The directive is identical to `aurora-server`; its add/add comparison is clean. Base homepage changes merge textually with current `aurora-server`; the explicit tile branch is the conflict described above. Future branch changes require rechecking.
+
+After owner approval, Claude can integrate **the final tip of `codex/frontend-qa`** in a separate integration worktree based on the then-current approved `aurora-server`. Preserve both histories and all Claude changes. Validate build/unit results, the combined homepage in all three themes/mobile widths, spell identity and PDFs against synthetic data before acceptance. No merge, push or deployment is authorized by this handoff.
+
+## Modified files and scope
+
+Full authoritative inventory: `git diff --name-only 6a6aea2 codex/frontend-qa` (**58 files**). App paths below are relative to `src/frontend/apps/builder-app`.
+
+- App entry/assets: `index.html`, `vite.config.ts`, `public/branding/{README.md,apple-touch-icon.png,favicon-16.png,favicon-32.png,favicon-48.png,favicon.ico,starlights-emblem.webp,starlights-logo.webp}`.
+- App source: `src/{main.tsx,index.css,styles/themes.css}`; `src/components/{hourly-backdrop.tsx,mode-toggle.tsx,theme-provider.tsx,spells/spell-browser.tsx,ui/button.tsx,ui/dialog.tsx,ui/sonner.tsx}`; `src/lib/{themes.ts,api/spell-printings.ts,rules/spell-options.ts,rules/spell-options.test.ts}`.
+- Pages under `src/pages`: `battle/{battle-index,battle-page,companions,items,prepare-spells}.tsx`; `characters/builder/{builder-page,magic-tab,spell-choice,wizard}.tsx`; `characters/sheet/{interactive-sheet,sheet-page}.tsx`; `landing/Index.tsx`; `layouts/default-layout.tsx`.
+- Repository tooling: `tools/frontend/{accessibility,branding,complete-characters,fixtures,play-checks,qa,smoke,workflows}.mjs`.
+- Repository guidance: `.gitignore`, `AGENTS.md`, `docs/ai/{ARCHITECTURE,CODEX_HANDOFF,DECISIONS,DEVELOPMENT_DIRECTIVE,FRONTEND_GUIDE,PROJECT_STATUS}.md`; `.agents/skills/starlights-{battle-simulator,character-builder,frontend,safe-development,testing}/SKILL.md`. Older status notes describe the modernization checkpoint; this handoff supersedes their test totals and integration branch.
+- QA-only delta from `a9a305f`: `src/lib/api/spell-printings.ts`, `src/lib/rules/spell-options{,.test}.ts`, `src/pages/characters/builder/spell-choice.tsx`, `tools/frontend/{fixtures,qa}.mjs`, and this handoff (app-relative paths for the first four).
+
+## Limits, production and cleanup
+
+No backend, database schema/migration or deployment files changed from the common base. No production database/content, credentials, containers, services or unrelated homelab services were changed. No deployment, Docker restart, merge or push occurred. Earlier real tests used only synthetic data in disposable Codex SQL/API containers; no production data was copied. No new servers or containers were started during this finalization.
+
+Earlier modernization cleanup recorded the isolated containers/networks and Vite as stopped/removed. **Current host-level cleanup cannot be independently certified:** this session's sandbox exposes only its own processes/network namespace, denies socket inspection and denies the read-only Docker listing. No preview is running in this session, but the earlier QA preview on host port **55052** (and disposable API **55053**) cannot be checked or stopped from here. A host-capable session must confirm those Codex-only processes are absent before declaring cleanup complete; never stop a service solely by port or touch production. No broad kill or container action was attempted.
+
+Remaining limitations: existing lint debt and large bundle; optional lore fixtures; missing imported alignment options; no exhaustive class/content or WCAG audit; PDF.js security update pending Claude integration; host preview shutdown verification outstanding. Frontend work is preserved and ready for reviewed integration after owner approval, with that cleanup limitation explicitly recorded.
