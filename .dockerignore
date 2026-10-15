@@ -4,3 +4,8 @@
 **/dist/
 .git/
 .vs/
+
+# Installer credentials and persistent player/content data must never enter image builds.
+deploy/.env
+deploy/.setup-*.tmp
+deploy/data/
