@@ -34,7 +34,7 @@ public sealed class ManageElementRulesEndpointDriver : IDriver
     /// </summary>
     public async Task<CreateStatisticRuleResponse> CreateStatisticRuleAsync(Guid elementId, CreateStatisticRuleRequest request)
     {
-        using var client = _integration.CreateClient();
+        using var client = _integration.CreateAdminClient();
 
         var response = await client.PostAsJsonAsync($"/api/elements/{elementId}/rules/statistics/create", request, _integration.CancellationToken);
         response.EnsureSuccessStatusCode();
@@ -47,7 +47,7 @@ public sealed class ManageElementRulesEndpointDriver : IDriver
 
     public async Task<(bool IsSuccessStatusCode, HttpStatusCode StatusCode)> DeleteStatisticRuleAsync(Guid elementId, Guid ruleId)
     {
-        using var client = _integration.CreateClient();
+        using var client = _integration.CreateAdminClient();
 
         var response = await client.DeleteAsync($"/api/elements/{elementId}/rules/statistics/{ruleId}", _integration.CancellationToken);
         return (response.IsSuccessStatusCode, response.StatusCode);
@@ -55,7 +55,7 @@ public sealed class ManageElementRulesEndpointDriver : IDriver
 
     public async Task<GetStatisticRulesResponse?> GetStatisticRulesAsync(Guid elementId)
     {
-        using var client = _integration.CreateClient();
+        using var client = _integration.CreateAdminClient();
 
         var response = await client.GetAsync($"/api/elements/{elementId}/rules/statistics", _integration.CancellationToken);
 
@@ -71,7 +71,7 @@ public sealed class ManageElementRulesEndpointDriver : IDriver
 
     public async Task<GetStatisticRuleResponse?> GetStatisticRuleByIdAsync(Guid elementId, Guid ruleId)
     {
-        using var client = _integration.CreateClient();
+        using var client = _integration.CreateAdminClient();
 
         var response = await client.GetAsync($"/api/elements/{elementId}/rules/statistics/{ruleId}", _integration.CancellationToken);
 
@@ -87,7 +87,7 @@ public sealed class ManageElementRulesEndpointDriver : IDriver
 
     public async Task<(bool IsSuccessStatusCode, HttpStatusCode StatusCode)> ReorderRulesAsync(Guid elementId, List<Guid> orderedRuleIds)
     {
-        using var client = _integration.CreateClient();
+        using var client = _integration.CreateAdminClient();
 
         var request = new ReorderElementRulesRequest { RuleIds = orderedRuleIds };
 
@@ -97,7 +97,7 @@ public sealed class ManageElementRulesEndpointDriver : IDriver
 
     public async Task<(UpdateStatisticRuleResponse? Response, HttpStatusCode StatusCode)> UpdateStatisticRuleAsync(Guid elementId, Guid ruleId, UpdateStatisticRuleRequest request)
     {
-        using var client = _integration.CreateClient();
+        using var client = _integration.CreateAdminClient();
 
         var response = await client.PutAsJsonAsync($"/api/elements/{elementId}/rules/statistics/{ruleId}", request, _integration.CancellationToken);
 
@@ -114,7 +114,7 @@ public sealed class ManageElementRulesEndpointDriver : IDriver
 
     public async Task<GetIncludeRulesResponse?> GetIncludeRulesAsync(Guid elementId)
     {
-        using var client = _integration.CreateClient();
+        using var client = _integration.CreateAdminClient();
 
         var response = await client.GetAsync($"/api/elements/{elementId}/rules/includes", CancellationToken.None);
 
@@ -130,7 +130,7 @@ public sealed class ManageElementRulesEndpointDriver : IDriver
 
     public async Task<GetIncludeRuleResponse?> GetIncludeRuleByIdAsync(Guid elementId, Guid ruleId)
     {
-        using var client = _integration.CreateClient();
+        using var client = _integration.CreateAdminClient();
 
         var response = await client.GetAsync($"/api/elements/{elementId}/rules/includes/{ruleId}", CancellationToken.None);
 
@@ -149,7 +149,7 @@ public sealed class ManageElementRulesEndpointDriver : IDriver
     /// </summary>
     public async Task<CreateIncludeRuleResponse> CreateIncludeRuleAsync(Guid elementId, CreateIncludeRuleRequest request)
     {
-        using var client = _integration.CreateClient();
+        using var client = _integration.CreateAdminClient();
 
         var response = await client.PostAsJsonAsync($"/api/elements/{elementId}/rules/includes/create", request, _integration.CancellationToken);
         response.EnsureSuccessStatusCode();
@@ -162,7 +162,7 @@ public sealed class ManageElementRulesEndpointDriver : IDriver
 
     public async Task<(UpdateIncludeRuleResponse? Response, HttpStatusCode StatusCode)> UpdateIncludeRuleAsync(Guid elementId, Guid ruleId, UpdateIncludeRuleRequest request)
     {
-        using var client = _integration.CreateClient();
+        using var client = _integration.CreateAdminClient();
 
         var response = await client.PutAsJsonAsync($"/api/elements/{elementId}/rules/includes/{ruleId}", request, _integration.CancellationToken);
 
@@ -179,7 +179,7 @@ public sealed class ManageElementRulesEndpointDriver : IDriver
 
     public async Task<(bool IsSuccessStatusCode, HttpStatusCode StatusCode)> DeleteIncludeRuleAsync(Guid elementId, Guid ruleId)
     {
-        using var client = _integration.CreateClient();
+        using var client = _integration.CreateAdminClient();
 
         var response = await client.DeleteAsync($"/api/elements/{elementId}/rules/includes/{ruleId}", _integration.CancellationToken);
         return (response.IsSuccessStatusCode, response.StatusCode);
@@ -187,7 +187,7 @@ public sealed class ManageElementRulesEndpointDriver : IDriver
 
     public async Task<(bool IsSuccessStatusCode, HttpStatusCode StatusCode)> ReorderIncludeRulesAsync(Guid elementId, List<Guid> orderedRuleIds)
     {
-        using var client = _integration.CreateClient();
+        using var client = _integration.CreateAdminClient();
 
         var request = new ReorderIncludeRulesRequest { RuleIds = orderedRuleIds };
 
@@ -200,7 +200,7 @@ public sealed class ManageElementRulesEndpointDriver : IDriver
     /// </summary>
     public async Task<CreateSelectionRuleResponse> CreateSelectionRuleAsync(Guid elementId, CreateSelectionRuleRequest request)
     {
-        using var client = _integration.CreateClient();
+        using var client = _integration.CreateAdminClient();
 
         var response = await client.PostAsJsonAsync($"/api/elements/{elementId}/rules/selections/create", request, _integration.CancellationToken);
         response.EnsureSuccessStatusCode();
@@ -213,7 +213,7 @@ public sealed class ManageElementRulesEndpointDriver : IDriver
 
     public async Task<(UpdateSelectionRuleResponse? Response, HttpStatusCode StatusCode)> UpdateSelectionRuleAsync(Guid elementId, Guid ruleId, UpdateSelectionRuleRequest request)
     {
-        using var client = _integration.CreateClient();
+        using var client = _integration.CreateAdminClient();
 
         var response = await client.PutAsJsonAsync($"/api/elements/{elementId}/rules/selections/{ruleId}", request, _integration.CancellationToken);
 
@@ -230,7 +230,7 @@ public sealed class ManageElementRulesEndpointDriver : IDriver
 
     public async Task<(bool IsSuccessStatusCode, HttpStatusCode StatusCode)> DeleteSelectionRuleAsync(Guid elementId, Guid ruleId)
     {
-        using var client = _integration.CreateClient();
+        using var client = _integration.CreateAdminClient();
 
         var response = await client.DeleteAsync($"/api/elements/{elementId}/rules/selections/{ruleId}", _integration.CancellationToken);
         return (response.IsSuccessStatusCode, response.StatusCode);
@@ -238,7 +238,7 @@ public sealed class ManageElementRulesEndpointDriver : IDriver
 
     public async Task<GetSelectionRulesResponse?> GetSelectionRulesAsync(Guid elementId)
     {
-        using var client = _integration.CreateClient();
+        using var client = _integration.CreateAdminClient();
 
         var response = await client.GetAsync($"/api/elements/{elementId}/rules/selections", _integration.CancellationToken);
 
@@ -254,7 +254,7 @@ public sealed class ManageElementRulesEndpointDriver : IDriver
 
     public async Task<GetSelectionRuleResponse?> GetSelectionRuleByIdAsync(Guid elementId, Guid ruleId)
     {
-        using var client = _integration.CreateClient();
+        using var client = _integration.CreateAdminClient();
 
         var response = await client.GetAsync($"/api/elements/{elementId}/rules/selections/{ruleId}", _integration.CancellationToken);
 
@@ -270,7 +270,7 @@ public sealed class ManageElementRulesEndpointDriver : IDriver
 
     public async Task<(bool IsSuccessStatusCode, HttpStatusCode StatusCode)> DeleteRulesAsync(Guid elementId, IReadOnlyList<Guid> ruleIds)
     {
-        using var client = _integration.CreateClient();
+        using var client = _integration.CreateAdminClient();
 
         var request = new DeleteElementRulesRequest(elementId, ruleIds);
 

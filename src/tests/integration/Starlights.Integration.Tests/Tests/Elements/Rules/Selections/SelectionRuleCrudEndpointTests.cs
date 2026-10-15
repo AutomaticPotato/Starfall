@@ -140,7 +140,7 @@ public sealed class SelectionRuleCrudEndpointTests : IntegrationTestBase
     {
         // Arrange
         var elementsDriver = _integration.GetDriver<ElementsEndpointDriver>();
-        using var client = _integration.CreateClient();
+        using var client = _integration.CreateAdminClient();
 
         var elementId = await elementsDriver.CreateSpellAsync(
             name: "Owner",

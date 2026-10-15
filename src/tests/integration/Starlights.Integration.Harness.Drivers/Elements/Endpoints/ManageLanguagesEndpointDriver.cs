@@ -22,7 +22,7 @@ public sealed class ManageLanguagesEndpointDriver : IDriver
     /// </summary>
     public async Task<List<LanguageDataModel>> GetAsync()
     {
-        using var client = _integration.CreateClient();
+        using var client = _integration.CreateAdminClient();
 
         var response = await client.GetAsync("/api/elements/languages", _integration.CancellationToken);
         response.EnsureSuccessStatusCode();
@@ -39,7 +39,7 @@ public sealed class ManageLanguagesEndpointDriver : IDriver
     /// </summary>
     public async Task<Guid> CreateAsync(CreateLanguageRequest request)
     {
-        using var client = _integration.CreateClient();
+        using var client = _integration.CreateAdminClient();
 
         var response = await client.PostAsJsonAsync("/api/elements/languages/create", request, _integration.CancellationToken);
         response.EnsureSuccessStatusCode();
@@ -55,7 +55,7 @@ public sealed class ManageLanguagesEndpointDriver : IDriver
     /// </summary>
     public async Task<LanguageDataModel?> GetAsync(Guid id)
     {
-        using var client = _integration.CreateClient();
+        using var client = _integration.CreateAdminClient();
 
         var response = await client.GetAsync($"/api/elements/languages/{id}", _integration.CancellationToken);
 
@@ -74,7 +74,7 @@ public sealed class ManageLanguagesEndpointDriver : IDriver
     /// </summary>
     public async Task<bool> PutAsync(UpdateLanguageRequest request)
     {
-        using var client = _integration.CreateClient();
+        using var client = _integration.CreateAdminClient();
 
         var response = await client.PutAsJsonAsync($"/api/elements/languages/{request.Id}", request, _integration.CancellationToken);
         response.EnsureSuccessStatusCode();

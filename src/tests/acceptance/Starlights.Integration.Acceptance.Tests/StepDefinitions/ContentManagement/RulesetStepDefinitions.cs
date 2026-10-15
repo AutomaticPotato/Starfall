@@ -17,7 +17,7 @@ public class RulesetStepDefinitions
     [Given("the core ruleset is initialized")]
     public async Task GivenTheCoreRulesetIsInitializedAsync()
     {
-        using var client = _host.CreateClient();
+        using var client = _host.CreateAdminClient();
         _ = await client.GetAsync("/api/elements/initialize", _context.CancellationToken);
     }
 

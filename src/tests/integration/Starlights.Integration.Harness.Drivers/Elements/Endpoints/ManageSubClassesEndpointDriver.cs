@@ -17,7 +17,7 @@ public sealed class ManageSubClassesEndpointDriver : IDriver
 
     public async Task<Guid> CreateAsync(CreateSubClassRequest request)
     {
-        using var client = _integration.CreateClient();
+        using var client = _integration.CreateAdminClient();
 
         var response = await client.PostAsJsonAsync("/api/elements/sub-classes/create", request, _integration.CancellationToken);
         response.EnsureSuccessStatusCode();
@@ -30,7 +30,7 @@ public sealed class ManageSubClassesEndpointDriver : IDriver
 
     public async Task<SubClassDataModel?> GetAsync(Guid id)
     {
-        using var client = _integration.CreateClient();
+        using var client = _integration.CreateAdminClient();
 
         var response = await client.GetAsync($"/api/elements/sub-classes/{id}", _integration.CancellationToken);
 

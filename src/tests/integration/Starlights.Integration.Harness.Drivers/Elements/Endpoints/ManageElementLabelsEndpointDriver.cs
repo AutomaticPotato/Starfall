@@ -23,7 +23,7 @@ public sealed class ManageElementLabelsEndpointDriver : IDriver
     /// </summary>
     public async Task<HttpStatusCode> CreateAsync(Guid elementId, IReadOnlyCollection<string> labels)
     {
-        using var client = _integration.CreateClient();
+        using var client = _integration.CreateAdminClient();
 
         var request = new CreateElementLabelRequest(labels.ToArray());
 
@@ -36,7 +36,7 @@ public sealed class ManageElementLabelsEndpointDriver : IDriver
     /// </summary>
     public async Task<IReadOnlyList<string>> ListAsync(Guid elementId)
     {
-        using var client = _integration.CreateClient();
+        using var client = _integration.CreateAdminClient();
 
         var response = await client.GetAsync($"/api/elements/{elementId}/labels", _integration.CancellationToken);
         response.EnsureSuccessStatusCode();
@@ -52,7 +52,7 @@ public sealed class ManageElementLabelsEndpointDriver : IDriver
     /// </summary>
     public async Task<HttpStatusCode> DeleteAsync(Guid elementId, IReadOnlyCollection<string> labels)
     {
-        using var client = _integration.CreateClient();
+        using var client = _integration.CreateAdminClient();
 
         var request = new DeleteElementLabelRequest(labels.ToArray());
 
@@ -70,7 +70,7 @@ public sealed class ManageElementLabelsEndpointDriver : IDriver
     /// </summary>
     public async Task<(UpdateElementLabelResponse Response, HttpStatusCode StatusCode)> UpdateAsync(Guid elementId, IReadOnlyCollection<string> labels)
     {
-        using var client = _integration.CreateClient();
+        using var client = _integration.CreateAdminClient();
 
         var request = new UpdateElementLabelRequest(labels.ToArray());
 

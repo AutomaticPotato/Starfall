@@ -24,7 +24,7 @@ public sealed class SubClassesEndpointsTests : IntegrationTestBase
     [TestMethod]
     public async Task GetSubClasses_WhenCreated_ReturnsListContainingIt()
     {
-        var client = _integration.CreateClient();
+        var client = _integration.CreateAdminClient();
 
         var createClassRequest = new CreateClassRequest
         {
@@ -66,7 +66,7 @@ public sealed class SubClassesEndpointsTests : IntegrationTestBase
     [TestMethod]
     public async Task GetSubClassById_WhenNotFound_ReturnsNotFound()
     {
-        var client = _integration.CreateClient();
+        var client = _integration.CreateAdminClient();
 
         var response = await client.GetAsync($"/api/elements/sub-classes/{Guid.NewGuid()}", _integration.CancellationToken);
 
@@ -76,7 +76,7 @@ public sealed class SubClassesEndpointsTests : IntegrationTestBase
     [TestMethod]
     public async Task GetSubClassById_WhenCreated_ReturnsDetails()
     {
-        var client = _integration.CreateClient();
+        var client = _integration.CreateAdminClient();
 
         var createClassRequest = new CreateClassRequest
         {
@@ -128,7 +128,7 @@ public sealed class SubClassesEndpointsTests : IntegrationTestBase
     [TestMethod]
     public async Task CreateSubClass_WhenValid_ReturnsCreated()
     {
-        var client = _integration.CreateClient();
+        var client = _integration.CreateAdminClient();
 
         var createClassRequest = new CreateClassRequest
         {
@@ -165,7 +165,7 @@ public sealed class SubClassesEndpointsTests : IntegrationTestBase
     [TestMethod]
     public async Task CreateSubClass_WhenInvalid_ReturnsBadRequest()
     {
-        var client = _integration.CreateClient();
+        var client = _integration.CreateAdminClient();
 
         var request = new CreateSubClassRequest
         {

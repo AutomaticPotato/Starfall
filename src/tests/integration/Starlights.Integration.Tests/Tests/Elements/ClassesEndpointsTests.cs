@@ -23,7 +23,7 @@ public sealed class ClassesEndpointsTests : IntegrationTestBase
     [TestMethod]
     public async Task GetClasses_WhenClassCreated_ReturnsListContainingIt()
     {
-        var client = _integration.CreateClient();
+        var client = _integration.CreateAdminClient();
 
         var createRequest = new CreateClassRequest
         {
@@ -51,7 +51,7 @@ public sealed class ClassesEndpointsTests : IntegrationTestBase
     [TestMethod]
     public async Task GetClassById_WhenNotFound_ReturnsNotFound()
     {
-        var client = _integration.CreateClient();
+        var client = _integration.CreateAdminClient();
 
         var response = await client.GetAsync($"/api/elements/classes/{Guid.NewGuid()}", _integration.CancellationToken);
 
@@ -61,7 +61,7 @@ public sealed class ClassesEndpointsTests : IntegrationTestBase
     [TestMethod]
     public async Task GetClassById_WhenCreated_ReturnsDetails()
     {
-        var client = _integration.CreateClient();
+        var client = _integration.CreateAdminClient();
 
         var createRequest = new CreateClassRequest
         {
@@ -99,7 +99,7 @@ public sealed class ClassesEndpointsTests : IntegrationTestBase
     [TestMethod]
     public async Task CreateClass_WhenValidWithoutShortDescription_ReturnsCreated()
     {
-        var client = _integration.CreateClient();
+        var client = _integration.CreateAdminClient();
 
         var request = new CreateClassRequest
         {
@@ -122,7 +122,7 @@ public sealed class ClassesEndpointsTests : IntegrationTestBase
     [TestMethod]
     public async Task CreateClass_WhenValidWithShortDescription_ReturnsCreated()
     {
-        var client = _integration.CreateClient();
+        var client = _integration.CreateAdminClient();
 
         var request = new CreateClassRequest
         {
@@ -145,7 +145,7 @@ public sealed class ClassesEndpointsTests : IntegrationTestBase
     [TestMethod]
     public async Task CreateClass_WhenMissingName_ReturnsBadRequest()
     {
-        var client = _integration.CreateClient();
+        var client = _integration.CreateAdminClient();
 
         var request = new CreateClassRequest
         {
@@ -164,7 +164,7 @@ public sealed class ClassesEndpointsTests : IntegrationTestBase
     [TestMethod]
     public async Task CreateClass_WhenMissingDescription_ReturnsBadRequest()
     {
-        var client = _integration.CreateClient();
+        var client = _integration.CreateAdminClient();
 
         var request = new CreateClassRequest
         {
@@ -187,7 +187,7 @@ public sealed class ClassesEndpointsTests : IntegrationTestBase
     [TestMethod]
     public async Task CreateClass_WhenHitPointDieInvalid_ReturnsBadRequest(int hitPointDieSize, int hitPointDieAmount)
     {
-        var client = _integration.CreateClient();
+        var client = _integration.CreateAdminClient();
 
         var request = new CreateClassRequest
         {

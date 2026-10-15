@@ -30,7 +30,7 @@ public sealed class ElementLabelsEndpointsTests : IntegrationTestBase
     [TestMethod]
     public async Task ListLabels_WhenElementNotFound_ReturnsNotFound()
     {
-        var client = _integration.CreateClient();
+        var client = _integration.CreateAdminClient();
 
         var response = await client.GetAsync($"/api/elements/{Guid.NewGuid()}/labels", CancellationToken.None);
 
@@ -40,7 +40,7 @@ public sealed class ElementLabelsEndpointsTests : IntegrationTestBase
     [TestMethod]
     public async Task CreateLabel_WhenInvalid_ReturnsBadRequest()
     {
-        var client = _integration.CreateClient();
+        var client = _integration.CreateAdminClient();
 
         var request = new CreateElementLabelRequest([""]);
 
@@ -52,7 +52,7 @@ public sealed class ElementLabelsEndpointsTests : IntegrationTestBase
     [TestMethod]
     public async Task CreateLabel_WhenValid_IsReturnedByList()
     {
-        var client = _integration.CreateClient();
+        var client = _integration.CreateAdminClient();
 
         var createElementRequest = new CreateElementRequest { Name = "Test Element", Type = "TestType", Description = null };
         var createElementResponse = await client.PostAsJsonAsync("/api/elements/create", createElementRequest, CancellationToken.None);
@@ -76,7 +76,7 @@ public sealed class ElementLabelsEndpointsTests : IntegrationTestBase
     [TestMethod]
     public async Task UpdateLabels_WhenInvalid_ReturnsBadRequest()
     {
-        var client = _integration.CreateClient();
+        var client = _integration.CreateAdminClient();
 
         var createElementRequest = new CreateElementRequest { Name = "Test Element", Type = "TestType", Description = null };
         var createElementResponse = await client.PostAsJsonAsync("/api/elements/create", createElementRequest, CancellationToken.None);
@@ -95,7 +95,7 @@ public sealed class ElementLabelsEndpointsTests : IntegrationTestBase
     [TestMethod]
     public async Task UpdateLabels_WhenValid_ReplacesEntireList()
     {
-        var client = _integration.CreateClient();
+        var client = _integration.CreateAdminClient();
 
         var createElementRequest = new CreateElementRequest { Name = "Test Element", Type = "TestType", Description = null };
         var createElementResponse = await client.PostAsJsonAsync("/api/elements/create", createElementRequest, CancellationToken.None);
@@ -123,7 +123,7 @@ public sealed class ElementLabelsEndpointsTests : IntegrationTestBase
     [TestMethod]
     public async Task DeleteLabel_WhenValid_RemovesItFromList()
     {
-        var client = _integration.CreateClient();
+        var client = _integration.CreateAdminClient();
 
         var createElementRequest = new CreateElementRequest { Name = "Test Element", Type = "TestType", Description = null };
         var createElementResponse = await client.PostAsJsonAsync("/api/elements/create", createElementRequest, CancellationToken.None);

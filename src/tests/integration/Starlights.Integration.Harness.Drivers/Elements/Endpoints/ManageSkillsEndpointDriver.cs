@@ -22,7 +22,7 @@ public sealed class ManageSkillsEndpointDriver : IDriver
     /// </summary>
     public async Task<Guid> CreateAsync(CreateSkillRequest request)
     {
-        using var client = _integration.CreateClient();
+        using var client = _integration.CreateAdminClient();
 
         var response = await client.PostAsJsonAsync("/api/elements/skills", request, _integration.CancellationToken);
         response.StatusCode.Should().Be(HttpStatusCode.Created);
@@ -39,7 +39,7 @@ public sealed class ManageSkillsEndpointDriver : IDriver
     /// </summary>
     public async Task<GetSkillsResponse> GetListAsync()
     {
-        using var client = _integration.CreateClient();
+        using var client = _integration.CreateAdminClient();
 
         var response = await client.GetAsync("/api/elements/skills", _integration.CancellationToken);
         response.EnsureSuccessStatusCode();
@@ -55,7 +55,7 @@ public sealed class ManageSkillsEndpointDriver : IDriver
     /// </summary>
     public async Task UpdateAsync(UpdateSkillRequest request)
     {
-        using var client = _integration.CreateClient();
+        using var client = _integration.CreateAdminClient();
 
         var response = await client.PutAsJsonAsync($"/api/elements/skills/{request.Id}", request, _integration.CancellationToken);
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);

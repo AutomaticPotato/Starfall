@@ -30,7 +30,7 @@ public sealed class AbilityScoresEndpointsTests : IntegrationTestBase
     [TestMethod]
     public async Task CreateAbilityScore_WhenValid_ReturnsCreated()
     {
-        var client = _integration.CreateClient();
+        var client = _integration.CreateAdminClient();
 
         var request = new CreateAbilityScoreRequest("Strength", "STR", null);
 
@@ -46,7 +46,7 @@ public sealed class AbilityScoresEndpointsTests : IntegrationTestBase
     [TestMethod]
     public async Task CreateAbilityScore_WhenInvalid_ReturnsBadRequest()
     {
-        var client = _integration.CreateClient();
+        var client = _integration.CreateAdminClient();
 
         var request = new CreateAbilityScoreRequest("", "", null);
 
@@ -58,7 +58,7 @@ public sealed class AbilityScoresEndpointsTests : IntegrationTestBase
     [TestMethod]
     public async Task GetAbilityScores_WhenCreated_ReturnsListContainingIt()
     {
-        var client = _integration.CreateClient();
+        var client = _integration.CreateAdminClient();
 
         var createRequest = new CreateAbilityScoreRequest("Strength", "STR", "");
         var createResponse = await client.PostAsJsonAsync("/api/elements/ability-scores/create", createRequest, _integration.CancellationToken);
@@ -79,7 +79,7 @@ public sealed class AbilityScoresEndpointsTests : IntegrationTestBase
     [TestMethod]
     public async Task UpdateAbilityScore_WhenNotFound_ReturnsNotFound()
     {
-        var client = _integration.CreateClient();
+        var client = _integration.CreateAdminClient();
 
         var request = new UpdateAbilityScoreRequest(Guid.NewGuid(), "Intelligence", "INT", "Measures mental acuity...");
 
@@ -91,7 +91,7 @@ public sealed class AbilityScoresEndpointsTests : IntegrationTestBase
     [TestMethod]
     public async Task UpdateAbilityScore_WhenValid_UpdatesFields()
     {
-        var client = _integration.CreateClient();
+        var client = _integration.CreateAdminClient();
 
         var createRequest = new CreateAbilityScoreRequest("Intelligence", "INT", "");
         var createResponse = await client.PostAsJsonAsync("/api/elements/ability-scores/create", createRequest, _integration.CancellationToken);
@@ -115,7 +115,7 @@ public sealed class AbilityScoresEndpointsTests : IntegrationTestBase
     [TestMethod]
     public async Task DeleteAbilityScore_WhenNotFound_ReturnsNotFound()
     {
-        var client = _integration.CreateClient();
+        var client = _integration.CreateAdminClient();
 
         var id = Guid.NewGuid();
 

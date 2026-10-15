@@ -19,7 +19,7 @@ public class ElementsEndpointDriver : IDriver
 
     public async Task InitializeElementsAsync(CancellationToken cancellation)
     {
-        using var client = _integration.CreateClient();
+        using var client = _integration.CreateAdminClient();
 
         var response = await client.GetAsync("/api/elements/initialize", cancellation);
         response.EnsureSuccessStatusCode();
@@ -31,7 +31,7 @@ public class ElementsEndpointDriver : IDriver
     public async Task<Guid> CreateSpellAsync(string name, int level, string school, string time, string range, string duration,
         bool isConcentration, bool isRitual, bool hasSomatic, bool hasVerbal, bool hasMaterial, string? materialComponent, string description)
     {
-        using var client = _integration.CreateClient();
+        using var client = _integration.CreateAdminClient();
 
         var request = new CreateSpellRequest()
         {
@@ -62,7 +62,7 @@ public class ElementsEndpointDriver : IDriver
 
     public async Task<SpellDataModel?> GetSpellByIdAsync(Guid id)
     {
-        using var client = _integration.CreateClient();
+        using var client = _integration.CreateAdminClient();
 
         var response = await client.GetAsync($"/api/elements/spells/{id}", _integration.CancellationToken);
 
@@ -78,7 +78,7 @@ public class ElementsEndpointDriver : IDriver
 
     public async Task<UpdateSpellResponse> UpdateSpellAsync(UpdateSpellRequest request)
     {
-        using var client = _integration.CreateClient();
+        using var client = _integration.CreateAdminClient();
 
         var response = await client.PutAsJsonAsync($"/api/elements/spells/{request.Id}", request, _integration.CancellationToken);
         response.EnsureSuccessStatusCode();
@@ -91,7 +91,7 @@ public class ElementsEndpointDriver : IDriver
 
     public async Task<List<SpellDataModel>> GetSpellsAsync()
     {
-        using var client = _integration.CreateClient();
+        using var client = _integration.CreateAdminClient();
 
         var response = await client.GetAsync("/api/elements/spells", _integration.CancellationToken);
         response.EnsureSuccessStatusCode();

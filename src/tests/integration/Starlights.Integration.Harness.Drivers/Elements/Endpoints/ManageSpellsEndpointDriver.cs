@@ -23,7 +23,7 @@ public class ManageSpellsEndpointDriver : IDriver
     /// <returns></returns>
     public async Task<List<SpellDataModel>> GetAsync()
     {
-        using var client = _integration.CreateClient();
+        using var client = _integration.CreateAdminClient();
 
         var response = await client.GetAsync("/api/elements/spells", _integration.CancellationToken);
         response.EnsureSuccessStatusCode();
@@ -40,7 +40,7 @@ public class ManageSpellsEndpointDriver : IDriver
     /// </summary>
     public async Task<Guid> CreateAsync(CreateSpellRequest request)
     {
-        using var client = _integration.CreateClient();
+        using var client = _integration.CreateAdminClient();
 
         var response = await client.PostAsJsonAsync("/api/elements/spells/create", request, _integration.CancellationToken);
         response.EnsureSuccessStatusCode();
@@ -58,7 +58,7 @@ public class ManageSpellsEndpointDriver : IDriver
     /// <returns></returns>
     public async Task<SpellDataModel?> GetAsync(Guid id)
     {
-        using var client = _integration.CreateClient();
+        using var client = _integration.CreateAdminClient();
 
         var response = await client.GetAsync($"/api/elements/spells/{id}", _integration.CancellationToken);
 
@@ -80,7 +80,7 @@ public class ManageSpellsEndpointDriver : IDriver
     /// </summary>
     public async Task<bool> PutAsync(UpdateSpellRequest request)
     {
-        using var client = _integration.CreateClient();
+        using var client = _integration.CreateAdminClient();
 
         var response = await client.PutAsJsonAsync($"/api/elements/spells/{request.Id}", request, _integration.CancellationToken);
         response.EnsureSuccessStatusCode();

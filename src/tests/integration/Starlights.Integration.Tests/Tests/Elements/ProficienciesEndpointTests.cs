@@ -22,7 +22,7 @@ public sealed class ProficienciesEndpointTests : IntegrationTestBase
     [TestMethod]
     public async Task CreateProficiency_WhenRequestInvalid_ReturnsBadRequest()
     {
-        var client = _integration.CreateClient();
+        var client = _integration.CreateAdminClient();
 
         var response = await client.PostAsJsonAsync(
             "/api/elements/proficiencies",
@@ -35,7 +35,7 @@ public sealed class ProficienciesEndpointTests : IntegrationTestBase
     [TestMethod]
     public async Task CreateUpdateDeleteProficiency_HappyPath()
     {
-        var client = _integration.CreateClient();
+        var client = _integration.CreateAdminClient();
 
         var createResponse = await client.PostAsJsonAsync(
             "/api/elements/proficiencies",

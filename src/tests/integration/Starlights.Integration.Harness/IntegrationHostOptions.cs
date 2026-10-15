@@ -20,6 +20,25 @@ public class IntegrationHostOptions
     public string UniqueIntegrationIdentifier { get; set; } = Guid.NewGuid().ToString("N")[..12];
 
     /// <summary>
+    /// The content administrator's key (<c>Admin:Key</c>), sent in the <c>X-Admin-Key</c> header by
+    /// <see cref="IntegrationHost.CreateAdminClient"/>. Synthetic and random per host; never a real key.
+    /// </summary>
+    public string AdminKey { get; set; } = SyntheticSecret();
+
+    /// <summary>
+    /// The master admin password (<c>Admin:MasterPassword</c>) that <c>/api/admin/unlock</c> exchanges for the admin
+    /// token. Synthetic and random per host.
+    /// </summary>
+    public string MasterPassword { get; set; } = SyntheticSecret();
+
+    /// <summary>
+    /// The key unlock tokens are signed with (<c>Players:TokenKey</c>). Synthetic and random per host.
+    /// </summary>
+    public string PlayerTokenKey { get; set; } = SyntheticSecret();
+
+    private static string SyntheticSecret() => $"test-{Guid.NewGuid():N}";
+
+    /// <summary>
     /// Gets or sets the assemblies to scan for <see cref="IDriver"/> implementations.
     /// </summary>
     public Assembly[] DriverAssemblies { get; set; } = [];

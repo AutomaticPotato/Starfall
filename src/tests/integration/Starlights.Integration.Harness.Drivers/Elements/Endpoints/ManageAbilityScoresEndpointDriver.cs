@@ -23,7 +23,7 @@ public sealed class ManageAbilityScoresEndpointDriver : IDriver
     /// </summary>
     public async Task<Guid> CreateAsync(CreateAbilityScoreRequest request)
     {
-        using var client = _integration.CreateClient();
+        using var client = _integration.CreateAdminClient();
 
         var response = await client.PostAsJsonAsync("/api/elements/ability-scores/create", request, _integration.CancellationToken);
         response.StatusCode.Should().Be(HttpStatusCode.Created);
@@ -40,7 +40,7 @@ public sealed class ManageAbilityScoresEndpointDriver : IDriver
     /// </summary>
     public async Task<AbilityScoreDataModel> GetByIdAsync(Guid id)
     {
-        using var client = _integration.CreateClient();
+        using var client = _integration.CreateAdminClient();
 
         var response = await client.GetAsync($"/api/elements/ability-scores/{id}", _integration.CancellationToken);
         response.EnsureSuccessStatusCode();
@@ -56,7 +56,7 @@ public sealed class ManageAbilityScoresEndpointDriver : IDriver
     /// </summary>
     public async Task<GetAbilityScoresResponse> GetListAsync()
     {
-        using var client = _integration.CreateClient();
+        using var client = _integration.CreateAdminClient();
 
         var response = await client.GetAsync("/api/elements/ability-scores", _integration.CancellationToken);
         response.EnsureSuccessStatusCode();
@@ -72,7 +72,7 @@ public sealed class ManageAbilityScoresEndpointDriver : IDriver
     /// </summary>
     public async Task PutAsync(UpdateAbilityScoreRequest request)
     {
-        using var client = _integration.CreateClient();
+        using var client = _integration.CreateAdminClient();
 
         var response = await client.PutAsJsonAsync($"/api/elements/ability-scores/{request.Id}", request, _integration.CancellationToken);
         response.StatusCode.Should().Be(HttpStatusCode.OK);

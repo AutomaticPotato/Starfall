@@ -25,7 +25,7 @@ public sealed class FeatCategoriesEndpointTests : IntegrationTestBase
     public async Task CreateFeatCategory()
     {
         // Arrange
-        var client = _integration.CreateClient();
+        var client = _integration.CreateAdminClient();
         var request = new CreateFeatCategoryRequest
         {
             Name = "General",
@@ -47,7 +47,7 @@ public sealed class FeatCategoriesEndpointTests : IntegrationTestBase
     {
         // Arrange
         var id = await CreateFeatCategoryAsync("General", "General feats");
-        var client = _integration.CreateClient();
+        var client = _integration.CreateAdminClient();
 
         // Act
         var response = await client.GetAsync("/api/elements/feat-categories", _integration.CancellationToken);
@@ -64,7 +64,7 @@ public sealed class FeatCategoriesEndpointTests : IntegrationTestBase
     {
         // Arrange
         var id = await CreateFeatCategoryAsync("General", "General feats");
-        var client = _integration.CreateClient();
+        var client = _integration.CreateAdminClient();
 
         // Act
         var response = await client.GetAsync($"/api/elements/feat-categories/{id}", _integration.CancellationToken);
@@ -81,7 +81,7 @@ public sealed class FeatCategoriesEndpointTests : IntegrationTestBase
     {
         // Arrange
         var id = await CreateFeatCategoryAsync("General", "General feats");
-        var client = _integration.CreateClient();
+        var client = _integration.CreateAdminClient();
         var request = new UpdateFeatCategoryRequest
         {
             Id = id,
@@ -101,7 +101,7 @@ public sealed class FeatCategoriesEndpointTests : IntegrationTestBase
 
     private async Task<Guid> CreateFeatCategoryAsync(string name, string? description)
     {
-        using var client = _integration.CreateClient();
+        using var client = _integration.CreateAdminClient();
 
         var request = new CreateFeatCategoryRequest
         {

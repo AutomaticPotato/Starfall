@@ -21,7 +21,7 @@ public sealed class ManageElementsEndpointDriver : IDriver
     /// </summary>
     public async Task<Guid> CreateAsync(CreateElementRequest request)
     {
-        using var client = _integration.CreateClient();
+        using var client = _integration.CreateAdminClient();
 
         var response = await client.PostAsJsonAsync("/api/elements/create", request, _integration.CancellationToken);
         response.EnsureSuccessStatusCode();
@@ -37,7 +37,7 @@ public sealed class ManageElementsEndpointDriver : IDriver
     /// </summary>
     public async Task<GetElementsResponse> GetListAsync(string? type = null)
     {
-        using var client = _integration.CreateClient();
+        using var client = _integration.CreateAdminClient();
 
         var url = string.IsNullOrWhiteSpace(type)
             ? "/api/elements"
@@ -57,7 +57,7 @@ public sealed class ManageElementsEndpointDriver : IDriver
     /// </summary>
     public async Task<ElementDataModel> GetByIdAsync(Guid id)
     {
-        using var client = _integration.CreateClient();
+        using var client = _integration.CreateAdminClient();
 
         var response = await client.GetAsync($"/api/elements/{id}", _integration.CancellationToken);
         response.EnsureSuccessStatusCode();
@@ -73,7 +73,7 @@ public sealed class ManageElementsEndpointDriver : IDriver
     /// </summary>
     public async Task<(bool IsSuccessStatusCode, System.Net.HttpStatusCode StatusCode)> DeleteAsync(Guid id)
     {
-        using var client = _integration.CreateClient();
+        using var client = _integration.CreateAdminClient();
 
         var response = await client.DeleteAsync($"/api/elements/{id}", _integration.CancellationToken);
         return (response.IsSuccessStatusCode, response.StatusCode);
@@ -84,7 +84,7 @@ public sealed class ManageElementsEndpointDriver : IDriver
     /// </summary>
     public async Task<(UpdateElementResponse? Response, System.Net.HttpStatusCode StatusCode)> UpdateAsync(Guid id, UpdateElementRequest request)
     {
-        using var client = _integration.CreateClient();
+        using var client = _integration.CreateAdminClient();
 
         var response = await client.PutAsJsonAsync($"/api/elements/{id}", request, _integration.CancellationToken);
         var statusCode = response.StatusCode;

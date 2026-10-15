@@ -13,10 +13,11 @@ public class IntegrationHost : IIntegrationHost, IDisposable
     private readonly IServiceScope _scope;
     private bool _disposedValue;
 
-    internal IntegrationHost(WebApplicationFactory<Program> factory, Dictionary<string, object> properties)
+    internal IntegrationHost(WebApplicationFactory<Program> factory, Dictionary<string, object> properties, IntegrationHostOptions options)
     {
         _factory = factory;
         Properties = properties;
+        Options = options;
         _scope = _factory.Services.CreateScope();
         Services = _scope.ServiceProvider;
     }
@@ -39,6 +40,27 @@ public class IntegrationHost : IIntegrationHost, IDisposable
     {
         return _factory.CreateClient();
     }
+
+    /// <summary>
+    /// The host's options, including its synthetic credentials (<see cref="IntegrationHostOptions.AdminKey"/>,
+    /// <see cref="IntegrationHostOptions.MasterPassword"/>).
+    /// </summary>
+    public IntegrationHostOptions Options { get; }
+
+    /// <summary>
+    /// Creates an HTTP client for content administration (creating, editing and deleting elements, initializing the
+    /// ruleset, <c>/api/admin</c>): it sends the host's synthetic admin key in the <c>X-Admin-Key</c> header.
+    /// Players' requests use <see cref="CreateClient"/>, which carries no credentials.
+    /// </summary>
+    public HttpClient CreateAdminClient()
+    {
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Add(AdminKeyHeader, Options.AdminKey);
+        return client;
+    }
+
+    /// <summary>The header that carries the content administrator's key.</summary>
+    public const string AdminKeyHeader = "X-Admin-Key";
 
     protected virtual void Dispose(bool disposing)
     {

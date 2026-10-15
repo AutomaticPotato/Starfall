@@ -22,7 +22,7 @@ public sealed class ManageProficienciesEndpointDriver : IDriver
     /// </summary>
     public async Task<Guid> CreateAsync(CreateProficiencyRequest request)
     {
-        using var client = _integration.CreateClient();
+        using var client = _integration.CreateAdminClient();
 
         var response = await client.PostAsJsonAsync("/api/elements/proficiencies", request, _integration.CancellationToken);
         response.StatusCode.Should().Be(HttpStatusCode.Created);
@@ -39,7 +39,7 @@ public sealed class ManageProficienciesEndpointDriver : IDriver
     /// </summary>
     public async Task<GetProficienciesResponse> GetListAsync()
     {
-        using var client = _integration.CreateClient();
+        using var client = _integration.CreateAdminClient();
 
         var response = await client.GetAsync("/api/elements/proficiencies", _integration.CancellationToken);
         response.EnsureSuccessStatusCode();
@@ -55,7 +55,7 @@ public sealed class ManageProficienciesEndpointDriver : IDriver
     /// </summary>
     public async Task UpdateAsync(UpdateProficiencyRequest request)
     {
-        using var client = _integration.CreateClient();
+        using var client = _integration.CreateAdminClient();
 
         var response = await client.PutAsJsonAsync($"/api/elements/proficiencies/{request.Id}", request, _integration.CancellationToken);
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
@@ -66,7 +66,7 @@ public sealed class ManageProficienciesEndpointDriver : IDriver
     /// </summary>
     public async Task DeleteAsync(Guid id)
     {
-        using var client = _integration.CreateClient();
+        using var client = _integration.CreateAdminClient();
 
         var response = await client.DeleteAsync($"/api/elements/proficiencies/{id}", _integration.CancellationToken);
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);

@@ -23,7 +23,7 @@ public sealed class SavingThrowsEndpointTests : IntegrationTestBase
     [TestMethod]
     public async Task CreateSavingThrow_WhenAbilityDoesNotExist_ReturnsBadRequest()
     {
-        var client = _integration.CreateClient();
+        var client = _integration.CreateAdminClient();
 
         var request = new
         {
@@ -39,7 +39,7 @@ public sealed class SavingThrowsEndpointTests : IntegrationTestBase
     [TestMethod]
     public async Task CreateUpdateDeleteSavingThrow_HappyPath()
     {
-        var client = _integration.CreateClient();
+        var client = _integration.CreateAdminClient();
 
         var createAbilityScoreResponse = await client.PostAsJsonAsync(
             "/api/elements/ability-scores/create",

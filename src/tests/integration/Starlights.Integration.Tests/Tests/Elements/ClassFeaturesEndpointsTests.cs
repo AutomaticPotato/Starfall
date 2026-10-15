@@ -24,7 +24,7 @@ public sealed class ClassFeaturesEndpointsTests : IntegrationTestBase
     [TestMethod]
     public async Task GetClassFeatures_WhenFeatureCreated_ReturnsListContainingIt()
     {
-        var client = _integration.CreateClient();
+        var client = _integration.CreateAdminClient();
 
         var createClassRequest = new CreateClassRequest
         {
@@ -67,7 +67,7 @@ public sealed class ClassFeaturesEndpointsTests : IntegrationTestBase
     [TestMethod]
     public async Task GetClassFeatureById_WhenNotFound_ReturnsNotFound()
     {
-        var client = _integration.CreateClient();
+        var client = _integration.CreateAdminClient();
 
         var response = await client.GetAsync($"/api/elements/class-features/{Guid.NewGuid()}", _integration.CancellationToken);
 
@@ -77,7 +77,7 @@ public sealed class ClassFeaturesEndpointsTests : IntegrationTestBase
     [TestMethod]
     public async Task GetClassFeatureById_WhenCreated_ReturnsDetails()
     {
-        var client = _integration.CreateClient();
+        var client = _integration.CreateAdminClient();
 
         var createClassRequest = new CreateClassRequest
         {
@@ -131,7 +131,7 @@ public sealed class ClassFeaturesEndpointsTests : IntegrationTestBase
     [TestMethod]
     public async Task CreateClassFeature_WhenValid_ReturnsCreated()
     {
-        var client = _integration.CreateClient();
+        var client = _integration.CreateAdminClient();
 
         var createClassRequest = new CreateClassRequest
         {
@@ -169,7 +169,7 @@ public sealed class ClassFeaturesEndpointsTests : IntegrationTestBase
     [TestMethod]
     public async Task CreateClassFeature_WhenInvalid_ReturnsBadRequest()
     {
-        var client = _integration.CreateClient();
+        var client = _integration.CreateAdminClient();
 
         var request = new CreateClassFeatureRequest
         {

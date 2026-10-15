@@ -37,8 +37,8 @@ public sealed class CharacterManagementDriver : IDriver
     public async Task<CharacterCreationOption> GetDefaultCharacterCreationOptionAsync()
     {
         var options = await GetCharacterCreationOptionsAsync();
-        var defaultOption = options.SingleOrDefault(o => o.Name == "Default Character");
-        defaultOption.Should().NotBeNull("Default Character option should be present in the options.");
+        var defaultOption = options.SingleOrDefault(o => o.Name == "Standard Character");
+        defaultOption.Should().NotBeNull("the ruleset initializer's \"Standard Character\" option should be present in the options.");
         return defaultOption;
     }
 

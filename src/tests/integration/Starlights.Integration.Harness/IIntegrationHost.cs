@@ -13,7 +13,13 @@ public interface IIntegrationHost
     IServiceProvider Services { get; }
 
     /// <summary>
-    /// Creates a new HTTP client for making requests to the application.
+    /// Creates a new HTTP client for making requests to the application, without credentials (a player with no
+    /// password, or anyone).
     /// </summary>
     HttpClient CreateClient();
+
+    /// <summary>
+    /// Creates a new HTTP client for content administration, sending the host's synthetic admin key.
+    /// </summary>
+    HttpClient CreateAdminClient();
 }

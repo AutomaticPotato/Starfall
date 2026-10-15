@@ -22,7 +22,7 @@ public class ManageFeatsEndpointDriver : IDriver
     /// </summary>
     public async Task<Guid> CreateAsync(CreateFeatRequest request)
     {
-        using var client = _integration.CreateClient();
+        using var client = _integration.CreateAdminClient();
 
         var response = await client.PostAsJsonAsync("/api/elements/feats/create", request, _integration.CancellationToken);
         response.EnsureSuccessStatusCode();
@@ -38,7 +38,7 @@ public class ManageFeatsEndpointDriver : IDriver
     /// </summary>
     public async Task<FeatDataModel> GetByIdAsync(Guid id)
     {
-        using var client = _integration.CreateClient();
+        using var client = _integration.CreateAdminClient();
 
         var response = await client.GetAsync($"/api/elements/feats/{id}", _integration.CancellationToken);
         response.EnsureSuccessStatusCode();
@@ -54,7 +54,7 @@ public class ManageFeatsEndpointDriver : IDriver
     /// </summary>
     public async Task<GetFeatsResponse> GetListAsync()
     {
-        using var client = _integration.CreateClient();
+        using var client = _integration.CreateAdminClient();
 
         var response = await client.GetAsync("/api/elements/feats", _integration.CancellationToken);
         response.EnsureSuccessStatusCode();
@@ -70,7 +70,7 @@ public class ManageFeatsEndpointDriver : IDriver
     /// </summary>
     public async Task<bool> PutAsync(UpdateFeatRequest request)
     {
-        using var client = _integration.CreateClient();
+        using var client = _integration.CreateAdminClient();
         var response = await client.PutAsJsonAsync($"/api/elements/feats/{request.Id}", request, _integration.CancellationToken);
         response.EnsureSuccessStatusCode();
 

@@ -456,3 +456,6 @@ deploy/data/
 # Isolated frontend tooling and synthetic validation artifacts
 /.tooling/
 /.artifacts/
+
+# Reqnroll writes an anonymous telemetry id next to the acceptance tests on build
+**/Reqnroll/userid

@@ -23,7 +23,7 @@ public sealed class SkillsEndpointTests : IntegrationTestBase
     [TestMethod]
     public async Task CreateSkill_WhenAbilityDoesNotExist_ReturnsBadRequest()
     {
-        var client = _integration.CreateClient();
+        var client = _integration.CreateAdminClient();
 
         var request = new
         {
@@ -39,7 +39,7 @@ public sealed class SkillsEndpointTests : IntegrationTestBase
     [TestMethod]
     public async Task CreateUpdateDeleteSkill_HappyPath()
     {
-        var client = _integration.CreateClient();
+        var client = _integration.CreateAdminClient();
 
         var createAbilityScoreResponse = await client.PostAsJsonAsync(
             "/api/elements/ability-scores/create",

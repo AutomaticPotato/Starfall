@@ -22,7 +22,7 @@ public sealed class ManageFeatCategoriesEndpointDriver : IDriver
     /// </summary>
     public async Task<List<FeatCategoryDataModel>> GetAsync()
     {
-        using var client = _integration.CreateClient();
+        using var client = _integration.CreateAdminClient();
 
         var response = await client.GetAsync("/api/elements/feat-categories", _integration.CancellationToken);
         response.EnsureSuccessStatusCode();
@@ -39,7 +39,7 @@ public sealed class ManageFeatCategoriesEndpointDriver : IDriver
     /// </summary>
     public async Task<Guid> CreateAsync(CreateFeatCategoryRequest request)
     {
-        using var client = _integration.CreateClient();
+        using var client = _integration.CreateAdminClient();
 
         var response = await client.PostAsJsonAsync("/api/elements/feat-categories/create", request, _integration.CancellationToken);
         response.EnsureSuccessStatusCode();
@@ -55,7 +55,7 @@ public sealed class ManageFeatCategoriesEndpointDriver : IDriver
     /// </summary>
     public async Task<FeatCategoryDataModel?> GetAsync(Guid id)
     {
-        using var client = _integration.CreateClient();
+        using var client = _integration.CreateAdminClient();
 
         var response = await client.GetAsync($"/api/elements/feat-categories/{id}", _integration.CancellationToken);
 
@@ -74,7 +74,7 @@ public sealed class ManageFeatCategoriesEndpointDriver : IDriver
     /// </summary>
     public async Task<bool> PutAsync(UpdateFeatCategoryRequest request)
     {
-        using var client = _integration.CreateClient();
+        using var client = _integration.CreateAdminClient();
 
         var response = await client.PutAsJsonAsync($"/api/elements/feat-categories/{request.Id}", request, _integration.CancellationToken);
         response.EnsureSuccessStatusCode();

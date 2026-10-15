@@ -17,7 +17,7 @@ public sealed class ManageClassesEndpointDriver : IDriver
 
     public async Task<Guid> CreateAsync(CreateClassRequest request)
     {
-        using var client = _integration.CreateClient();
+        using var client = _integration.CreateAdminClient();
 
         var response = await client.PostAsJsonAsync("/api/elements/classes/create", request, _integration.CancellationToken);
         response.EnsureSuccessStatusCode();
@@ -30,7 +30,7 @@ public sealed class ManageClassesEndpointDriver : IDriver
 
     public async Task<ClassDataModel?> GetAsync(Guid id)
     {
-        using var client = _integration.CreateClient();
+        using var client = _integration.CreateAdminClient();
 
         var response = await client.GetAsync($"/api/elements/classes/{id}", _integration.CancellationToken);
 

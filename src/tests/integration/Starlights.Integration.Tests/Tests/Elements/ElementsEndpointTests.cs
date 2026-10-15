@@ -22,7 +22,7 @@ public sealed class ElementsEndpointTests : IntegrationTestBase
     public async Task EnsureSuccessStatusCode(string url)
     {
         // Arrange
-        var client = _integration.CreateClient();
+        var client = _integration.CreateAdminClient();
 
         // Act
         var response = await client.GetAsync(url, _integration.CancellationToken);
@@ -35,7 +35,7 @@ public sealed class ElementsEndpointTests : IntegrationTestBase
     public async Task InitializeElements()
     {
         // Arrange
-        var client = _integration.CreateClient();
+        var client = _integration.CreateAdminClient();
 
         // Act
         var response = await client.GetAsync("/api/elements/initialize", _integration.CancellationToken);

@@ -78,6 +78,13 @@ public class IntegrationHostBuilder
                 // custom integration environment configuration
                 builder.UseSetting("INTEGRATION_ENVIRONMENT_UNIQUE_NAME", options.UniqueIntegrationIdentifier);
 
+                // synthetic credentials, so the application's own access checks run as in production: content
+                // administration needs the admin key (or the admin token from the master password), and a locked
+                // player's characters need that player's token
+                builder.UseSetting("Admin:Key", options.AdminKey);
+                builder.UseSetting("Admin:MasterPassword", options.MasterPassword);
+                builder.UseSetting("Players:TokenKey", options.PlayerTokenKey);
+
                 // preserve the execution context to ensure that the test server can handle async operations correctly
                 builder.UseTestServer(testServerOptions => testServerOptions.PreserveExecutionContext = true);
 
@@ -110,7 +117,7 @@ public class IntegrationHostBuilder
                 });
             });
 
-        var host = new IntegrationHost(factory, properties);
+        var host = new IntegrationHost(factory, properties, options);
         hostAccessor.Host = host;
 
         return host;
