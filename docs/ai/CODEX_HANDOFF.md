@@ -9,3 +9,8 @@ Inspected routing, builder/magic, sheet/combat APIs, themes, deployment and auth
 
 ## Resume
 Read AGENTS.md, this file, then FRONTEND_GUIDE sections relevant to current changes. Inspect `git status`/`git log`; do not rediscover the full repository. Next: implement semantic themes and shared spell/character components, then validate.
+
+## Milestone 2 — theme foundation
+Semantic Porcelain/Slate/Midnight palettes; preview/save/cancel; migration of light/dark settings; OS and cross-tab sync; reduced motion; touch-size buttons and constrained dialogs. Header uses a labeled mobile menu. Background photos are replaced by clean theme surfaces; files remain intact. Shared toast colors now follow the actual provider.
+Validation: direct workspace TypeScript 7 app check passes; targeted ESLint JSON checks pass (provider retains fast-refresh warnings for shared exports). All five skills validate. Token foreground/background ratios checked by WCAG relative luminance: minimum 5.69:1 among tested foreground, muted, primary, status pairs. This is a palette check, not a full page accessibility audit.
+Remaining implementation is in the worktree (spell browser, reprints, interactive sheet and battle presentation); commit it as the next milestone after review. Full Vite/Vitest runs blocked by host Node 18. Backend SDK absent. Browser package present, Chromium executable absent. User asked to provide runtime paths.

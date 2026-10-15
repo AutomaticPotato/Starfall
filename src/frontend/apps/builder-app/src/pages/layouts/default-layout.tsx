@@ -1,7 +1,9 @@
+import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import { BookOpenIcon, CrownIcon, DatabaseIcon, FlaskConicalIcon, LibraryBigIcon, OrbitIcon, ScrollTextIcon, SwordsIcon, UserIcon } from "lucide-react";
+import { BookOpenIcon, CrownIcon, DatabaseIcon, FlaskConicalIcon, LibraryBigIcon, MenuIcon, OrbitIcon, ScrollTextIcon, SwordsIcon, UserIcon } from "lucide-react";
 import { Link, NavLink, Outlet } from "react-router-dom";
 import { ModeToggle } from "@/components/mode-toggle";
 import { GitHubIconButton } from "@/components/navigation/github-icon-button";
@@ -73,36 +75,7 @@ export function LandingBackground2() {
   );
 }
 
-export function LandingBackground3() {
-  return (
-    <>
-      <div
-        className="absolute inset-0 -z-10 pointer-events-none bg-background dark:hidden"
-        style={{
-          backgroundImage: `
-        linear-gradient(45deg, transparent 49%, #e5e7eb 49%, #e5e7eb 51%, transparent 51%),
-        linear-gradient(-45deg, transparent 49%, #e5e7eb 49%, #e5e7eb 51%, transparent 51%)
-            `,
-          backgroundSize: "40px 40px",
-          WebkitMaskImage: "radial-gradient(ellipse 70% 60% at 50% 0%, #000 60%, transparent 100%)",
-          maskImage: "radial-gradient(ellipse 70% 60% at 50% 0%, #000 60%, transparent 100%)",
-        }}
-      />
-      <div
-        className="absolute inset-0 -z-10 pointer-events-none bg-background hidden dark:block"
-        style={{
-          backgroundImage: `
-        linear-gradient(45deg, transparent 49%, rgba(255,255,255,0.06) 49%, rgba(255,255,255,0.06) 51%, transparent 51%),
-        linear-gradient(-45deg, transparent 49%, rgba(255,255,255,0.04) 49%, rgba(255,255,255,0.04) 51%, transparent 51%)
-            `,
-          backgroundSize: "40px 40px",
-          WebkitMaskImage: "radial-gradient(ellipse 70% 60% at 50% 0%, #000 60%, transparent 100%)",
-          maskImage: "radial-gradient(ellipse 70% 60% at 50% 0%, #000 60%, transparent 100%)",
-        }}
-      />
-    </>
-  );
-}
+export function LandingBackground3() { return null; }
 
 function SizeIndicatorBadge({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
@@ -136,16 +109,16 @@ export function MainNavigation() {
         <div className="flex items-center justify-start gap-2 ">
           <Link to="/" className=" flex items-center font-heading relative">
             <OrbitIcon className="size-6 mr-3 stroke-starlights-purple-600" />
-            <span className="hidden lg:inline tracking-widest mt-0.5">Project Starlights</span>
-            <span className="hidden sm:inline lg:hidden tracking-widest mt-0.5">Starlights</span>
+            <span className="hidden 2xl:inline tracking-widest mt-0.5">Project Starlights</span>
+            <span className="hidden xl:inline 2xl:hidden tracking-widest mt-0.5">Starlights</span>
           </Link>
 
-          <MainLinks className="ms-6 hidden md:flex" />
+          <MainLinks className="ms-2 hidden lg:flex" />
         </div>
 
         <div className="flex items-center justify-end gap-2">
           {/* phones: the same places as icons */}
-          <MainLinks className="md:hidden" compact />
+          <MobileNavigation />
           <PlayerChip />
           <AdminButton />
           <div className="flex items-center justify-end gap-2">
@@ -158,8 +131,8 @@ export function MainNavigation() {
 
           {import.meta.env.DEV && (
             <>
-              <Separator orientation="vertical" className="min-h-5" />
-              <SizeIndicatorBadge className="ms-2" />
+              <Separator orientation="vertical" className="hidden min-h-5 xl:block" />
+              <SizeIndicatorBadge className="ms-2 hidden xl:block" />
             </>
           )}
 
@@ -181,6 +154,12 @@ const MAIN_LINKS = [
   { to: "/compendium", label: "Compendium", icon: BookOpenIcon },
   { to: "/homebrew", label: "Homebrew", icon: FlaskConicalIcon },
 ];
+
+function MobileNavigation() {
+  const admin = useIsAdmin();
+  const links = admin ? [...MAIN_LINKS, { to: "/content", label: "Content", icon: DatabaseIcon }] : MAIN_LINKS;
+  return <div className="lg:hidden"><DropdownMenu><DropdownMenuTrigger asChild><Button variant="outline" aria-label="Open navigation"><MenuIcon /><span className="hidden min-[390px]:inline">Menu</span></Button></DropdownMenuTrigger><DropdownMenuContent align="end">{links.map(({ to, label, icon: Icon }) => <DropdownMenuItem key={to} asChild><Link to={to} className="min-h-11"><Icon />{label}</Link></DropdownMenuItem>)}</DropdownMenuContent></DropdownMenu></div>;
+}
 
 function MainLinks({ className, compact }: { className?: string; compact?: boolean }) {
   // the admin also gets the Content page (where the rules and the Compendium come from)
