@@ -1,7 +1,7 @@
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 
-namespace Starlights.Modules.Elements.Services.Homebrew;
+namespace Starlights.Modules.Elements.Domain.Homebrew;
 
 /// <summary>A feature a homebrew class or subclass gains at a level.</summary>
 public sealed record HomebrewFeatureModel
