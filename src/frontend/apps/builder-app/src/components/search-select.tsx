@@ -166,7 +166,7 @@ export function SearchSelect({
         className={cn(
           "flex max-h-[var(--radix-popover-content-available-height)] w-[var(--radix-popover-trigger-width)] min-w-72 max-w-[calc(100vw-2rem)] flex-col p-0",
           // a list with filters needs room for chips and rows: asking for it makes the list open upward near the bottom
-          hasFilters && "min-h-[min(24rem,calc(100dvh-2rem))]",
+          hasFilters && "min-h-[min(24rem,calc(100dvh-2rem))] max-sm:min-h-[min(16rem,calc(100dvh-2rem))]",
         )}
       >
         <div className="flex shrink-0 items-center gap-2 border-b px-3">
@@ -197,7 +197,7 @@ export function SearchSelect({
           )}
         </div>
         {hasFilters && showFilters && (
-          <div className="flex max-h-44 shrink-0 flex-col gap-1.5 overflow-y-auto border-b px-3 py-2 max-sm:max-h-36">
+          <div className="flex max-h-44 shrink-0 flex-col gap-1.5 overflow-y-auto border-b px-3 py-2 max-sm:max-h-28">
             {groups.map(({ facet, values }) => (
               <div key={facet.key} className="flex items-center gap-1.5">
                 <span className="w-14 shrink-0 text-[11px] uppercase tracking-wide text-muted-foreground">{facet.label}</span>
@@ -264,7 +264,7 @@ export function SearchSelect({
         ) : shown.length === 0 ? (
           <p className="p-4 text-center text-sm text-muted-foreground">{ticked > 0 || query ? "Nothing matches; change the filters or the search." : "No options"}</p>
         ) : (
-          <ul ref={listRef} role="listbox" className="max-h-72 min-h-36 flex-1 overflow-y-auto py-1">
+          <ul ref={listRef} role="listbox" className="max-h-72 min-h-36 flex-1 overflow-y-auto py-1 max-sm:min-h-24">
             {shown.map((option, i) => (
               <li
                 key={option.id}
