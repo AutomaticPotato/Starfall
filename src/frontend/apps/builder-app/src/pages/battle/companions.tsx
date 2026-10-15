@@ -73,7 +73,7 @@ export function Companions({
   const quick = (name: string) => {
     const key = lookup("bestiary", name, edition);
     return (
-      <button key={name} type="button" onClick={() => add(name, key)} className="rounded-full border border-white/15 px-2.5 py-1 text-xs text-white/80 hover:border-amber-300/60 hover:bg-white/10">
+      <button key={name} type="button" onClick={() => add(name, key)} className="rounded-full border border-border px-2.5 py-1 text-sm text-muted-foreground hover:border-amber-300/60 hover:bg-muted">
         {name}
       </button>
     );
@@ -81,14 +81,14 @@ export function Companions({
 
   return (
     <div className="space-y-3">
-      <section className="rounded-xl border border-white/10 bg-neutral-900/85 p-3 shadow-xl backdrop-blur-md sm:p-4">
+      <section className="rounded-xl border border-border bg-card p-3 shadow-sm sm:p-4">
         <header className="mb-2 flex items-center gap-2">
-          <PawPrintIcon className="size-4 text-amber-300" />
-          <h2 className="font-heading text-sm uppercase tracking-[0.2em] text-amber-200/90">Add a familiar or companion</h2>
+          <PawPrintIcon className="size-4 text-[var(--warning)]" />
+          <h2 className="font-heading text-base font-semibold text-[var(--warning)]">Add a familiar or companion</h2>
         </header>
         {hasFamiliar && (
           <div className="mb-3">
-            <p className="mb-1.5 text-xs text-white/65">
+            <p className="mb-1.5 text-sm text-muted-foreground">
               Find Familiar{chain ? " with Pact of the Chain" : ""}: {edition === "2024" ? "a Celestial, Fey or Fiend in one of these shapes (or another CR 0 beast)" : "a celestial, fey or fiend in one of these shapes"}.
             </p>
             <div className="flex flex-wrap gap-1.5">{familiarForms(edition, chain).map(quick)}</div>
@@ -96,7 +96,7 @@ export function Companions({
         )}
         {suggested.length > 0 && (
           <div className="mb-3">
-            <p className="mb-1.5 text-xs text-white/65">From your features and spells:</p>
+            <p className="mb-1.5 text-sm text-muted-foreground">From your features and spells:</p>
             <div className="flex flex-wrap gap-1.5">{[...new Set(suggested)].map(quick)}</div>
           </div>
         )}
@@ -104,12 +104,12 @@ export function Companions({
           <Button size="sm" variant="secondary" onClick={() => setPicking(true)}>
             <CatIcon /> Any creature from the bestiary
           </Button>
-          <span className="text-xs text-white/70">or</span>
-          <Input value={custom} onChange={(e) => setCustom(e.target.value)} placeholder="A name of your own" aria-label="Companion name" className="h-8 w-48 border-white/20 bg-black/40 text-white" />
+          <span className="text-sm text-muted-foreground">or</span>
+          <Input value={custom} onChange={(e) => setCustom(e.target.value)} placeholder="A name of your own" aria-label="Companion name" className="h-8 w-48 border-border bg-muted text-foreground" />
           <Button
             size="sm"
             variant="ghost"
-            className="text-white/80"
+            className="text-muted-foreground"
             disabled={!custom.trim()}
             onClick={() => {
               add(custom.trim().slice(0, 100), null);
@@ -123,7 +123,7 @@ export function Companions({
       </section>
 
       {companions.length === 0 ? (
-        <p className="rounded-xl border border-white/10 bg-neutral-900/80 p-4 text-sm text-white/75">No familiar or companion in this fight yet.</p>
+        <p className="rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground">No familiar or companion in this fight yet.</p>
       ) : (
         <div className="grid gap-3 lg:grid-cols-2">
           {companions.map((c) => (
@@ -132,7 +132,7 @@ export function Companions({
         </div>
       )}
       {hasFamiliar && (
-        <p className="text-xs text-white/70">
+        <p className="text-sm text-muted-foreground">
           {edition === "2024"
             ? "A familiar acts on its own initiative and can't attack (with Pact of the Chain, when you take the Attack action you can give up one attack so it attacks with its Reaction). It can deliver your touch spells, and you can see and hear through it."
             : "A familiar acts independently and can't attack (with Pact of the Chain, you can give up one of your attacks so it attacks with its reaction). It can deliver your touch spells, and you can see through its eyes as an action."}
@@ -157,12 +157,12 @@ function CompanionCard({ companion: c, onChange, onRemove }: { companion: Compan
   const hp = Math.max(0, c.maxHitPoints - c.damage);
   const ratio = c.maxHitPoints > 0 ? hp / c.maxHitPoints : 0;
   return (
-    <article className="rounded-xl border border-white/10 bg-neutral-900/80 p-3 shadow-xl backdrop-blur-md">
+    <article className="rounded-xl border border-border bg-card p-3 shadow-sm">
       <div className="flex items-start gap-2">
         <div className="min-w-0 flex-1">
-          <h3 className="truncate font-heading text-lg tracking-wide text-white">{c.key ? <LoreLink category="bestiary" k={c.key}>{c.name}</LoreLink> : c.name}</h3>
-          <div className="flex items-baseline gap-1.5 text-sm text-white/80">
-            <span className="font-heading text-2xl text-white">{hp}</span>
+          <h3 className="truncate font-heading text-lg tracking-wide text-foreground">{c.key ? <LoreLink category="bestiary" k={c.key}>{c.name}</LoreLink> : c.name}</h3>
+          <div className="flex items-baseline gap-1.5 text-sm text-muted-foreground">
+            <span className="font-heading text-2xl text-foreground">{hp}</span>
             <span>/</span>
             <Input
               inputMode="numeric"
@@ -170,25 +170,25 @@ function CompanionCard({ companion: c, onChange, onRemove }: { companion: Compan
               value={c.maxHitPoints || ""}
               placeholder="max"
               onChange={(e) => onChange((x) => ({ ...x, maxHitPoints: Math.min(10_000, Number(e.target.value.replace(/\D/g, "")) || 0) }))}
-              className="h-7 w-16 border-white/20 bg-black/40 px-1 text-center text-white"
+              className="h-7 w-16 border-border bg-muted px-1 text-center text-foreground"
             />
-            <span className="text-xs text-white/70">hit points</span>
-            {c.temporaryHitPoints > 0 && <span className="text-xs text-sky-200">+{c.temporaryHitPoints} temp</span>}
+            <span className="text-sm text-muted-foreground">hit points</span>
+            {c.temporaryHitPoints > 0 && <span className="text-sm text-[var(--info)]">+{c.temporaryHitPoints} temp</span>}
           </div>
         </div>
-        <Button size="icon" variant="ghost" className="size-7 text-white/75" aria-label={`Remove ${c.name}`} onClick={onRemove}>
+        <Button size="icon" variant="ghost" className="size-7 text-muted-foreground" aria-label={`Remove ${c.name}`} onClick={onRemove}>
           <Trash2Icon />
         </Button>
       </div>
-      <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/10">
+      <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted">
         <div className={cn("h-full rounded-full", ratio > 0.5 ? "bg-emerald-400" : ratio > 0.25 ? "bg-amber-400" : "bg-red-500")} style={{ width: `${Math.round(ratio * 100)}%` }} />
       </div>
       <div className="mt-2 flex flex-wrap items-center gap-2">
-        <Input inputMode="numeric" aria-label={`Amount for ${c.name}`} placeholder="Amount" value={amount} onChange={(e) => setAmount(e.target.value.replace(/\D/g, ""))} className="h-8 w-20 border-white/20 bg-black/40 text-white" />
+        <Input inputMode="numeric" aria-label={`Amount for ${c.name}`} placeholder="Amount" value={amount} onChange={(e) => setAmount(e.target.value.replace(/\D/g, ""))} className="h-8 w-20 border-border bg-muted text-foreground" />
         <Button size="sm" variant="destructive" disabled={!n} onClick={() => (onChange((x) => hurtCompanion(x, n)), setAmount(""))}>
           Damage
         </Button>
-        <Button size="sm" className="bg-emerald-600 text-white hover:bg-emerald-500" disabled={!n} onClick={() => (onChange((x) => hurtCompanion(x, -n)), setAmount(""))}>
+        <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90" disabled={!n} onClick={() => (onChange((x) => hurtCompanion(x, -n)), setAmount(""))}>
           Heal
         </Button>
         <Button size="sm" variant="secondary" disabled={!n} onClick={() => (onChange((x) => ({ ...x, temporaryHitPoints: Math.max(x.temporaryHitPoints, n) })), setAmount(""))}>
@@ -201,11 +201,11 @@ function CompanionCard({ companion: c, onChange, onRemove }: { companion: Compan
         onBlur={() => notes !== (c.notes ?? "") && onChange((x) => ({ ...x, notes: notes || null }))}
         placeholder="Notes (shape, orders, conditions…)"
         aria-label={`Notes on ${c.name}`}
-        className="mt-2 h-8 border-white/15 bg-black/30 text-sm text-white"
+        className="mt-2 h-8 border-border bg-muted text-sm text-foreground"
       />
       {c.key && (
         <details className="mt-2">
-          <summary className="cursor-pointer text-xs text-white/75">Stat block</summary>
+          <summary className="cursor-pointer text-sm text-muted-foreground">Stat block</summary>
           <div className="mt-2 max-h-[28rem] overflow-y-auto rounded-lg bg-background p-3 text-foreground">
             <EntryPreview category="bestiary" k={c.key} />
           </div>

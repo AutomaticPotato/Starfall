@@ -452,3 +452,7 @@ starlights-lore/
 
 # the self-hosting kit's content and data (deploy/setup.sh)
 deploy/data/
+
+# Isolated frontend tooling and synthetic validation artifacts
+/.tooling/
+/.artifacts/

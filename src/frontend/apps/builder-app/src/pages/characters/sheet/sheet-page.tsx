@@ -104,6 +104,7 @@ export function CharacterSheetPage() {
             <ArrowLeftIcon /> Back to the builder
           </Link>
         </Button>
+        <Button variant="secondary" asChild><Link to={`/characters/${id}/play`}>Interactive sheet</Link></Button>
         <span className="flex-1" />
         <Button variant="secondary" onClick={() => window.print()} disabled={!shown || shown.urls.length < shown.count}>
           <PrinterIcon /> Print

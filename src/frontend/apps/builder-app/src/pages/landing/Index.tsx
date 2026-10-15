@@ -27,12 +27,13 @@ function LandingTile({
     <>
       <Link
         to={url}
-        className={`block h-full relative overflow-hidden rounded-xl group border-4 border-double shadow-lg ${enabled ? "" : "pointer-events-none"} `}
+        className={`block h-full relative overflow-hidden rounded-xl group border border-border bg-[#101827] shadow-sm ${enabled ? "" : "pointer-events-none"} `}
       >
         {image ? (
           <img
             src={image}
-            alt={title}
+            alt=""
+            onError={(event) => { event.currentTarget.hidden = true; }}
             className={`absolute inset-0 w-full h-full object-cover transition-transform duration-500 scale-100 group-hover:scale-105 ${
               enabled ? "" : "grayscale-85 group-hover:grayscale-0 "
             }`}
@@ -41,7 +42,7 @@ function LandingTile({
           <div className="absolute inset-0 bg-linear-to-br from-muted to-background" />
         )}
 
-        <div className="absolute inset-0 bg-linear-to-tr from-black/40 group-hover:from-black/20 to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-tr from-black/80 group-hover:from-black/70 to-transparent" />
         {/* 
         <div className="absolute rounded-lg rotate-160 w-20 h-20 -top-7 -right-5 bg-accent shadow-2xl"></div>
         <SwordsIcon className="absolute  top-1 right-4 size-6 rotate-0 opacity-20 mt-2.5 ms-2.5" /> */}
@@ -108,10 +109,14 @@ export function LandingPage2() {
   return (
     <>
       <HourlyBackdrop />
-      <header className="mb-8 max-w-2xl">
-        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-starlights-purple-600 dark:text-starlights-purple-400">Your table's companion</p>
-        <h1 className="mt-2 font-heading text-4xl tracking-wide sm:text-5xl">Project Starlights</h1>
-        <p className="mt-3 text-muted-foreground sm:text-lg">Build characters, run campaigns, look anything up and play out every turn of a fight, all in one place.</p>
+      <header className="mb-8 grid items-center gap-6 sm:grid-cols-[minmax(0,22rem)_1fr]">
+        <h1 className="overflow-hidden rounded-2xl bg-[#0b1424] shadow-sm">
+          <img src="/branding/starlights-logo.webp" alt="Project Starlights" width={1000} height={750} fetchPriority="high" className="h-auto w-full" />
+        </h1>
+        <div className="max-w-xl">
+          <p className="text-sm font-semibold uppercase tracking-widest text-primary-text">Your table's companion</p>
+          <p className="mt-3 text-lg text-muted-foreground">Build characters, run campaigns, look anything up and play out every turn of a fight, all in one place.</p>
+        </div>
       </header>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-5 sm:grid-rows-2 sm:h-[34rem]">

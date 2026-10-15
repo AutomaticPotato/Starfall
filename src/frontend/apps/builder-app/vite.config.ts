@@ -55,7 +55,8 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       port: parseInt(nodeEnv.PORT || "55052"),
-      open: true,
+      host: "127.0.0.1",
+      open: false,
     },
     define: {
       "import.meta.env.VITE_API_HTTPS": JSON.stringify(apiHttps),
