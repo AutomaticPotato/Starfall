@@ -35,3 +35,20 @@ export function spellChoiceGroups(choices: BuilderChoice[]): SpellChoiceGroup[] 
     .sort(([a], [b]) => rank(a) - rank(b))
     .map(([section, list]) => ({ title: GROUP_TITLES[section] ?? section, choices: list, open: list.filter((c) => !c.optional && !c.selected).length }));
 }
+
+/** A choice the character still has to make (an optional one, a god or an alignment, can stay empty). */
+export const isOpen = (c: BuilderChoice) => !c.optional && !c.selected;
+
+export type BuilderTab = "build" | "magic" | "equipment";
+
+/** The full builder's tab a choice is made on: spells on Magic, starting equipment on Equipment, the rest on Build. */
+export function tabOf(c: BuilderChoice): BuilderTab {
+  return c.type === "Spell" ? "magic" : c.section === "Equipment" ? "equipment" : "build";
+}
+
+/** The choices still to make on each tab of the full builder. */
+export function openByTab(choices: BuilderChoice[]): Record<BuilderTab, number> {
+  const out: Record<BuilderTab, number> = { build: 0, magic: 0, equipment: 0 };
+  for (const c of choices) if (isOpen(c)) out[tabOf(c)]++;
+  return out;
+}

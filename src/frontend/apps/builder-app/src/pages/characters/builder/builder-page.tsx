@@ -1,4 +1,4 @@
-import { ArrowLeftIcon, ChurchIcon, FileTextIcon, ImageIcon, InfoIcon, MinusIcon, PlusIcon, ScaleIcon, ScrollTextIcon, SparklesIcon, SwordsIcon, Trash2Icon, UserIcon, UsersIcon } from "lucide-react";
+import { ArrowDownIcon, ArrowLeftIcon, ChurchIcon, CircleAlertIcon, CircleCheckIcon, FileTextIcon, ImageIcon, InfoIcon, MinusIcon, PlusIcon, ScaleIcon, ScrollTextIcon, SparklesIcon, SwordsIcon, Trash2Icon, UserIcon, UsersIcon } from "lucide-react";
 import { useMemo, useRef, useState, type ComponentType, type ReactNode } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { SaveBar } from "./save-bar";
@@ -40,7 +40,7 @@ import { ExtrasCard } from "./extras-card";
 import { Wizard } from "./wizard";
 import { editionOf, switchEdition, useCharacterSources, useSetCharacterSources, useSources } from "@/lib/api/sources";
 import { EditionPicker } from "@/components/edition-picker";
-import { stepChoices } from "@/lib/rules/wizard-steps";
+import { isOpen, openByTab, stepChoices, type BuilderTab } from "@/lib/rules/wizard-steps";
 import { cn } from "@/lib/utils";
 
 const SECTION_ORDER = ["Class", "Species", "Background", "Alignment", "Deity"];
@@ -68,6 +68,7 @@ export function CharacterBuilderPage() {
   // spells are chosen on the Magic tab (as in Aurora), everything else on the Build tab
   const spellChoices = useMemo(() => stepChoices({ spells: true }, choicesData?.choices ?? []), [choicesData]);
   const openSpells = spellChoices.filter((c) => !c.optional && !c.selected).length;
+  const openTabs = useMemo(() => openByTab(choicesData?.choices ?? []), [choicesData]);
   const sections = useMemo(() => {
     const bySection = new Map<string, BuilderChoice[]>();
     for (const choice of (choicesData?.choices ?? []).filter((c) => c.type !== "Spell")) {
@@ -121,15 +122,22 @@ export function CharacterBuilderPage() {
         />
       ) : (
       <Tabs value={tab} onValueChange={setTab}>
+        <ToDoBar open={openTabs} loading={isLoading} tab={tab} setTab={setTab} />
         <div className="flex flex-wrap items-center gap-2">
         <TabsList className="max-w-full justify-start overflow-x-auto">
-          <TabsTrigger value="build">Build</TabsTrigger>
+          <TabsTrigger value="build">
+            Build
+            {openTabs.build > 0 && <span className="ms-1 rounded-full bg-amber-500/90 px-1.5 text-[11px] text-black">{openTabs.build}</span>}
+          </TabsTrigger>
           <TabsTrigger value="abilities">Abilities</TabsTrigger>
           <TabsTrigger value="magic">
             Magic
             {openSpells > 0 && <span className="ms-1 rounded-full bg-amber-500/90 px-1.5 text-[11px] text-black">{openSpells}</span>}
           </TabsTrigger>
-          <TabsTrigger value="equipment">Equipment</TabsTrigger>
+          <TabsTrigger value="equipment">
+            Equipment
+            {openTabs.equipment > 0 && <span className="ms-1 rounded-full bg-amber-500/90 px-1.5 text-[11px] text-black">{openTabs.equipment}</span>}
+          </TabsTrigger>
           <TabsTrigger value="story">Story</TabsTrigger>
           <TabsTrigger value="sources">Sources</TabsTrigger>
         </TabsList>
@@ -431,6 +439,58 @@ function ClassLevels({
   );
 }
 
+const TAB_NAMES: Record<BuilderTab, string> = { build: "Build", magic: "Magic", equipment: "Equipment" };
+
+/**
+ * What is still to choose, on top of the builder while it scrolls: how many on each tab, and a button that opens the
+ * tab with the next one, scrolls to it and makes it flash. "Everything is chosen" when nothing is left.
+ */
+function ToDoBar({ open, loading, tab, setTab }: { open: Record<BuilderTab, number>; loading: boolean; tab: string; setTab: (t: string) => void }) {
+  const next = useRef(0);
+  const total = open.build + open.magic + open.equipment;
+  if (loading) return null;
+  if (total === 0) {
+    return (
+      <p className="mb-3 flex items-center gap-2 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-800 dark:text-emerald-200">
+        <CircleCheckIcon className="size-4" /> Everything is chosen.
+      </p>
+    );
+  }
+  // each open choice of this tab once, then on to the next tab that has some
+  function showNext() {
+    const tabs = (["build", "magic", "equipment"] as BuilderTab[]).filter((t) => open[t] > 0);
+    const go = () => {
+      const rows = [...document.querySelectorAll<HTMLElement>('[role="tabpanel"][data-state="active"] [data-open-choice]')];
+      if (rows.length === 0) return;
+      const row = rows[next.current++ % rows.length];
+      row.scrollIntoView({ behavior: "smooth", block: "center" });
+      row.animate([{ boxShadow: "0 0 0 0 rgb(245 158 11 / 0.9)" }, { boxShadow: "0 0 0 10px rgb(245 158 11 / 0)" }], { duration: 900, iterations: 2 });
+    };
+    const here = tab as BuilderTab;
+    if (tabs.includes(here) && next.current < open[here]) return go();
+    const target = tabs[(tabs.indexOf(here) + 1) % tabs.length];
+    next.current = 0;
+    if (target === tab) return go();
+    setTab(target);
+    setTimeout(go, 250);
+  }
+  const parts = (["build", "magic", "equipment"] as BuilderTab[]).filter((t) => open[t] > 0).map((t) => `${TAB_NAMES[t]} ${open[t]}`);
+  return (
+    <div className="sticky top-16 z-20 mb-3 flex flex-wrap items-center gap-2 rounded-lg border border-amber-500/60 bg-background/95 px-3 py-2 shadow-md backdrop-blur">
+      <CircleAlertIcon className="size-4 shrink-0 text-amber-500" />
+      <span className="min-w-0 flex-1 text-sm">
+        <span className="font-semibold">
+          {total} {total === 1 ? "choice" : "choices"} still to make
+        </span>
+        <span className="text-muted-foreground"> · {parts.join(" · ")}</span>
+      </span>
+      <Button size="sm" className="bg-amber-500 text-black hover:bg-amber-400" onClick={showNext}>
+        <ArrowDownIcon /> Show me the next one
+      </Button>
+    </div>
+  );
+}
+
 function SectionCard({ section, choices, children }: { section: string; choices: BuilderChoice[]; children: ReactNode }) {
   const Icon = SECTION_ICONS[section] ?? SparklesIcon;
   const open = choices.filter((c) => !c.selected && !c.optional).length;
@@ -497,15 +557,28 @@ function ChoiceRow({
     choice.depth > 0 && !choice.name.includes(choice.parentName) ? `from ${choice.parentName}` : null,
   ].filter(Boolean);
 
+  // a choice still to make stands out (amber), so the player finds what is left; "Show me the next one" looks for it
+  const todo = isOpen(choice);
   return (
     <div
-      className={cn("flex flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-4", choice.depth > 0 && "border-l-2 pl-3")}
+      data-open-choice={todo || undefined}
+      className={cn(
+        "flex scroll-mt-40 flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-4",
+        choice.depth > 0 && "border-l-2 pl-3",
+        todo && "rounded-md border-l-4 border-amber-500 bg-amber-500/10 py-2 pe-2 ring-1 ring-amber-500/50",
+        todo && choice.depth === 0 && "ps-3",
+      )}
       style={choice.depth > 1 ? { marginLeft: `${(choice.depth - 1) * 1}rem` } : undefined}
     >
       {!hideLabel && (
         <div className="min-w-0 shrink-0 sm:w-60">
-          <div className="truncate text-sm font-medium" title={choice.name}>
-            {choice.name}
+          <div className="flex items-center gap-1.5 text-sm font-medium" title={choice.name}>
+            <span className="truncate">{choice.name}</span>
+            {todo && (
+              <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-500 px-1.5 text-[11px] font-semibold text-black">
+                <span className="size-1.5 animate-pulse rounded-full bg-black/70" /> To choose
+              </span>
+            )}
           </div>
           {meta.length > 0 && <div className="truncate text-xs text-muted-foreground">{meta.join(" · ")}</div>}
         </div>

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { BuilderChoice } from "@/lib/api/builder";
-import { spellChoiceGroups, stepChoices } from "./wizard-steps";
+import { isOpen, openByTab, spellChoiceGroups, stepChoices } from "./wizard-steps";
 
 const choice = (name: string, section: string, type: string, parentName = "", selected = false): BuilderChoice => ({
   ruleId: name,
@@ -67,5 +67,19 @@ describe("the Magic tab's spell picks", () => {
 
   it("has none for a character without spell choices", () => {
     expect(spellChoiceGroups([choice("Class", "Class", "Class")])).toEqual([]);
+  });
+});
+
+describe("what is still to choose", () => {
+  it("counts the open choices on each tab of the full builder, leaving out optional ones", () => {
+    const list = [
+      choice("Skill Proficiency (Bard)", "Class", "Proficiency"),
+      choice("Cantrip (Bard)", "Class", "Spell"),
+      choice("Spell (Bard)", "Class", "Spell", "Level 1: Spellcasting", true),
+      choice("Starting Equipment", "Equipment", "Item"),
+      { ...choice("Deity", "Deity", "Deity"), optional: true },
+    ];
+    expect(openByTab(list)).toEqual({ build: 1, magic: 1, equipment: 1 });
+    expect(list.filter(isOpen).map((c) => c.name)).toEqual(["Skill Proficiency (Bard)", "Cantrip (Bard)", "Starting Equipment"]);
   });
 });
