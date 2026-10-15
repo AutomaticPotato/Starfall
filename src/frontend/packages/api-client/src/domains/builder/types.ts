@@ -16,6 +16,21 @@ export type SelectionRuleOptionDataModel = {
   prerequisite?: string | null;
   /** False when the character does not meet its requirements yet (a plan for a higher level). */
   eligible?: boolean;
+  /** For a spell: its level (0 = cantrip), school and casting figures. */
+  spell?: SpellOptionDataModel | null;
+};
+
+export type SpellOptionDataModel = {
+  level: number;
+  school?: string | null;
+  castingTime?: string | null;
+  range?: string | null;
+  duration?: string | null;
+  components?: string | null;
+  concentration?: boolean;
+  ritual?: boolean;
+  /** The spell lists it is on ("Wizard", "Cleric"). */
+  lists?: string[];
 };
 
 // --- Registrations ---

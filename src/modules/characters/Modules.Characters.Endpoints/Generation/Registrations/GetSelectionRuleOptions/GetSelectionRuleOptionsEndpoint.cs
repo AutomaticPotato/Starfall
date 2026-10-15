@@ -108,6 +108,9 @@ public sealed class GetSelectionRuleOptionsEndpoint : EndpointWithoutRequest<Get
             .ThenBy(o => o.Element.Source)
             .ToList();
 
+        // a spell's level, school and casting figures, so the player can read and filter the list before picking
+        var spells = string.Equals(selectionRule.ElementType, "Spell", StringComparison.OrdinalIgnoreCase) ? await _spells.GetAsync(ct) : null;
+
         var response = new GetSelectionRuleOptionsResponse
         {
             Options = options.ConvertAll(o => new SelectionRuleOptionModel
@@ -117,6 +120,20 @@ public sealed class GetSelectionRuleOptionsEndpoint : EndpointWithoutRequest<Get
                 Source = o.Element.Source == "Internal" ? null : o.Element.Source,
                 Prerequisite = string.IsNullOrWhiteSpace(o.Element.Prerequisite) ? null : o.Element.Prerequisite,
                 Eligible = o.Eligible,
+                Spell = spells?.Find(o.Element.Id) is { } spell
+                    ? new SpellOptionModel
+                    {
+                        Level = spell.Level,
+                        School = spell.School,
+                        CastingTime = spell.CastingTime,
+                        Range = spell.Range,
+                        Duration = spell.Duration,
+                        Components = spell.Components,
+                        Concentration = spell.Concentration,
+                        Ritual = spell.Ritual,
+                        Lists = spell.Lists,
+                    }
+                    : null,
             })
         };
 

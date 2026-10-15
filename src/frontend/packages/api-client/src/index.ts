@@ -74,6 +74,7 @@ export type {
   RegistrationModel,
   SelectionRuleDataModel,
   SelectionRuleOptionDataModel,
+  SpellOptionDataModel,
   StatisticGroupDataModel,
   StatisticValueDataModel,
   UnregisterSelectionRequest,

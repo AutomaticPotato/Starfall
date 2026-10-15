@@ -5,6 +5,7 @@ import { SaveBar } from "./save-bar";
 import { toast } from "sonner";
 import { ElementPanel } from "@/components/element-panel";
 import { SearchSelect } from "@/components/search-select";
+import { SPELL_FACETS, spellDetails, spellFacets, spellHint, spellKind } from "@/lib/rules/option-filters";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
@@ -545,11 +546,23 @@ function ChoiceRow({
       optionsQuery.data?.options.map((o) => ({
         id: o.elementId,
         name: o.name,
-        hint: [o.eligible === false ? `Needs ${o.prerequisite || "something you don't have yet"}` : o.prerequisite, o.source].filter(Boolean).join(" · "),
+        // a spell's line says what it is (level, school, concentration, ritual); filters and the details strip read the rest
+        hint: [
+          o.spell ? spellHint(o.spell) : null,
+          o.eligible === false ? `Needs ${o.prerequisite || "something you don't have yet"}` : o.prerequisite,
+          o.source,
+        ]
+          .filter(Boolean)
+          .join(" · "),
         disabled: o.eligible === false,
+        facets: o.spell ? spellFacets(o.spell) : undefined,
+        kind: o.spell ? spellKind(o.spell) : null,
+        details: o.spell ? spellDetails(o.spell) : undefined,
+        needs: o.prerequisite ?? (o.eligible === false ? "something you don't have yet" : null),
       })),
     [optionsQuery.data],
   );
+  const facets = useMemo(() => (optionsQuery.data?.options.some((o) => o.spell) ? SPELL_FACETS : undefined), [optionsQuery.data]);
 
   const meta = [
     choice.slots > 1 ? `${choice.slot} of ${choice.slots}` : null,
@@ -589,6 +602,7 @@ function ChoiceRow({
           valueLabel={choice.selected?.name}
           valueHint={choice.selected?.source}
           options={options}
+          facets={facets}
           loading={optionsQuery.isLoading}
           placeholder={`Choose ${placeholderOf(choice)}…`}
           disabled={busy}
