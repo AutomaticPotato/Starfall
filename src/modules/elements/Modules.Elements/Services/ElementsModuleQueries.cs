@@ -152,4 +152,14 @@ internal class ElementsModuleQueries : IElementsModuleQueries
         var elements = await repository.GetElementsByIdsAsync(elementIds);
         return elements.ConvertAll(e => e.AsElementDataModel());
     }
+
+    public async Task<IReadOnlyDictionary<string, string>> GetSourceGroups()
+    {
+        var rows = await _persistence.GetRepository<IElementsRepository>().GetAuroraSourcesAsync();
+        // as the sources list (GetSourcesEndpoint): a book belongs to the folder most of its elements come from
+        return rows
+            .Where(r => !string.IsNullOrWhiteSpace(r.Source))
+            .GroupBy(r => r.Source!)
+            .ToDictionary(g => g.Key, g => g.GroupBy(r => r.File.Split('/')[0]).OrderByDescending(f => f.Count()).First().Key, StringComparer.OrdinalIgnoreCase);
+    }
 }

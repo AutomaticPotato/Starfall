@@ -69,4 +69,10 @@ public interface IElementsModuleQueries
     /// a character gaining a rule for one of them must be worked out again.
     /// </summary>
     Task<IReadOnlySet<string>> GetStatisticsReferencedByRequirements();
+
+    /// <summary>
+    /// Each source book's group, the content repository's top folder most of its elements come from (core,
+    /// supplements, unearthed-arcana, homebrew, …), as the sources list shows them.
+    /// </summary>
+    Task<IReadOnlyDictionary<string, string>> GetSourceGroups();
 }
