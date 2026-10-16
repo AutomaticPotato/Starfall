@@ -24,6 +24,10 @@
 2. **Browser checks blocked:** Vite listen on `127.0.0.1:55162` fails `EPERM`; Chromium exits at `sandbox_host_linux.cc:41` with `shutdown: Operation not permitted`. `tools/frontend/custom-attacks.mjs` is prepared and syntax checked, but **not executed**. In a browser-capable environment start isolated Vite on 55162; run it with `PLAYWRIGHT_MODULE=/home/chassapis/.cache/starlights-test/pw/node_modules/playwright/index.mjs`. It intercepts synthetic APIs and covers 320/390/1440px edits, failure/retry, keyboard ordering and delete/reload. Also verify real disposable API Save/Discard, Aurora reimport, interactive sheet and PDF download. No visual or end-to-end pass is claimed.
 3. **GitHub blocked:** Git cannot resolve `github.com`; `gh auth status` reports invalid credentials for CHassapis. Restore network/DNS and authenticate an account with repository administration permission. No callable connected GitHub repository-rename action is available here.
 
+## Local delivery
+
+Implementation commit: `a944c0c` on `feature/starfall-custom-attacks`. An explicit `git push mine HEAD:refs/heads/feature/starfall-custom-attacks` failed with `Could not resolve host: github.com`; no push succeeded. The working tree was clean after the implementation commit. This documentation follow-up records that outcome.
+
 ## Finish after verification
 
 - Inspect all worktree statuses and fetch the latest fork branch. Preserve concurrent work; merge this feature branch into the then-current `aurora-server` without resetting or force-pushing. Rerun checks if integration changes code.
