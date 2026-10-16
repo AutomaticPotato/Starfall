@@ -1,5 +1,9 @@
 # Project Starlights
 
+**v0.10.0 public beta: release preparation, not yet published.** The independent release check found remaining
+backend, browser, dependency and asset-permission blockers. See the [verification report](docs/ai/V0_10_0_VERIFICATION.md)
+for results and the [draft release notes](docs/releases/v0.10.0.md). Development is in maintenance mode.
+
 > **About this fork (branch `aurora-server`).** A self-hosted build of Project Starlights by C Hassapis, packaged to
 > run in Docker for a D&D group. All credit for Starlights and Aurora Builder goes to their creator, **Bas Driessen**
 > ([swdriessen/starlights](https://github.com/swdriessen/starlights), [aurorabuilder.com](https://www.aurorabuilder.com)).
@@ -22,6 +26,13 @@
   (packages or gold) and spells, one step at a time, with a skip to the full builder.
 - **Character sheets like Aurora's**, on screen and as PDF, built in (nothing to copy from Aurora), with the portrait
   sized and placed as you like and a last page showing the whole picture; bring in players' Aurora character files.
+- **Interactive play sheet** shares hit points, conditions, rests, equipment and spell preparation with Battle.
+  Aurora imports retain custom attacks, their written figures and display order in the sheet, PDF and Battle.
+  Unarmored armor class also recognizes Aurora's natural-armor calculations, including an autognome's Armored Casing.
+- **Portable characters**: export and import a Starlights character file between installations with matching content.
+  See [character portability](docs/character-portability.md) for compatibility requirements.
+- **Porcelain, Slate and Midnight themes**, responsive navigation and searchable, paginated spell cards.
+  Verified identical printings from the same rules edition share a choice; different editions and homebrew stay separate.
 - **Builder**: multiclassing, 2014 and 2024 rules (or both), Save / Discard, items that cast spells, extra feats,
   languages and proficiencies. Each option in a choice says what it needs ("Artificer Level 6+"); the ones a character
   doesn't qualify for yet are greyed out at the end of the list.
@@ -35,8 +46,10 @@
   all of it as one file.
 - **Encounters run as fights**: initiative, turns, monster hit points (hidden from players), and the party's hit points,
   armor class (magic items included), passive Perception and conditions straight from their simulators.
+- **Encounter difficulty** compares 2014 and 2024 results separately, with an optional, labelled magic-item estimate.
+  Campaign sessions have search and collapsible navigation.
 - **Trading**: players give each other items and coins from their Equipment tab.
-- **Homebrew page**: make magic items (weapons can have their own damage dice) and monsters in a form, or upload Aurora
+- **Homebrew page**: make magic items (weapons can have their own damage dice), monsters, spells, subclasses and classes in forms, or upload Aurora
   element files. Homebrew is off by default: a player ticks it in a character's Sources, and a DM switches on
   "Use homebrew" in a campaign's settings.
 - **Compendium of Lore**: the books, creatures, spells and items from the 5etools data, linkable from campaigns.
@@ -53,8 +66,12 @@ The full, step-by-step guide is **[docs/installation.md](docs/installation.md)**
     no Windows on ARM.
   - **4 GB of RAM** for Docker (8 GB recommended) and **at least 10 GB free disk** (20 GB recommended).
 - **Linux** (Ubuntu or Debian) with Docker Engine and its Compose plugin, or **Windows** with WSL2 and Docker Desktop.
-  `git` and `python3` in Linux/WSL. Your user must be able to run `docker info` without sudo.
+  `git`, `python3` and `curl` in Linux/WSL. Your user must be able to run `docker info` without sudo.
 - An internet connection for the first setup (the Docker images and about 200 MB of content).
+
+The Docker build supplies Node.js and .NET; they are not required on the host. Windows/WSL2 installation and a full
+content download through the installer still require independent validation. See [installation requirements and
+validation status](docs/installation.md) before installing.
 
 ### Linux
 
@@ -134,7 +151,7 @@ The export holds your DM notes: keep it private. Starlights can't import it yet;
 
 ### Homebrew
 
-On the **Homebrew** page (admin password needed) make magic items and monsters with a form, or upload Aurora element
+On the **Homebrew** page (admin password needed) make magic items, monsters, spells, subclasses and classes with forms, or upload Aurora element
 files (`.xml`) for classes, species, backgrounds and anything else. Homebrew starts switched off everywhere:
 
 - a player ticks the homebrew book in their character's **Sources** tab to use it in the builder;
@@ -296,6 +313,28 @@ Other programs can read your group's characters from a Starlights server: the we
 
 Keep the server on your private network; the documentation lives here, not on the server.
 
+## Verification and beta limitations
+
+The release worktree passes **234 frontend tests**, including the optional real-content checks, and the full frontend
+build. The installer has **39 passing contract tests**. All 19 bundled PDF templates parse; a synthetic character
+exports through the real PDF generator. These checks do not establish end-to-end backend or browser correctness.
+The release fix supports both legacy and wrapped 5etools book/adventure files; its matching backend organization-reader
+change still needs compilation and tests. Full evidence and commands are in the [verification report](docs/ai/V0_10_0_VERIFICATION.md).
+
+- Backend/integration tests, the intermittent JSON serializer failure, SQL persistence and browser journeys remain
+  release gates. The current environment cannot run .NET, Docker, a local web server or Chromium.
+- Builds used cached dependencies. A clean `npm ci`, current dependency vulnerability audits and verification of
+  the exact release commit in CI are still required. Existing lint debt is 38 errors and one warning.
+- Homebrew saving needs a completed initial content import. Custom classes do not implement Mystic Arcanum,
+  third-casters or custom resource pools. Simultaneous builder/Battle edits can leave charge displays stale.
+- Custom attack figures stay as written; they are not recalculated on level-up. The API exposes the ingredients for
+  weapon attacks, not finished attack totals. The API guide documents missing query metadata and some inaccurate
+  content-administration response codes in the OpenAPI description.
+- Campaign exports are readable archives; campaign import is not implemented. Character imports require matching
+  books and homebrew. Windows/WSL2 and exhaustive class/content/accessibility coverage are not certified.
+- The software's MIT licence does not establish redistribution rights for third-party artwork or sheet logos.
+  The unresolved assets are listed in the release report; public release is held pending their resolution.
+
 ## Credits and legal
 
 - [Project Starlights](https://github.com/swdriessen/starlights) and [Aurora Builder](https://www.aurorabuilder.com) by
@@ -334,7 +373,7 @@ This project uses .NET Aspire for local orchestration. You can run it using Visu
 ### Prerequisites
 
 - .NET 10 SDK
-- Node.js 20.19+
+- Node.js 22.19+ or a supported Node.js 24 release; install the locked workspace dependencies with `npm ci`
 - Docker Desktop (or compatible container runtime)
 - Visual Studio (recent version) or Visual Studio Code
 
@@ -382,6 +421,18 @@ To run all tests, execute the following command in the root directory:
 ```bash
 dotnet test
 ```
+
+Frontend checks, from `src/frontend`:
+
+```bash
+npm ci
+npm run build
+npm run test -w apps/builder-app
+npm run lint
+```
+
+Set `LORE_SRC` to a complete local 5etools source checkout to include the five real-content tests. Keep all test
+databases, content and browser fixtures separate from production. Never run deployment scripts as tests.
 
 ## Architecture
 

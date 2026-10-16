@@ -1,5 +1,12 @@
 # Project status
 
+## Current release gate — 2026-10-16
+
+**Maintenance mode; v0.10.0 not published.** The later `aurora-server` baseline `ec3b83f` includes the frontend,
+homebrew, security, installation, portability, API and AC work described below. Earlier integration instructions
+and totals are historical. See [independent release verification](V0_10_0_VERIFICATION.md) and
+[final handoff](FINAL_HANDOFF.md) for the current candidate, passing checks and unresolved blockers.
+
 ## Existing systems
 Character creation/guided builder, registration progression, multiclassing, 2014/2024 sources, equipment, spellcasting/preparation, Aurora imports/PDF, campaigns, combat/action simulation, lore imports, player locks, snapshots and Docker packaging.
 

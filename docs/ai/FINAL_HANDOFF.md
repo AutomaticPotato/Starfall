@@ -1,6 +1,13 @@
 # Starlights — final handoff (maintenance mode)
 
-Release of 2026-10-16: the `aurora-server` commit that adds this file (`git log -1 -- docs/ai/FINAL_HANDOFF.md`).
+**v0.10.0 release check, 2026-10-16: HOLD — no tag or GitHub release published.**
+Independent verification and the remaining gates are in [V0_10_0_VERIFICATION.md](V0_10_0_VERIFICATION.md).
+Local candidate: `release/v0.10.0`, based on remote/local `ec3b83f`; compatibility fix `e718fad`.
+234 frontend tests and the full frontend build pass; 39 installer tests pass; a synthetic PDF exports.
+Backend/integration tests (including the serializer failure), SQL/browser journeys, clean dependency audits,
+exact-commit CI and bundled-asset permissions remain open. The backend compatibility patch is uncompiled/untested.
+No production access, deployment, merge or push occurred. [Release notes](../releases/v0.10.0.md) remain a draft.
+
 Development is closed; from here: bug fixes and live-play improvements, one small mission at a time
 (`docs/ai/DEVELOPMENT_DIRECTIVE.md`). Read this, then only the skill for the subject.
 
@@ -48,6 +55,8 @@ show the exact changes; write live data only after approval. Rules and book look
 - Saving homebrew errors on an install whose content was never imported (`--skip-content`).
 - GitHub Actions: pushes have not triggered CI (run it with Actions → Run workflow); one backend integration test
   (`ReorderElementRulesEndpointTests`) fails intermittently on parallel host start-up.
+- The serializer/startup race remains an investigation lead, not a confirmed diagnosis or fix. No CI runs were
+  returned for the verified remote baseline. See the release report before making a release-readiness claim.
 - Windows/WSL2 install and the PowerShell launcher are unverified on real Windows.
 - Licensing open: upstream art in `public/images`, D&D logos on the Aurora sheet templates, the watermarked Tasha
   homebrew tile picture (outside git) — the owner decides.

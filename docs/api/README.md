@@ -13,6 +13,8 @@ from a Starlights server your group runs.
 
 Nothing here needs a public server. A Starlights server is meant for a private network (your LAN, Tailscale); the
 description is in this repository, and a production server does not serve it.
+GitHub displays `index.html` as source: serve `docs/api` locally to use Scalar. Its pinned JavaScript bundle loads
+from jsDelivr, so that viewer needs internet access; the JSON description and guide can be read offline.
 
 ## Reaching a server
 
@@ -156,10 +158,12 @@ needed), and the same test fails when the endpoints change and the file does not
 
 ```bash
 # regenerate (from the repository root)
-STARLIGHTS_UPDATE_OPENAPI=1 dotnet test src/tests/integration/Starlights.Integration.Tests --filter FullyQualifiedName~OpenApiDocument
+STARLIGHTS_UPDATE_OPENAPI=1 dotnet test --project src/tests/integration/Starlights.Integration.Tests --filter FullyQualifiedName~OpenApiDocument
 # check (part of the normal test run; the GitHub workflow runs it when started by hand)
-dotnet test src/tests/integration/Starlights.Integration.Tests --filter FullyQualifiedName~OpenApiDocument
+dotnet test --project src/tests/integration/Starlights.Integration.Tests --filter FullyQualifiedName~OpenApiDocument
 ```
+
+The `--project` option follows the .NET 10 Microsoft.Testing.Platform runner selected in `global.json`.
 
 In development (`dotnet run` / Aspire) the server also serves it live at `/openapi/v1.json` with Scalar at
 `/scalar`.
