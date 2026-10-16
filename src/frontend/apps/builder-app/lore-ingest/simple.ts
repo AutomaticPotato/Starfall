@@ -182,7 +182,10 @@ export function ingestSimple(ctx: Context, root: string) {
 export function ingestSpecies(ctx: Context) {
   const problem = (m: string) => ctx.report.problem(`species ${m}`);
   const { list: races, json } = readList(ctx, "races.json", "race");
-  const subraces = Array.isArray(json.subrace) ? (json.subrace as Json[]) : [];
+  // a subrace can be a copy of another (Amonkhet is the PHB human Variant, changed), taking its race from it; it is
+  // known by its race as well as its name ("Variant" is a subrace of more than one race)
+  const subKey = (e: Json) => `${keyOf(e)}|${entryKey(str(e.raceName) ?? "", str(e.raceSource) ?? "")}`;
+  const subraces = resolveCopies(Array.isArray(json.subrace) ? (json.subrace as Json[]) : [], subKey, { problem });
   const resolved = resolveCopies(races, keyOf, { problem });
   const all: Json[] = [...resolved, ...resolved.flatMap((r) => (r._versions ? expandVersions(r, { problem }) : []))];
   const byKey = new Map(resolved.map((r) => [keyOf(r), r]));
