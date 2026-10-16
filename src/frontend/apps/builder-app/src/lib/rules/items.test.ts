@@ -4,6 +4,7 @@ import {
   armorClass,
   attacks,
   attunementMax,
+  auroraAttackList,
   sheetAttacks,
   displayName,
   equipProblems,
@@ -371,5 +372,80 @@ describe("grouping for the Equipment tab", () => {
     expect(byId.get("p")).toMatchObject({ contents: 10, capacity: 30, away: false });
     expect(byId.get("c")).toMatchObject({ contents: 10, away: true });
     expect(byId.get("b")).toMatchObject({ contents: 0, capacity: 500, away: true });
+  });
+});
+
+// Aurora's Manage → Attacks: an attack written by hand that no item stands behind (synthetic figures)
+describe("custom attacks", () => {
+  const proficient = ["ID_PROFICIENCY_WEAPON_PROFICIENCY_MARTIAL_WEAPONS", "ID_PROFICIENCY_WEAPON_PROFICIENCY_SIMPLE_WEAPONS"];
+  const armorAttack = {
+    id: "6f1d2c3b-0000-4000-8000-000000000001",
+    name: "Thunder Gauntlets",
+    range: "5 ft",
+    toHit: "+6 vs AC",
+    damage: "1d8+3 thunder",
+    ability: "Intelligence",
+    description: "Guardian armor: the target has disadvantage on attacks against others.",
+  };
+  // an artificer with a longsword on the attack list (place 1) and the armor attack after it (place 2)
+  const artificer = (): Inventory => ({
+    ...inv(entry("sword", "longsword", { equipped: "Main Hand", attack: 1 }), entry("plate", "breastplate", { equipped: "Armor" })),
+    customAttacks: [{ ...armorAttack, place: 2 }],
+  });
+
+  it("shows an artificer's armor attack that no item stands behind, figures as written", () => {
+    const rows = sheetAttacks(artificer(), catalog, facts({ STR: 14, INT: 16 }, {}, proficient));
+    expect(rows.map((a) => a.name)).toEqual(["Longsword", "Thunder Gauntlets"]);
+    expect(rows[1]).toMatchObject({ custom: true, range: "5 ft", attack: "+6 vs AC", toHit: 6, damage: "1d8+3 thunder", entryId: `custom:${armorAttack.id}` });
+    expect(rows[1].properties).toEqual([armorAttack.description]);
+  });
+
+  it("keeps the weapon worked out from the item next to it", () => {
+    const [sword] = sheetAttacks(artificer(), catalog, facts({ STR: 14 }, {}, proficient));
+    expect(sword).toMatchObject({ attack: "+5 vs AC", damage: "1d8+2 slashing" });
+    expect(sword.custom).toBeUndefined();
+  });
+
+  it("follows Aurora's order when the custom attack comes first", () => {
+    const first = { ...artificer(), customAttacks: [{ ...armorAttack, place: 1 }], items: [entry("sword", "longsword", { equipped: "Main Hand", attack: 2 })] };
+    expect(sheetAttacks(first, catalog, facts({})).map((a) => a.name)).toEqual(["Thunder Gauntlets", "Longsword"]);
+  });
+
+  it("adds custom attacks after the equipped weapons when nothing has a place", () => {
+    const unplaced: Inventory = { ...inv(entry("d", "dagger", { equipped: "Main Hand" })), customAttacks: [{ ...armorAttack }] };
+    expect(sheetAttacks(unplaced, catalog, facts({})).map((a) => a.name)).toEqual(["Dagger", "Thunder Gauntlets"]);
+    expect(sheetAttacks({ ...inv(), customAttacks: [armorAttack] }, catalog, facts({})).map((a) => a.name)).toEqual(["Thunder Gauntlets"]);
+  });
+});
+
+describe("Aurora's attack list on import", () => {
+  const dagger = { identifier: "item-dagger", name: "Dagger", range: "20/60", attack: "+7 vs AC", damage: "1d4+4 piercing", ability: "Dexterity", description: "Finesse, Light, Thrown" };
+  // a custom attack as Aurora writes it: no item has its identifier, and no ability attribute
+  const gauntlets = { identifier: "custom-1", name: "Thunder Gauntlets", range: "5 ft", attack: "+6 vs AC", damage: "1d8+3 thunder", description: "Guardian armor" };
+
+  it("numbers every displayed attack and keeps only the ones without an item as custom attacks", () => {
+    const { places, customAttacks } = auroraAttackList([dagger, gauntlets], new Set(["item-dagger"]));
+    expect([...places]).toEqual([["item-dagger", 1], ["custom-1", 2]]);
+    expect(customAttacks).toEqual([
+      { id: "custom-1", name: "Thunder Gauntlets", range: "5 ft", toHit: "+6 vs AC", damage: "1d8+3 thunder", ability: null, description: "Guardian armor", place: 2 },
+    ]);
+  });
+
+  it("adds nothing twice when the same file comes in again, and updates the figures", () => {
+    const once = auroraAttackList([dagger, gauntlets], new Set(["item-dagger"])).customAttacks;
+    const again = auroraAttackList([dagger, { ...gauntlets, damage: "2d8+3 thunder" }], new Set(["item-dagger"]), once).customAttacks;
+    expect(again).toHaveLength(1);
+    expect(again[0].damage).toBe("2d8+3 thunder");
+  });
+
+  it("keeps the attack of a weapon that did not come in, and leaves out hidden ones", () => {
+    const { places, customAttacks } = auroraAttackList([{ ...dagger, displayed: false }, dagger, gauntlets], new Set());
+    expect(customAttacks.map((a) => [a.name, a.place])).toEqual([["Dagger", 1], ["Thunder Gauntlets", 2]]);
+    expect(places.size).toBe(2);
+  });
+
+  it("keeps custom attacks added before that this file does not have", () => {
+    const stored = [{ id: "older", name: "Bite", toHit: "+4 vs AC", damage: "1d6+2 piercing", place: 3 }];
+    expect(auroraAttackList([gauntlets], new Set(), stored).customAttacks.map((a) => a.name)).toEqual(["Bite", "Thunder Gauntlets"]);
   });
 });

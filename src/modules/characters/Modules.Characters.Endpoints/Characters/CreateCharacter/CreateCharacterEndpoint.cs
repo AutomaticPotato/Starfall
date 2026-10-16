@@ -1,4 +1,5 @@
 ﻿using FastEndpoints;
+using Microsoft.AspNetCore.Http;
 using Starlights.Modules.Characters.Data;
 using Starlights.Modules.Characters.Domain;
 using Starlights.Modules.Characters.Domain.Appearances;
@@ -31,6 +32,8 @@ public sealed class CreateCharacterEndpoint : Endpoint<CreateCharacterRequest, C
         Post("");
         Group<CharactersGroup>();
         AllowAnonymous();
+        // it answers 201 Created (for the API description)
+        Description(b => b.ClearDefaultProduces().Produces<CreateCharacterResponse>(StatusCodes.Status201Created, "application/json"));
     }
 
     public override async Task HandleAsync(CreateCharacterRequest req, CancellationToken ct)

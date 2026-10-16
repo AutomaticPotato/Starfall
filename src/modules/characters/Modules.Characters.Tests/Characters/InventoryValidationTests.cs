@@ -69,4 +69,47 @@ public class InventoryValidationTests
         new CharacterInventory { Items = [Item("sword") with { Attack = 0 }] }.Validate().Should().NotBeNull();
         new CharacterInventory { Items = [Item("sword") with { Attack = 101 }] }.Validate().Should().NotBeNull();
     }
+
+    // an artificer's armor attack added by hand in Aurora (Manage → Attacks): no item stands behind it
+    private static CustomAttack ArmorAttack(string id = "a1") => new()
+    {
+        Id = id, Name = "Thunder Gauntlets", Range = "5 ft", ToHit = "+6 vs AC", Damage = "1d8+3 thunder", Ability = "Intelligence", Place = 2,
+    };
+
+    [TestMethod]
+    public void ACustomAttack_WithoutAnItem_IsValid()
+    {
+        new CharacterInventory { Items = [Item("sword") with { Attack = 1 }], CustomAttacks = [ArmorAttack()] }.Validate().Should().BeNull();
+        new CharacterInventory { CustomAttacks = [] }.Validate().Should().BeNull();
+    }
+
+    [TestMethod]
+    public void CustomAttacks_NeedANameAnIdOfTheirOwnAndSensibleSizes()
+    {
+        new CharacterInventory { CustomAttacks = [ArmorAttack() with { Name = " " }] }.Validate().Should().Contain("without a name");
+        new CharacterInventory { CustomAttacks = [ArmorAttack(), ArmorAttack()] }.Validate().Should().Contain("its own id");
+        new CharacterInventory { CustomAttacks = [ArmorAttack("")] }.Validate().Should().Contain("Thunder Gauntlets");
+        new CharacterInventory { CustomAttacks = [ArmorAttack() with { Damage = new string('d', 201) }] }.Validate().Should().NotBeNull();
+        new CharacterInventory { CustomAttacks = [ArmorAttack() with { Place = 0 }] }.Validate().Should().NotBeNull();
+        new CharacterInventory { CustomAttacks = [.. Enumerable.Range(0, 101).Select(i => ArmorAttack($"a{i}"))] }.Validate().Should().StartWith("At most 100 attacks");
+    }
+
+    [TestMethod]
+    public void ASaveThatLeavesCustomAttacksOut_KeepsTheStoredOnes_AndAnEmptyListRemovesThem()
+    {
+        var stored = new CharacterInventory { CustomAttacks = [ArmorAttack()] };
+        var web = new System.Text.Json.JsonSerializerOptions(System.Text.Json.JsonSerializerDefaults.Web);
+
+        // the body of a client that does not know custom attacks (the Equipment tab of an older app)
+        var older = System.Text.Json.JsonSerializer.Deserialize<CharacterInventory>("""{"revision":3,"items":[],"coins":{"gp":4}}""", web)!;
+        older.CustomAttacks.Should().BeNull("a missing field must be told apart from an empty list");
+        older.KeepingCustomAttacksOf(stored).CustomAttacks.Should().Equal(stored.CustomAttacks);
+        older.KeepingCustomAttacksOf(stored).Coins["gp"].Should().Be(4);
+
+        var cleared = System.Text.Json.JsonSerializer.Deserialize<CharacterInventory>("""{"revision":3,"items":[],"coins":{},"customAttacks":[]}""", web)!;
+        cleared.KeepingCustomAttacksOf(stored).CustomAttacks.Should().BeEmpty();
+
+        var edited = new CharacterInventory { CustomAttacks = [ArmorAttack() with { Damage = "2d8+3 thunder" }] };
+        edited.KeepingCustomAttacksOf(stored).CustomAttacks!.Single().Damage.Should().Be("2d8+3 thunder");
+    }
 }

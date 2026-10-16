@@ -115,6 +115,23 @@ export interface Inventory {
   coins: Partial<Record<Coin, number>>;
   treasure?: string | null;
   questItems?: string | null;
+  /** attacks no item stands behind (Aurora's Manage → Attacks); left out of a save, the server keeps them */
+  customAttacks?: CustomAttack[] | null;
+}
+
+/** An attack written by hand, kept as written: an artificer's armor attack, a natural weapon. */
+export interface CustomAttack {
+  /** Aurora's identifier of the attack */
+  id: string;
+  name: string;
+  range?: string | null;
+  /** "+7 vs AC" */
+  toHit?: string | null;
+  damage?: string | null;
+  ability?: string | null;
+  description?: string | null;
+  /** its place in the attack list, numbered together with the entries' `attack` */
+  place?: number | null;
 }
 
 export type Catalog = ReadonlyMap<string, ItemInfo>;
@@ -420,6 +437,8 @@ export interface Attack {
   damage: string;
   properties: string[];
   proficient: boolean;
+  /** written by hand (a custom attack): its figures are shown as written, not worked out */
+  custom?: boolean;
 }
 
 const sign = (n: number) => (n >= 0 ? `+${n}` : `${n}`);
@@ -614,19 +633,90 @@ export function attackModes(inventory: Inventory, catalog: Catalog, c: Character
   return out;
 }
 
+/** A custom attack as an attack row, its figures as written. */
+export function customAttackRow(a: CustomAttack): Attack {
+  const toHit = (a.toHit ?? "").replace(/−/g, "-").match(/[+-]?\d+/);
+  return {
+    entryId: `custom:${a.id}`,
+    name: a.name,
+    range: a.range ?? "",
+    toHit: toHit ? Number(toHit[0]) : 0,
+    attack: a.toHit ?? "",
+    damage: a.damage ?? "",
+    properties: a.description ? [a.description] : [],
+    proficient: true,
+    custom: true,
+  };
+}
+
 /**
- * The sheet's attack rows: the weapons the player put on the attack list (Aurora's displayed attacks), in that
- * order; when none are listed, the equipped weapons, each name once.
+ * The sheet's attack rows: the weapons the player put on the attack list (Aurora's displayed attacks) and the
+ * custom attacks, in the list's order; when nothing has a place, the equipped weapons (each name once), then the
+ * custom attacks. Weapons are worked out from the item; custom attacks keep their written figures.
  */
 export function sheetAttacks(inventory: Inventory, catalog: Catalog, c: CharacterFacts): Attack[] {
   const all = new Map(attacks(inventory, catalog, c).map((a) => [a.entryId, a]));
-  const listed = inventory.items.filter((e) => e.attack).sort((a, b) => a.attack! - b.attack!);
-  if (listed.length > 0) return listed.map((e) => all.get(e.id)).filter((a): a is Attack => !!a);
+  const custom = inventory.customAttacks ?? [];
+  const listed = inventory.items.filter((e) => e.attack);
+  if (listed.length > 0 || custom.some((a) => a.place)) {
+    const placed = [
+      ...listed.map((e) => ({ place: e.attack!, row: all.get(e.id) })),
+      ...custom.map((a) => ({ place: a.place ?? Number.MAX_SAFE_INTEGER, row: customAttackRow(a) })),
+    ];
+    return placed.sort((a, b) => a.place - b.place).map((p) => p.row).filter((a): a is Attack => !!a);
+  }
   const seen = new Set<string>();
-  return inventory.items
+  const equipped = inventory.items
     .filter((e) => e.equipped)
     .map((e) => all.get(e.id))
     .filter((a): a is Attack => !!a && !seen.has(a.name) && !!seen.add(a.name));
+  return [...equipped, ...custom.map(customAttackRow)];
+}
+
+/** An `<attack>` of an Aurora character file (build > input > attacks), as read from its attributes. */
+export interface AuroraAttack {
+  identifier: string;
+  name: string;
+  range?: string | null;
+  attack?: string | null;
+  damage?: string | null;
+  ability?: string | null;
+  description?: string | null;
+  displayed?: boolean;
+}
+
+/**
+ * Aurora's attack list as Starlights keeps it. Each displayed attack gets its place (1, 2, …); the ones an
+ * inventory entry stands behind (same identifier) become that entry's place, the rest custom attacks with their
+ * figures as written, merged into those already stored by identifier (importing twice adds nothing twice).
+ */
+export function auroraAttackList(
+  attacks: AuroraAttack[],
+  entryIds: ReadonlySet<string>,
+  stored: CustomAttack[] = [],
+): { places: Map<string, number>; customAttacks: CustomAttack[] } {
+  const places = new Map<string, number>();
+  const byId = new Map(stored.map((a) => [a.id, a]));
+  const clip = (s: string | null | undefined, max: number) => (s?.trim() ? s.trim().slice(0, max) : null);
+  attacks
+    .filter((a) => a.displayed !== false && a.identifier && a.name.trim())
+    .slice(0, 100)
+    .forEach((a, i) => {
+      const place = i + 1;
+      places.set(a.identifier, place);
+      if (entryIds.has(a.identifier) || a.identifier.length > 64) return;
+      byId.set(a.identifier, {
+        id: a.identifier,
+        name: a.name.trim().slice(0, 200),
+        range: clip(a.range, 100),
+        toHit: clip(a.attack, 100),
+        damage: clip(a.damage, 200),
+        ability: clip(a.ability, 40),
+        description: clip(a.description, 5000),
+        place,
+      });
+    });
+  return { places, customAttacks: [...byId.values()] };
 }
 
 /** The attunement limit: Aurora's attunement:max statistic (artificers raise it), otherwise 3. */

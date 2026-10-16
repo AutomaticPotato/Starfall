@@ -55,6 +55,10 @@ public sealed class UpdateCharacterCombatEndpoint : Endpoint<CharacterCombat>
         Put("{characterId:guid}/combat");
         Group<CharactersGroup>();
         AllowAnonymous();
+        // it answers with the saved state, or the current one when something was given to the character meanwhile
+        // (for the API description)
+        Description(b => b.ClearDefaultProduces().Produces<CharacterCombat>(StatusCodes.Status200OK, "application/json")
+            .Produces<CharacterCombat>(StatusCodes.Status409Conflict, "application/json").ProducesProblem(StatusCodes.Status400BadRequest));
     }
 
     public override async Task HandleAsync(CharacterCombat req, CancellationToken ct)

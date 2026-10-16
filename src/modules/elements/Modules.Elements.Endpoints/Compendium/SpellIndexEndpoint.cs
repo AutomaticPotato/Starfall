@@ -33,6 +33,8 @@ public sealed class GetSpellIndexEndpoint : EndpointWithoutRequest
         Get("/spell-index");
         AllowAnonymous();
         Group<ElementsGroup>();
+        // sent as cached JSON text below; this tells the API description its shape
+        Description(b => b.ClearDefaultProduces().Produces<GetSpellIndexResponse>(StatusCodes.Status200OK, "application/json").Produces(StatusCodes.Status304NotModified));
     }
 
     public override async Task HandleAsync(CancellationToken ct)

@@ -65,6 +65,9 @@ public sealed class UpdateCharacterInventoryEndpoint : Endpoint<CharacterInvento
         Put("{characterId:guid}/inventory");
         Group<CharactersGroup>();
         AllowAnonymous();
+        // what it answers, for the API description (the body is sent untyped below)
+        Description(b => b.ClearDefaultProduces().Produces<InventorySaved>(StatusCodes.Status200OK, "application/json")
+            .ProducesProblem(StatusCodes.Status400BadRequest).ProducesProblem(StatusCodes.Status409Conflict));
     }
 
     public override async Task HandleAsync(CharacterInventory req, CancellationToken ct)
@@ -123,7 +126,9 @@ public sealed class UpdateCharacterInventoryEndpoint : Endpoint<CharacterInvento
             await _attached.RemoveAsync(character.Id, gone);
         }
 
-        character.UpdateInventory(req with { Version = 1, Revision = character.Inventory.Revision + 1, Items = items });
+        // custom attacks left out (a client that does not know them) stay as they are; an empty list removes them
+        character.UpdateInventory((req with { Version = 1, Revision = character.Inventory.Revision + 1, Items = items })
+            .KeepingCustomAttacksOf(character.Inventory));
         await _persistence.SaveChangesAsync();
         await locked.CommitAsync();
 

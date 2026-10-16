@@ -1,4 +1,5 @@
 using FastEndpoints;
+using Microsoft.AspNetCore.Http;
 using Starlights.Modules.Characters.Data;
 using Starlights.Modules.Characters.Domain.Abilities;
 using Starlights.Modules.Characters.Domain.Characters;
@@ -114,6 +115,8 @@ public sealed class UpdateCharacterMagicEndpoint : Endpoint<CharacterMagic>
         Put("{characterId:guid}/magic");
         Group<CharactersGroup>();
         AllowAnonymous();
+        // it answers with the saved state (for the API description)
+        Description(b => b.ClearDefaultProduces().Produces<CharacterMagic>(StatusCodes.Status200OK, "application/json"));
     }
 
     public override async Task HandleAsync(CharacterMagic req, CancellationToken ct)

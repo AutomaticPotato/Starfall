@@ -69,6 +69,8 @@ export interface SheetAttackLine {
   attack: string;
   damage: string;
   description: string;
+  /** a custom attack (written by hand, no item behind it) */
+  custom?: boolean;
 }
 
 export interface SheetSpellLine {
@@ -115,7 +117,14 @@ export function sheetArmor(inventory: Inventory, catalog: Catalog, facts: Charac
 }
 
 export function sheetAttackLines(inventory: Inventory, catalog: Catalog, facts: CharacterFacts): SheetAttackLine[] {
-  return sheetAttacks(inventory, catalog, facts).map((a) => ({ name: a.name, range: a.range, attack: a.attack, damage: a.damage, description: a.properties.join(", ") }));
+  return sheetAttacks(inventory, catalog, facts).map((a) => ({
+    name: a.name,
+    range: a.range,
+    attack: a.attack,
+    damage: a.damage,
+    description: a.properties.join(", "),
+    ...(a.custom ? { custom: true } : {}),
+  }));
 }
 
 export function sheetEquipment(inventory: Inventory, catalog: Catalog, facts: CharacterFacts & { strength: number }, texts: ReadonlyMap<string, ItemText>): SheetEquipment {

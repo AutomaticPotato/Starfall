@@ -200,9 +200,15 @@ export function buildBattleModel(data: SheetData): BattleModel {
     };
   };
   const modes = data.attackModes ?? [];
+  // a sheet line as a weapon; a custom attack (written by hand in Aurora, no item behind it) keeps its figures, and
+  // its text is a note rather than a list of weapon properties
+  const fromLine = (a: SheetData["attacks"][number]): WeaponAttack[] => {
+    const w = weaponFrom(a.custom ? { ...a, description: "" } : a);
+    return w ? [a.custom && a.description ? { ...w, notes: [a.description] } : w] : [];
+  };
   const weapons = modes.length
-    ? modes.filter((m) => m.mode !== "Off hand").map(fromMode).filter((w): w is WeaponAttack => w !== null)
-    : data.attacks.map(weaponFrom).filter((w): w is WeaponAttack => w !== null);
+    ? [...modes.filter((m) => m.mode !== "Off hand").map(fromMode).filter((w): w is WeaponAttack => w !== null), ...data.attacks.filter((a) => a.custom).flatMap(fromLine)]
+    : data.attacks.flatMap(fromLine);
 
   // unarmed strike: 1 + Strength bludgeoning; a monk's Martial Arts die and Dexterity
   const martialArts = data.features.find((f) => /^Martial Arts\b/i.test(f.title));

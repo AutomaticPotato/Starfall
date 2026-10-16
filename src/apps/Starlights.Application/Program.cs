@@ -47,7 +47,40 @@ public sealed partial class Program
         builder.AddServiceDefaults();
 
         builder.Services.AddAuthorization();
-        builder.Services.AddOpenApi();
+        builder.Services.AddOpenApi(options =>
+        {
+            // schemas are named by class name; the content administration has a few classes named like the
+            // characters' (GetAbilityScoresResponse, SkillDataModel, …), so those get an "Elements" prefix instead of
+            // one silently describing the other
+            var characterTypeNames = typeof(CreateCharacterEndpoint).Assembly.GetTypes().Select(t => t.Name).ToHashSet();
+            options.CreateSchemaReferenceId = type =>
+            {
+                var id = Microsoft.AspNetCore.OpenApi.OpenApiOptions.CreateDefaultSchemaReferenceId(type);
+                return id is not null && characterTypeNames.Contains(type.Type.Name)
+                    && type.Type.Namespace?.StartsWith("Starlights.Modules.Elements", StringComparison.Ordinal) == true ? "Elements" + id : id;
+            };
+            // the published description (docs/api/openapi.json): no server address, each installation has its own
+            options.AddDocumentTransformer((document, _, _) =>
+            {
+                document.Info = new Microsoft.OpenApi.OpenApiInfo
+                {
+                    Title = "Starlights API",
+                    Version = "v1",
+                    Description = "The HTTP API of a Starlights server (the web app uses it too). Guide: docs/api/README.md in the repository.",
+                };
+                document.Servers = [];
+                return Task.CompletedTask;
+            });
+            // query parameters ([QueryParam]) are not request bodies: a GET or DELETE never has one
+            options.AddOperationTransformer((operation, context, _) =>
+            {
+                if (context.Description.HttpMethod is "GET" or "DELETE")
+                {
+                    operation.RequestBody = null;
+                }
+                return Task.CompletedTask;
+            });
+        });
 
         // other origins only in development (the Vite dev server): the web app and the API share one origin behind
         // nginx, and outside development another site must not use a player's sign-in cookie (Cloudflare Access)
@@ -96,9 +129,14 @@ public sealed partial class Program
             app.MapHealthChecks("/alive", new HealthCheckOptions { Predicate = r => r.Tags.Contains("live") });
         }
 
-        if (app.Environment.IsDevelopment())
+        // the API description: in development, and in the integration tests that write docs/api/openapi.json from it
+        // (never in production; the published copy lives in the repository)
+        if (app.Environment.IsDevelopment() || app.Environment.IsIntegration())
         {
             app.MapOpenApi();
+        }
+        if (app.Environment.IsDevelopment())
+        {
             app.MapScalarApiReference(options =>
             {
                 options.Servers = [];

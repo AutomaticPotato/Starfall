@@ -80,6 +80,35 @@ public sealed record CustomItem
 }
 
 /// <summary>
+/// An attack written by hand rather than worked out from a weapon: Aurora's Manage → Attacks entries that no item
+/// stands behind (an artificer's armor attack, a natural weapon). Its figures are kept as written.
+/// </summary>
+public sealed record CustomAttack
+{
+    /// <summary>Stable id (Aurora's identifier of the attack).</summary>
+    public string Id { get; init; } = string.Empty;
+
+    public string Name { get; init; } = string.Empty;
+
+    /// <summary>"5 ft", "20/60".</summary>
+    public string? Range { get; init; }
+
+    /// <summary>The attack roll as written: "+7 vs AC", or a save ("DC 15 Dex").</summary>
+    public string? ToHit { get; init; }
+
+    /// <summary>"1d8+4 force".</summary>
+    public string? Damage { get; init; }
+
+    /// <summary>The ability it uses, when given ("Intelligence").</summary>
+    public string? Ability { get; init; }
+
+    public string? Description { get; init; }
+
+    /// <summary>Its place in the sheet's attack list, numbered together with <see cref="InventoryItem.Attack"/>.</summary>
+    public int? Place { get; init; }
+}
+
+/// <summary>
 /// Everything a character has: items, coins, and the free-text treasure and quest item lists of the sheet's
 /// equipment page.
 /// </summary>
@@ -101,6 +130,16 @@ public sealed record CharacterInventory
     public string? Treasure { get; init; }
 
     public string? QuestItems { get; init; }
+
+    /// <summary>
+    /// Attacks no item stands behind (see <see cref="CustomAttack"/>). Null when never set: a save that leaves it
+    /// out keeps the ones stored, so a client that does not know about them cannot lose them.
+    /// </summary>
+    public List<CustomAttack>? CustomAttacks { get; init; }
+
+    /// <summary>This save, with the stored custom attacks when it leaves them out (an empty list removes them).</summary>
+    public CharacterInventory KeepingCustomAttacksOf(CharacterInventory stored) =>
+        CustomAttacks is null ? this with { CustomAttacks = stored.CustomAttacks } : this;
 
     public static readonly IReadOnlySet<string> CoinKinds = new HashSet<string> { "cp", "sp", "ep", "gp", "pp" };
 
@@ -141,6 +180,22 @@ public sealed record CharacterInventory
         if ((Treasure?.Length ?? 0) > 20_000 || (QuestItems?.Length ?? 0) > 20_000)
         {
             return "The treasure and quest item texts are too long.";
+        }
+        if (CustomAttacks is { } attacks)
+        {
+            if (attacks.Count > 100 || attacks.Select(a => a.Id).Distinct().Count() != attacks.Count)
+            {
+                return "At most 100 attacks, each with its own id.";
+            }
+            foreach (var a in attacks)
+            {
+                if (a.Id.Length is 0 or > 64 || string.IsNullOrWhiteSpace(a.Name) || a.Name.Length > 200
+                    || (a.Range?.Length ?? 0) > 100 || (a.ToHit?.Length ?? 0) > 100 || (a.Damage?.Length ?? 0) > 200
+                    || (a.Ability?.Length ?? 0) > 40 || (a.Description?.Length ?? 0) > 5_000 || a.Place is < 1 or > 100)
+                {
+                    return $"The attack \"{(string.IsNullOrWhiteSpace(a.Name) ? "without a name" : a.Name)}\" has a value that is missing, too long or out of range.";
+                }
+            }
         }
 
         // every container reference points at another entry, and following them never comes back around

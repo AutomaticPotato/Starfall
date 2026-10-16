@@ -10,7 +10,8 @@
 **Contents:** [What this fork adds](#what-this-fork-adds) · [Install](#install-with-docker) ·
 [Using it](#using-it) · [Settings](#settings) · [Content](#how-aurora-legacy-and-5etools-are-connected) ·
 [Updating](#updating) · [Backups](#backups-and-restoring) · [Playing away from home](#playing-away-from-home) ·
-[Troubleshooting](#troubleshooting) · [Removing it](#removing-it) · [Credits](#credits-and-legal)
+[Troubleshooting](#troubleshooting) · [Removing it](#removing-it) · [Developer API](#developer-api) ·
+[Credits](#credits-and-legal)
 
 ## What this fork adds
 
@@ -282,6 +283,18 @@ docker compose down
 docker rmi $(docker compose config --images | grep -v mssql)   # this install's own images
 docker run --rm -v "$PWD:/d" alpine rm -rf /d/data     # deletes everything, including characters, campaigns and backups
 ```
+
+## Developer API
+
+Other programs can read your group's characters from a Starlights server: the web app runs on the same HTTP API.
+
+- **Guide:** [docs/api/README.md](docs/api/README.md): players and passwords (`X-Player-Token`), characters,
+  attacks (custom attacks included), inventory, magic and combat, with what the API does not do yet.
+- **Description:** [docs/api/openapi.json](docs/api/openapi.json) (OpenAPI 3.1, generated from the endpoints by a test
+  that fails when they drift), readable with [docs/api/index.html](docs/api/index.html) (Scalar).
+- **Examples:** [Python](docs/api/examples/starlights_client.py) and [TypeScript](docs/api/examples/starlights-client.ts).
+
+Keep the server on your private network; the documentation lives here, not on the server.
 
 ## Credits and legal
 

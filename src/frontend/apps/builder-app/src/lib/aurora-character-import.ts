@@ -1,6 +1,7 @@
 import { apiClient } from "@/lib/api-client";
 import type { BuilderChoice } from "@/lib/api/builder";
 import { shrinkImage } from "@/lib/image";
+import { auroraAttackList, type AuroraAttack, type CustomAttack } from "@/lib/rules/items";
 
 /**
  * Imports a character saved by the Aurora desktop builder (.dnd5e). Aurora stores every choice as
@@ -411,24 +412,46 @@ const COINS: [string, string][] = [
  * running it again adds nothing twice. Returns how many items were added and the ones not in the content.
  */
 export async function importAuroraEquipment(characterId: string, doc: Document): Promise<{ added: number; missing: string[] }> {
-  const current = await apiClient.get<{ items: { id: string; attack?: number | null }[]; coins: Record<string, number>; treasure?: string | null; questItems?: string | null }>(
-    `/api/characters/${characterId}/inventory`,
-  );
-  // the weapons Aurora shows as attacks, in its order, by the item's identifier
-  const attackOrder = new Map(
-    Array.from(doc.querySelectorAll("build > input > attacks > attack"))
-      .filter((a) => a.getAttribute("displayed") !== "false" && a.getAttribute("identifier"))
-      .map((a, i) => [a.getAttribute("identifier")!, i + 1]),
-  );
+  const current = await apiClient.get<{
+    items: { id: string; attack?: number | null }[];
+    coins: Record<string, number>;
+    treasure?: string | null;
+    questItems?: string | null;
+    customAttacks?: CustomAttack[] | null;
+  }>(`/api/characters/${characterId}/inventory`);
+  // Aurora's attack list, in its order: the attacks of weapons (by the item's identifier) and the ones written by
+  // hand (Manage → Attacks, e.g. an artificer's armor attack), which no item stands behind
+  const auroraAttacks: AuroraAttack[] = Array.from(doc.querySelectorAll("build > input > attacks > attack")).map((a) => ({
+    identifier: a.getAttribute("identifier") ?? "",
+    name: a.getAttribute("name") ?? "",
+    range: a.getAttribute("range"),
+    attack: a.getAttribute("attack"),
+    damage: a.getAttribute("damage"),
+    ability: a.getAttribute("ability"),
+    description: a.querySelector(":scope > description")?.textContent ?? null,
+    displayed: a.getAttribute("displayed") !== "false",
+  }));
   if (current.items.length > 0 || Object.values(current.coins ?? {}).some((n) => n > 0)) {
-    // an inventory brought in before attacks were: give its entries their attack places, if none has one yet
-    if (!current.items.some((i) => i.attack) && current.items.some((i) => attackOrder.has(i.id))) {
-      await apiClient.put(`/api/characters/${characterId}/inventory`, { ...current, items: current.items.map((i) => ({ ...i, attack: attackOrder.get(i.id) ?? null })) });
+    // an inventory brought in before attacks were: give its entries their attack places, if none has one yet, and
+    // add the custom attacks (again: they are matched by identifier, so nothing comes twice)
+    // a weapon of the file is not a custom attack even when this inventory has its own copy under another id
+    const fileItems = Array.from(doc.querySelectorAll("build > equipment > item")).map((i) => i.getAttribute("identifier") ?? "");
+    const tied = new Set([...current.items.map((i) => i.id), ...fileItems]);
+    const { places, customAttacks } = auroraAttackList(auroraAttacks, tied, current.customAttacks ?? []);
+    const placeItems = !current.items.some((i) => i.attack) && current.items.some((i) => places.has(i.id));
+    const addAttacks = JSON.stringify(customAttacks) !== JSON.stringify(current.customAttacks ?? []);
+    if (placeItems || addAttacks) {
+      await apiClient.put(`/api/characters/${characterId}/inventory`, {
+        ...current,
+        items: placeItems ? current.items.map((i) => ({ ...i, attack: places.get(i.id) ?? null })) : current.items,
+        customAttacks,
+      });
     }
     return { added: 0, missing: [] };
   }
+  const attackPlaces = auroraAttackList(auroraAttacks, new Set()).places;
 
-  const nodes = Array.from(doc.querySelectorAll("build > equipment > item")).filter(
+  const nodes =Array.from(doc.querySelectorAll("build > equipment > item")).filter(
     (i) => i.getAttribute("hidden") !== "true" && !/_ITEM_FEAT_PROXY_/.test(i.getAttribute("id") ?? ""),
   );
   const auroraIds = [...new Set(nodes.flatMap((i) => [i.getAttribute("id") ?? "", ...Array.from(i.querySelectorAll(":scope > items > adorner")).map((a) => a.getAttribute("id") ?? "")]))];
@@ -457,7 +480,7 @@ export async function importAuroraEquipment(characterId: string, doc: Document):
         equipped: equipped?.textContent?.trim() === "true" ? (SLOTS[equipped.getAttribute("location") ?? ""] ?? "Worn") : null,
         attuned: text(node, ":scope > attunement") === "true",
         card: node.querySelector(":scope > details")?.getAttribute("card") === "true",
-        attack: attackOrder.get(identifier) ?? null,
+        attack: attackPlaces.get(identifier) ?? null,
         notes: text(node, ":scope > details > notes") || null,
       },
     ];
@@ -471,8 +494,10 @@ export async function importAuroraEquipment(characterId: string, doc: Document):
   }
   const treasure = [text(currency, ":scope > treasure"), text(currency, ":scope > equipment")].filter(Boolean).join("\n\n");
 
-  if (items.length === 0 && Object.keys(coins).length === 0 && !treasure) return { added: 0, missing };
-  await apiClient.put(`/api/characters/${characterId}/inventory`, { ...current, items, coins, treasure: treasure || current.treasure || null });
+  // attacks of items that did not come in (not in the content) are kept as custom attacks, figures as Aurora wrote them
+  const { customAttacks } = auroraAttackList(auroraAttacks, new Set(items.map((i) => i.id)), current.customAttacks ?? []);
+  if (items.length === 0 && Object.keys(coins).length === 0 && !treasure && customAttacks.length === 0) return { added: 0, missing };
+  await apiClient.put(`/api/characters/${characterId}/inventory`, { ...current, items, coins, treasure: treasure || current.treasure || null, customAttacks });
   return { added: items.length, missing };
 }
 
