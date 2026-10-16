@@ -7,6 +7,14 @@
 > [5etools](https://github.com/5etools-mirror-3/5etools-src). Unofficial fan project, not affiliated with or endorsed by
 > Wizards of the Coast; no book content is part of this repository. The original README follows the fork's sections.
 
+<p align="center">
+  <img src="assets/images/screenshots/home-desktop.jpg" alt="The Starlights home page on a desktop" width="65%">
+  &nbsp;
+  <img src="assets/images/screenshots/home-phone.jpg" alt="The Starlights home page on a phone" width="28%">
+</p>
+<p align="center"><sub>The home page on a desktop and on a phone (Porcelain theme). A new install shows it like this; the
+three plain tiles take pictures you add yourself.</sub></p>
+
 **Contents:** [What this fork adds](#what-this-fork-adds) · [Install](#install-with-docker) ·
 [Using it](#using-it) · [Settings](#settings) · [Content](#how-aurora-legacy-and-5etools-are-connected) ·
 [Updating](#updating) · [Backups](#backups-and-restoring) · [Playing away from home](#playing-away-from-home) ·
