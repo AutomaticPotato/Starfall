@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Content admin for a Starlights install made with setup.sh (reads .env next to this script).
+# Content admin for a Starfall install made with setup.sh (reads .env next to this script).
 #
 #   ./admin.sh update [--force]      bring in the newest content from the links on the Content page (Aurora Legacy,
 #                                    5etools): downloads what changed, imports it, rebuilds the Compendium, updates

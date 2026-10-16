@@ -198,7 +198,7 @@ function Party({ party }: { party: PartyMember[] }) {
             <span className="text-sm leading-tight">
               <span className="block font-medium">{m.name}</span>
               <span className="block text-xs text-muted-foreground">
-                {m.missing ? "removed from Starlights" : [m.build && `${m.build}${m.level ? ` ${m.level}` : ""}`, m.playerName].filter(Boolean).join(" · ")}
+                {m.missing ? "removed from Starfall" : [m.build && `${m.build}${m.level ? ` ${m.level}` : ""}`, m.playerName].filter(Boolean).join(" · ")}
               </span>
             </span>
           </span>

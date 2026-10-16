@@ -1,8 +1,8 @@
-# Starlights API — integration guide
+# Starfall API — integration guide
 
-Starlights is a web app on top of an HTTP API. Everything the app shows comes from that API, so another program (a
+Starfall is a web app on top of an HTTP API. Everything the app shows comes from that API, so another program (a
 character viewer like [Flare](https://github.com/Egorobi/Flare), a Discord bot, a VTT bridge) can read the same data
-from a Starlights server your group runs.
+from a Starfall server your group runs.
 
 - **The description:** [`openapi.json`](openapi.json), OpenAPI 3.1, generated from the server's real endpoints (see
   [Keeping it current](#keeping-it-current)). Open it in any OpenAPI tool, or read it in the browser with
@@ -11,7 +11,7 @@ from a Starlights server your group runs.
   [`examples/starlights-client.ts`](examples/starlights-client.ts) (TypeScript, `fetch`). Both log in as a player
   when needed and print each character's attack list, custom attacks included.
 
-Nothing here needs a public server. A Starlights server is meant for a private network (your LAN, Tailscale); the
+Nothing here needs a public server. A Starfall server is meant for a private network (your LAN, Tailscale); the
 description is in this repository, and a production server does not serve it.
 GitHub displays `index.html` as source: serve `docs/api` locally to use Scalar. Its pinned JavaScript bundle loads
 from jsDelivr, so that viewer needs internet access; the JSON description and guide can be read offline.
@@ -67,7 +67,7 @@ All take `{characterId}` (a GUID from the list). Read-only unless marked.
 | `GET …/magic` / `PUT` | the player's choices: prepared spells, spent slots |
 | `GET …/combat` / `PUT` | play state: damage taken, temporary HP, hit dice spent, conditions, exhaustion, death saves, uses of features and items |
 | `GET …/story` | the story fields (appearance, backstory, …) |
-| `GET …/export` | the whole character as one Starlights character file (see [character portability](../character-portability.md)) |
+| `GET …/export` | the whole character as one Starfall character file (see [character portability](../character-portability.md)) |
 
 Content the sheet needs alongside: `GET /api/elements/items` (every item's figures: weapon dice and properties, armor
 class, by element id; default values are left out of the JSON) and `GET /api/elements/spell-index` (every spell).
@@ -98,8 +98,10 @@ the equipped weapons, then the custom attacks.
 
 Where custom attacks come from: importing an Aurora character file (`.dnd5e`) keeps every displayed attack in
 `<attacks>` whose identifier is not an item of the file (Aurora's **Manage → Attacks**), and the attack of an item
-the server's content doesn't have. They keep Aurora's figures: Starlights does not recalculate them. Importing the
-same file again updates them by identifier and adds nothing twice. They stay through builder saves, level-ups,
+the server's content doesn't have. They keep Aurora's figures: Starfall does not recalculate them. Importing the
+same file again updates unedited attacks by identifier and adds nothing twice. The Equipment tab’s Custom Attacks editor
+sets `edited: true` on manual edits and reordered rows, which then take precedence over reimports. Deleted IDs
+are remembered in inventory `removedAttackIds`, so reimports do not resurrect them. They stay through builder saves, level-ups,
 trades, character export and import.
 
 ## Writing
@@ -108,7 +110,10 @@ Writes replace the whole document: read it, change it, send it all back.
 
 - **Inventory:** `PUT …/inventory` with the `revision` you read. The answer is `{ revision }` (the new one); `409` when
   someone saved in between: read again and reapply. Leave `customAttacks` out (or `null`) to keep the stored ones;
-  send `[]` to remove them all. Server-owned fields (`registrationId`) are ignored.
+  send `[]` to remove them all. Preserve `edited` on custom attacks; API edits should set it to `true`.
+  `removedAttackIds` is optional (omitted/null preserves stored IDs; `[]` clears the suppression list),
+  with at most 1000 nonblank identifiers of at most 64 characters. To keep a deletion across reimports,
+  remove the row and add its ID to this list in the same revision-checked save. Server-owned fields (`registrationId`) are ignored.
 - **Combat:** `PUT …/combat` with the `received` value you read; `409` with the current state when the character was
   given something in between (a potion from a party member).
 - **Magic:** `PUT …/magic`; the last write wins.
@@ -148,7 +153,7 @@ Generated clients: `npx openapi-typescript docs/api/openapi.json -o starlights.d
   `openapi.json`; this guide names them.
 - **Content administration** (`/api/elements` writes, `/api/admin`) is in the description for completeness but needs
   the admin key. Some of those endpoints answer `201 Created` where the description says `200`.
-- The API has no versioning beyond this repository: a new Starlights version can add fields. Ignore fields you don't
+- The API has no versioning beyond this repository: a new Starfall version can add fields. Ignore fields you don't
   know, and compare `openapi.json` between versions.
 
 ## Keeping it current

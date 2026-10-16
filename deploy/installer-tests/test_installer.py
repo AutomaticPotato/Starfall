@@ -327,7 +327,7 @@ class InstallerTests(unittest.TestCase):
         self.installer.responses = [state(), {}, state(succeeded=False)]
         result, output = self.install()
         self.assertEqual(result, 2)
-        self.assertIn('Starlights is running', output)
+        self.assertIn('Starfall is running', output)
         self.assertNotIn('Setup complete', output)
         env = (self.root / '.env').read_bytes()
         self.installer.responses = [state(succeeded=False), {}, state(succeeded=True)]

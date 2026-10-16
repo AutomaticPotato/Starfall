@@ -138,7 +138,7 @@ class Installer:
             fs = subprocess.check_output(['stat', '-f', '-c', '%T', str(self.root)], text=True,
                                          stderr=subprocess.DEVNULL, timeout=10).strip()
             if fs in ('9p', 'drvfs', 'cifs', 'smb2') or str(self.root).startswith('/mnt/'):
-                raise SetupError('Clone into your WSL Linux home (for example ~/starlights), not a Windows drive or network share.')
+                raise SetupError('Clone into your WSL Linux home (for example ~/starfall), not a Windows drive or network share.')
         if not os.access(self.root, os.W_OK | os.X_OK):
             raise SetupError('The deploy directory is not writable by your user. Use a checkout you own.')
         if not shutil.which('docker'):
@@ -350,7 +350,7 @@ done
             expected = {'starlights-db', 'starlights-api', 'starlights-web',
                         'starlights-migrate-elements', 'starlights-migrate-characters'}
             if not expected.issubset(services):
-                emit(f'Building Starlights (up to {self.timeouts["BUILD"]} seconds). This can take a while on the first run.')
+                emit(f'Building Starfall (up to {self.timeouts["BUILD"]} seconds). This can take a while on the first run.')
                 if shutil.which('git'):
                     try:
                         self.command_env['STARLIGHTS_COMMIT'] = self.run(['git', 'rev-parse', '--short', 'HEAD']).strip() or 'unknown'
@@ -382,7 +382,7 @@ done
             reason = str(exc) if isinstance(exc, SetupError) else 'Operation failed or timed out; diagnostic payloads are withheld.'
             emit(f'Error during {stage}: {reason}')
             if stage == 'content import':
-                emit('Starlights is running, but content setup is incomplete. Check the Content page for download/import '
+                emit('Starfall is running, but content setup is incomplete. Check the Content page for download/import '
                      'errors and GitHub connectivity. Rerun ./setup.sh to attach to or retry the job; '
                      'a running server job is not cancelled by this installer. No success was recorded by setup.')
                 return 2
@@ -392,7 +392,7 @@ done
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Install Starlights using local Docker. Linux or Windows through WSL2.')
+    parser = argparse.ArgumentParser(description='Install Starfall using local Docker. Linux or Windows through WSL2.')
     parser.add_argument('--check', action='store_true', help='check prerequisites only; do not change files or containers')
     parser.add_argument('--skip-content', action='store_true', help='start the app without downloading/importing content')
     parser.add_argument('--port', type=int, help='browser port for a new installation (default 8093)')

@@ -1,6 +1,6 @@
 ---
 name: starlights-dnd-rules
-description: Load before implementing or checking a D&D 5e rule in Starlights (2014 vs 2024 behaviour, spellcasting, encounter XP, item uses) — it says where the rule already lives and which sources are authoritative, so nothing is invented.
+description: Load before implementing or checking a D&D 5e rule in Starfall (2014 vs 2024 behaviour, spellcasting, encounter XP, item uses) — it says where the rule already lives and which sources are authoritative, so nothing is invented.
 ---
 
 # Rules: where they live, what is authoritative

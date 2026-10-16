@@ -1,4 +1,4 @@
-# Official Project Starlights artwork
+# Official Project Starfall artwork
 
 Owner-supplied `Project Starlights Celestial Emblem.png`; original is preserved outside the repository.
 SHA-256: `7de485acdbc275b4884ae66edb33ec0089ede1d506c2d73511f3050fb2050d38`.

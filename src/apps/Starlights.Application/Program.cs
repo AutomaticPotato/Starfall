@@ -64,9 +64,9 @@ public sealed partial class Program
             {
                 document.Info = new Microsoft.OpenApi.OpenApiInfo
                 {
-                    Title = "Starlights API",
+                    Title = "Starfall API",
                     Version = "v1",
-                    Description = "The HTTP API of a Starlights server (the web app uses it too). Guide: docs/api/README.md in the repository.",
+                    Description = "The HTTP API of a Starfall server (the web app uses it too). Guide: docs/api/README.md in the repository.",
                 };
                 document.Servers = [];
                 return Task.CompletedTask;
@@ -141,7 +141,7 @@ public sealed partial class Program
             {
                 options.Servers = [];
 
-                options.WithTitle("Starlights API")
+                options.WithTitle("Starfall API")
                     .HideClientButton()
                     .WithClassicLayout()
                     .WithTheme(ScalarTheme.Alternate)

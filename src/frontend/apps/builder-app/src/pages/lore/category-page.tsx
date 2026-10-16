@@ -338,7 +338,7 @@ function EntryPane({ meta, category, k, backTo }: { meta: LoreMeta; category: st
     document.title = `${entry.name} · Compendium of Lore`;
     rememberRecent({ category, key: k, name: entry.name, source: entry.source });
     return () => {
-      document.title = "Starlights";
+      document.title = "Starfall";
     };
   }, [entry, category, k]);
 

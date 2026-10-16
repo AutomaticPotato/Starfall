@@ -29,7 +29,7 @@ function Missing({ member }: { member: PartyMember }) {
   return (
     <article className="rounded-lg border p-3 opacity-60">
       <p className="font-medium">{member.name}</p>
-      <p className="text-xs text-muted-foreground">This character was removed from Starlights.</p>
+      <p className="text-xs text-muted-foreground">This character was removed from Starfall.</p>
     </article>
   );
 }

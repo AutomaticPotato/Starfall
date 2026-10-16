@@ -117,11 +117,15 @@ export interface Inventory {
   questItems?: string | null;
   /** attacks no item stands behind (Aurora's Manage → Attacks); left out of a save, the server keeps them */
   customAttacks?: CustomAttack[] | null;
+  /** Deleted attack identifiers are not restored by Aurora reimports. */
+  removedAttackIds?: string[] | null;
 }
 
 /** An attack written by hand, kept as written: an artificer's armor attack, a natural weapon. */
 export interface CustomAttack {
-  /** Aurora's identifier of the attack */
+  /** User edits take precedence over subsequent Aurora imports. */
+  edited?: boolean;
+  /** Stable identifier (Aurora's identifier for imported attacks). */
   id: string;
   name: string;
   range?: string | null;
@@ -701,7 +705,7 @@ export interface AuroraAttack {
 }
 
 /**
- * Aurora's attack list as Starlights keeps it. Each displayed attack gets its place (1, 2, …); the ones an
+ * Aurora's attack list as Starfall keeps it. Each displayed attack gets its place (1, 2, …); the ones an
  * inventory entry stands behind (same identifier) become that entry's place, the rest custom attacks with their
  * figures as written, merged into those already stored by identifier (importing twice adds nothing twice).
  */
@@ -709,6 +713,7 @@ export function auroraAttackList(
   attacks: AuroraAttack[],
   entryIds: ReadonlySet<string>,
   stored: CustomAttack[] = [],
+  removedIds: readonly string[] = [],
 ): { places: Map<string, number>; customAttacks: CustomAttack[] } {
   const places = new Map<string, number>();
   const byId = new Map(stored.map((a) => [a.id, a]));
@@ -719,7 +724,8 @@ export function auroraAttackList(
     .forEach((a, i) => {
       const place = i + 1;
       places.set(a.identifier, place);
-      if (entryIds.has(a.identifier) || a.identifier.length > 64) return;
+      if (entryIds.has(a.identifier) || a.identifier.length > 64 || removedIds.includes(a.identifier) || byId.get(a.identifier)?.edited) return;
+      if (!byId.has(a.identifier) && byId.size >= 100) return;
       byId.set(a.identifier, {
         id: a.identifier,
         name: a.name.trim().slice(0, 200),

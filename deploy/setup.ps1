@@ -13,7 +13,7 @@ if ($env:OS -ne 'Windows_NT') {
 }
 if (-not [Environment]::Is64BitOperatingSystem -or
     $env:PROCESSOR_ARCHITECTURE -eq 'ARM64' -or $env:PROCESSOR_ARCHITEW6432 -eq 'ARM64') {
-    throw 'Starlights requires an x86-64 Intel/AMD computer; Windows on ARM is unsupported.'
+    throw 'Starfall requires an x86-64 Intel/AMD computer; Windows on ARM is unsupported.'
 }
 if ([Environment]::OSVersion.Version.Build -lt 19045) {
     throw 'Use Windows 11 or a compatible Windows 10 22H2 system. Check Docker Desktop current system requirements.'
@@ -23,7 +23,7 @@ if (-not (Get-Command wsl.exe -ErrorAction SilentlyContinue)) {
 }
 if ($LinuxPath -notmatch '^(~/|/)' -or $LinuxPath -match '^/mnt/' -or
     $LinuxPath -match '[\x00-\x1f"`$\\]') {
-    throw 'LinuxPath must be a WSL Linux path such as ~/starlights/deploy or /home/alice/My Games/starlights/deploy. Do not use C:\, UNC paths or /mnt/c.'
+    throw 'LinuxPath must be a WSL Linux path such as ~/starfall/deploy or /home/alice/My Games/starfall/deploy. Do not use C:\, UNC paths or /mnt/c.'
 }
 # Check the selected distribution, not just WSL's default version. Strip NULs from older wsl.exe output.
 $kernel = (& wsl.exe --distribution $Distribution --exec uname -r 2>$null | Out-String) -replace "`0", ''

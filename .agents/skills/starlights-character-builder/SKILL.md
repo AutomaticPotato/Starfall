@@ -1,6 +1,6 @@
 ---
 name: starlights-character-builder
-description: Work on Starlights character creation, multiclass progression, spell selection and persistence.
+description: Work on Starfall character creation, multiclass progression, spell selection and persistence.
 ---
 
 Read the Builder and magic section and relevant lib/api hooks. Preserve server choice eligibility, refreshCharacter polling and SaveBar snapshots. Use lib/rules/magic.ts for 2014/2024 and multiclass rules.

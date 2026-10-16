@@ -1,3 +1,5 @@
+> Current work (2026-10-16): [Starfall rebrand and Custom Attacks](STARFALL_HANDOFF.md). Implementation is committed separately; backend/browser verification and GitHub operations remain blocked. The historical frontend QA handoff below is retained.
+
 # Codex handoff — frontend QA complete
 
 Updated 2026-10-15. Integrate **`codex/frontend-qa`**, not just `codex/frontend-modernisation`. Owner approval is still required before integration; no merge, push or deployment was performed. Follow `AGENTS.md` and `DEVELOPMENT_DIRECTIVE.md`.

@@ -33,11 +33,11 @@ backup=$(cd "$backup" 2>/dev/null && pwd) || die "no such backup folder: $backup
 step "1. Checking the backup"
 if $deep; then "$MAINT_DIR/verify.sh" "$backup" --deep; else "$MAINT_DIR/verify.sh" "$backup"; fi
 
-step "2. Checking it fits this version of Starlights"
+step "2. Checking it fits this version of Starfall"
 require_db_running
 known=$(code_migrations HEAD)
 newer=$(python3 -c 'import json,sys; print("\n".join(json.load(open(sys.argv[1]))["migrations"]))' "$backup/manifest.json" | grep -vxF -f <(printf '%s\n' "$known") || true)
-[ -z "$newer" ] || die "this backup comes from a NEWER version of Starlights (its database has changes this code does not know):
+[ -z "$newer" ] || die "this backup comes from a NEWER version of Starfall (its database has changes this code does not know):
 $(printf '%s\n' "$newer" | sed 's/^/  /')" "Update the code first (git pull, or check out the version the backup came from: $(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["code_commit"])' "$backup/manifest.json")), then restore."
 bver=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["sql_server_version"])' "$backup/manifest.json")
 cver=$(sql_server_version)

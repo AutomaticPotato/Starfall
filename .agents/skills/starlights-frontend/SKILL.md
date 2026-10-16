@@ -1,6 +1,6 @@
 ---
 name: starlights-frontend
-description: Work on Starlights React layouts, routing, shared components and themes.
+description: Work on Starfall React layouts, routing, shared components and themes.
 ---
 
 Start at main.tsx for routes and components/theme-provider.tsx for settings. Reuse semantic tokens and existing Radix controls. Keep rule calculations outside presentation.

@@ -13,7 +13,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AnvilIcon, DownloadIcon, FileSpreadsheetIcon, MenuIcon, PlusIcon, SwordsIcon, Trash2Icon } from "lucide-react";
 
-/** Downloads the character as a Starlights character file (for another Starlights server). */
+/** Downloads the character as a Starfall character file (for another Starfall server). */
 function exportCard(card: CharacterCard) {
   exportCharacter(card.characterId, card.name).catch((e) => toast.error("Could not export the character", { description: serverMessage(e) }));
 }
@@ -276,7 +276,7 @@ function CharactersCollection({ showAll }: { showAll: boolean }) {
               {isMobile ? null : (
                 <Button
                   variant={"secondary"}
-                  title="Export character (for another Starlights server)"
+                  title="Export character (for another Starfall server)"
                   onClick={() => exportCard(card)}
                   className="absolute inset-e-11 top-3 rounded-lg size-6 hidden group-hover:flex opacity-100 hover:opacity-100"
                 >

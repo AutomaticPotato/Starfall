@@ -194,13 +194,16 @@ public class CharacterPortableDataTests
         var attackId = Guid.Parse("ffffffff-0000-0000-0000-000000000001");
         var inventory = new Domain.Characters.CharacterInventory
         {
-            CustomAttacks = [new() { Id = attackId.ToString(), Name = "Thunder Gauntlets", ToHit = "+6 vs AC", Damage = "1d8+3 thunder", Range = "5 ft", Place = 1 }],
+            CustomAttacks = [new() { Id = attackId.ToString(), Name = "Thunder Gauntlets", ToHit = "+6 vs AC", Damage = "1d8+3 thunder", Range = "5 ft", Place = 1, Edited = true }],
+            RemovedAttackIds = ["deleted-aurora-attack"],
         };
         var data = JsonSerializer.Serialize(new { character = new { name = "Ilyra", inventory = JsonSerializer.Serialize(inventory) } });
         var map = CharacterPortableData.NewIds(data, [], SourceCharacter, Guid.NewGuid());
 
         var remapped = JsonNode.Parse(CharacterPortableData.Remap(data, map))!["character"]!["inventory"]!.GetValue<string>();
-        var attack = JsonSerializer.Deserialize<Domain.Characters.CharacterInventory>(remapped)!.CustomAttacks!.Single();
+        var restored = JsonSerializer.Deserialize<Domain.Characters.CharacterInventory>(remapped)!;
+        var attack = restored.CustomAttacks!.Single();
+        restored.RemovedAttackIds.Should().Equal("deleted-aurora-attack");
 
         attack.Should().BeEquivalentTo(inventory.CustomAttacks[0] with { Id = map[attackId].ToString("D") });
     }

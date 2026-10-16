@@ -1,7 +1,7 @@
-# Moving characters between Starlights servers
+# Moving characters between Starfall servers
 
 **Export:** on the Characters page, hover a character (on a phone: its menu) and press **Export**. You get
-`<name>.starlights.json`. **Import:** on the other server, **Import Starlights character** on the Characters page,
+`<name>.starlights.json`. **Import:** on the other server, **Import Starfall character** on the Characters page,
 choose the file, check the preview, press **Import as a new character**.
 
 The import always creates a **new** character of the player who imports it (a password-locked player must be unlocked
@@ -15,7 +15,7 @@ Format `starlights-character`, version 1 (JSON):
 | Field | What |
 |---|---|
 | `format`, `version` | `"starlights-character"`, `1`. A newer version is refused with "update this server first". |
-| `exportedAt`, `exportedFrom` | when, and the exporting server's Starlights commit |
+| `exportedAt`, `exportedFrom` | when, and the exporting server's Starfall commit |
 | `sourceCharacterId` | the character's id on the exporting server (the importing server gives it a new one) |
 | `summary` | name, level, classes and levels, edition (`2014`, `2024`, `mixed`), species, background, books used |
 | `dependencies` | every rules element the character refers to: id, name, type, book, whether it is homebrew |
@@ -34,7 +34,7 @@ installed first.
   Content page, homebrew on the Homebrew page). Nothing is substituted.
 - Every id in the file except verified rules content gets a new value, so importing the same file twice gives two
   separate characters and a file cannot reach any other character.
-- Fields from a different Starlights version: details this server has no place for are listed as not kept; details
+- Fields from a different Starfall version: details this server has no place for are listed as not kept; details
   the file lacks start empty. Both are shown before you confirm.
 - After the import the character is worked through this server's rules once (as after a content update), keeping
   every pick.

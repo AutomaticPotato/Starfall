@@ -1,9 +1,9 @@
 ---
 name: starlights-deployment
-description: Load before testing Starlights against real data, deploying it to the homelab, rolling back or publishing to GitHub. Covers the test copy, the deploy routine (backup, rollback images, build, content re-import), live checks and the publish checks.
+description: Load before testing Starfall against real data, deploying it to the homelab, rolling back or publishing to GitHub. Covers the test copy, the deploy routine (backup, rollback images, build, content re-import), live checks and the publish checks.
 ---
 
-# Starlights deployment (homelab)
+# Starfall deployment (homelab)
 
 Live = `~/homelab/compose/starlights` (containers `starlights-web`, `starlights-api`, `starlights-db`); it builds
 from `~/starlights` at whatever `aurora-server` points to. Nothing is tried on live first.

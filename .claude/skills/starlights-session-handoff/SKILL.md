@@ -1,6 +1,6 @@
 ---
 name: starlights-session-handoff
-description: Load before ending a Starlights session, before context is compacted, or after finishing a milestone — how to record progress in docs/ai/CLAUDE_HANDOFF.md so the next session resumes without rereading the code or conversation.
+description: Load before ending a Starfall session, before context is compacted, or after finishing a milestone — how to record progress in docs/ai/CLAUDE_HANDOFF.md so the next session resumes without rereading the code or conversation.
 ---
 
 # Recording progress

@@ -5,7 +5,7 @@ import { auroraAttackList, type AuroraAttack, type CustomAttack } from "@/lib/ru
 
 /**
  * Imports a character saved by the Aurora desktop builder (.dnd5e). Aurora stores every choice as
- * <element type="…" name="…" number="n" registered="ID_…">, nested under the element that offered it; Starlights
+ * <element type="…" name="…" number="n" registered="ID_…">, nested under the element that offered it; Starfall
  * imported the same choices under the same names, so the picks are replayed slot by slot as the builder unlocks
  * them (a class's choices appear once the class is picked, a subclass once the level allows it, …).
  */
@@ -17,7 +17,7 @@ export interface AuroraImportReport {
   picked: number;
   /** picks whose element is not in the imported content (homebrew, custom sources) */
   missing: string[];
-  /** picks whose choice did not come up in the Starlights build */
+  /** picks whose choice did not come up in the Starfall build */
   unmatched: string[];
 }
 
@@ -32,7 +32,7 @@ interface Pick {
   parent: string | null;
 }
 
-// Aurora's top-level choices and the Starlights sections they correspond to
+// Aurora's top-level choices and the Starfall sections they correspond to
 const TOP_LEVEL: Record<string, string> = { Race: "Species", Class: "Class", Background: "Background", Alignment: "Alignment", Deity: "Deity" };
 
 const ABILITIES = ["strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma"];
@@ -280,7 +280,7 @@ export async function importAuroraPreparedSpells(characterId: string, doc: Docum
   return added;
 }
 
-/** Aurora ids (with the homebrew id variants) to Starlights element ids, for the picks and what the file's gear and feat proxies need. */
+/** Aurora ids (with the homebrew id variants) to Starfall element ids, for the picks and what the file's gear and feat proxies need. */
 async function lookupIds(picks: Pick[], doc: Document): Promise<Record<string, string>> {
   const gear = Array.from(doc.querySelectorAll("build > equipment > item")).flatMap((item) => [
     item.getAttribute("id") ?? "",
@@ -418,6 +418,7 @@ export async function importAuroraEquipment(characterId: string, doc: Document):
     treasure?: string | null;
     questItems?: string | null;
     customAttacks?: CustomAttack[] | null;
+    removedAttackIds?: string[] | null;
   }>(`/api/characters/${characterId}/inventory`);
   // Aurora's attack list, in its order: the attacks of weapons (by the item's identifier) and the ones written by
   // hand (Manage → Attacks, e.g. an artificer's armor attack), which no item stands behind
@@ -437,9 +438,9 @@ export async function importAuroraEquipment(characterId: string, doc: Document):
     // a weapon of the file is not a custom attack even when this inventory has its own copy under another id
     const fileItems = Array.from(doc.querySelectorAll("build > equipment > item")).map((i) => i.getAttribute("identifier") ?? "");
     const tied = new Set([...current.items.map((i) => i.id), ...fileItems]);
-    const { places, customAttacks } = auroraAttackList(auroraAttacks, tied, current.customAttacks ?? []);
+    const { places, customAttacks } = auroraAttackList(auroraAttacks, tied, current.customAttacks ?? [], current.removedAttackIds ?? []);
     const placeItems = !current.items.some((i) => i.attack) && current.items.some((i) => places.has(i.id));
-    const addAttacks = JSON.stringify(customAttacks) !== JSON.stringify(current.customAttacks ?? []);
+    const addAttacks = JSON.stringify(customAttacks) !== JSON.stringify(current.customAttacks ?? [], current.removedAttackIds ?? []);
     if (placeItems || addAttacks) {
       await apiClient.put(`/api/characters/${characterId}/inventory`, {
         ...current,
@@ -495,7 +496,7 @@ export async function importAuroraEquipment(characterId: string, doc: Document):
   const treasure = [text(currency, ":scope > treasure"), text(currency, ":scope > equipment")].filter(Boolean).join("\n\n");
 
   // attacks of items that did not come in (not in the content) are kept as custom attacks, figures as Aurora wrote them
-  const { customAttacks } = auroraAttackList(auroraAttacks, new Set(items.map((i) => i.id)), current.customAttacks ?? []);
+  const { customAttacks } = auroraAttackList(auroraAttacks, new Set(items.map((i) => i.id)), current.customAttacks ?? [], current.removedAttackIds ?? []);
   if (items.length === 0 && Object.keys(coins).length === 0 && !treasure && customAttacks.length === 0) return { added: 0, missing };
   await apiClient.put(`/api/characters/${characterId}/inventory`, { ...current, items, coins, treasure: treasure || current.treasure || null, customAttacks });
   return { added: items.length, missing };
@@ -555,7 +556,7 @@ function hitPointRolls(doc: Document): string | null {
 
 /**
  * The deity: Aurora files keep it as a "Deity" pick that may sit under another element (a cleric's domain), while
- * Starlights has one Deity choice of its own; it is filled when still empty.
+ * Starfall has one Deity choice of its own; it is filled when still empty.
  */
 async function fillDeity(characterId: string, picks: Pick[], ids: Record<string, string>) {
   const pick = picks.find((p) => p.type === "Deity" && ids[p.registered]);

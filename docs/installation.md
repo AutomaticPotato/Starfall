@@ -1,6 +1,6 @@
-# Install Starlights with Docker
+# Install Starfall with Docker
 
-Starlights runs in your browser. Install it once on a computer that stays on while your group plays.
+Starfall runs in your browser. Install it once on a computer that stays on while your group plays.
 The same `deploy/docker-compose.yml` runs on Linux and on Windows through WSL2. No desktop application is needed.
 
 **Validation status:** on Ubuntu 24.04 with real Docker (disposable installs, synthetic data, `--skip-content`): a
@@ -49,8 +49,8 @@ account on your computer. Docker itself and any system prerequisites must be ins
 
    ```bash
    cd ~
-   git clone --branch aurora-server https://github.com/CHassapis/starlights.git
-   cd starlights/deploy
+   git clone --branch aurora-server https://github.com/CHassapis/starfall.git
+   cd starfall/deploy
    ./setup.sh --check
    ./setup.sh
    ```
@@ -61,7 +61,7 @@ write permissions will succeed; those are tested during setup. If the default po
 
 ## Windows: Docker Desktop and WSL2
 
-Keep the checkout and database in the **WSL Linux filesystem**, for example `/home/alice/starlights`.
+Keep the checkout and database in the **WSL Linux filesystem**, for example `/home/alice/starfall`.
 Do not clone into `C:\`, OneDrive, a network share or `/mnt/c`. Linux database ownership and bind mounts depend on Linux
 filesystem behavior. Docker also recommends [keeping bind-mounted files in Linux](https://docs.docker.com/desktop/features/wsl/best-practices/).
 
@@ -87,14 +87,14 @@ filesystem behavior. Docker also recommends [keeping bind-mounted files in Linux
 
    ```bash
    cd ~
-   git clone --branch aurora-server https://github.com/CHassapis/starlights.git
-   cd starlights/deploy
+   git clone --branch aurora-server https://github.com/CHassapis/starfall.git
+   cd starfall/deploy
    ./setup.sh --check
    ./setup.sh
    ```
 
 5. Open **http://localhost:8093** in your normal Windows browser (or the port you selected).
-   Leave Docker Desktop running while you use Starlights. Linux restart policies do not start Docker Desktop itself after
+   Leave Docker Desktop running while you use Starfall. Linux restart policies do not start Docker Desktop itself after
    Windows signs out or reboots; check Docker Desktop's startup setting.
 
 ### Optional PowerShell launcher
@@ -102,8 +102,8 @@ filesystem behavior. Docker also recommends [keeping bind-mounted files in Linux
 After cloning inside Ubuntu, you can run setup from PowerShell using the included `setup.ps1`:
 
 ```powershell
-& '\\wsl.localhost\Ubuntu\home\alice\starlights\deploy\setup.ps1' -Distribution Ubuntu -LinuxPath '/home/alice/starlights/deploy' -Check
-& '\\wsl.localhost\Ubuntu\home\alice\starlights\deploy\setup.ps1' -Distribution Ubuntu -LinuxPath '/home/alice/starlights/deploy'
+& '\\wsl.localhost\Ubuntu\home\alice\starfall\deploy\setup.ps1' -Distribution Ubuntu -LinuxPath '/home/alice/starfall/deploy' -Check
+& '\\wsl.localhost\Ubuntu\home\alice\starfall\deploy\setup.ps1' -Distribution Ubuntu -LinuxPath '/home/alice/starfall/deploy'
 ```
 
 Replace `Ubuntu` and `alice` with your distribution name and Linux username. You can also invoke a copy of `setup.ps1`
@@ -115,7 +115,7 @@ If PowerShell blocks script execution, use the Ubuntu terminal method above; cha
 is unnecessary. The launcher runs the Python helper directly, so CRLF line endings in a Windows copy of `setup.ps1`
 do not affect Bash. Git attributes keep the Linux entrypoint LF. The `.env` reader accepts LF and CRLF.
 
-## Open Starlights and start playing
+## Open Starfall and start playing
 
 - On the Linux server itself, or the Windows computer running Docker Desktop: **http://localhost:8093**.
 - From another computer or phone on the same home network: **http://192.168.1.20:8093**, replacing `192.168.1.20` with your
@@ -128,7 +128,7 @@ do not affect Bash. Git attributes keep the Linux entrypoint LF. The `.env` read
 
 Select your player name, then create a character after content import finishes. Use **Save** to keep character changes.
 For administrator access, open `deploy/.env` privately in an editor and read `STARLIGHTS_MASTER_PASSWORD`. Enter it using
-the **key button** in Starlights' header. This password gives broad access to characters and campaigns; keep it private.
+the **key button** in Starfall' header. This password gives broad access to characters and campaigns; keep it private.
 Setup never prints it. Do not paste `.env`, rendered Compose configuration or container inspection output into support requests.
 
 ## Repeat setup or recover from an interruption

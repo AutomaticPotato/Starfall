@@ -1,5 +1,5 @@
 /**
- * The Content page's status sections: the server (the Starlights version it runs, its database changes and a few
+ * The Content page's status sections: the server (the Starfall version it runs, its database changes and a few
  * counts) and the content (Aurora Legacy's commit, the 5etools release, the last update that worked, whether one is
  * running, and, when the admin asks, what GitHub has that is newer). Checking only reads; updating is always the
  * admin's explicit action: the Update button on installs that bring in their own content, the server's own command
@@ -98,7 +98,7 @@ export function ServerSection() {
         <p className="text-sm text-destructive">Could not read the server's status. {error?.message}</p>
       ) : (
         <dl className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-[max-content_1fr]">
-          <dt className="text-muted-foreground">Starlights version</dt>
+          <dt className="text-muted-foreground">Starfall version</dt>
           <dd>
             {data.commit ? <code className="rounded bg-muted px-1.5 py-0.5 text-xs">{data.commit}</code> : <span className="text-muted-foreground">unknown (built without STARLIGHTS_COMMIT)</span>}
             <span className="text-muted-foreground">

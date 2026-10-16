@@ -1,8 +1,8 @@
-# Looking after your Starlights server: backups, restoring and updating
+# Looking after your Starfall server: backups, restoring and updating
 
-This is for anyone running Starlights with Docker from the `deploy/` folder (the install `setup.sh` makes). You don't
+This is for anyone running Starfall with Docker from the `deploy/` folder (the install `setup.sh` makes). You don't
 need to know SQL Server or Docker well: every command below is copied as-is into a terminal **in the `deploy/`
-folder** of your Starlights checkout.
+folder** of your Starfall checkout.
 
 Nothing here runs by itself. Updates and restores only happen when you run them, and they ask first.
 
@@ -72,7 +72,7 @@ maintenance/restore.sh data/backups/<folder>
 What it does, in order (it stops at the first problem, with a message saying what to do):
 
 1. Checks the backup fully (including the temporary test restore).
-2. Refuses a backup made by a **newer** version of Starlights or of SQL Server: update the code first.
+2. Refuses a backup made by a **newer** version of Starfall or of SQL Server: update the code first.
 3. Shows what is in the backup and what is there now, and asks you to type the install's name.
 4. Makes a **safety backup** of the current state (label `pre-restore`), so a restore can itself be undone.
 5. Stops the site, restores the database, moves the current portraits/homebrew/art aside to
@@ -84,7 +84,7 @@ Players need to unlock their characters again only if you restore onto a new ser
 
 ### Moving to a new computer
 
-1. Install Starlights on the new computer with `setup.sh` (see [installation.md](installation.md)). To keep the same
+1. Install Starfall on the new computer with `setup.sh` (see [installation.md](installation.md)). To keep the same
    admin password, put your old `.env` there **before** running setup: `cp env.backup deploy/.env && chmod 600
    deploy/.env` (from a backup made with `--include-env`; setup refuses a `.env` other users can read).
 2. Copy the backup folder over, into its `deploy/data/backups/` (after setup: setup refuses to start on a `data/`
@@ -161,6 +161,6 @@ Everything a script printed is worth keeping when you ask for help; it never pri
 
 ## Notes for the homelab install
 
-The homelab server runs Starlights from `~/homelab/compose/starlights` with fixed container names and its own
+The homelab server runs Starfall from `~/homelab/compose/starlights` with fixed container names and its own
 folders (`~/homelab/config/starlights/...`), not from `deploy/`. These scripts are for the `deploy/` layout; the
 homelab keeps its own routine (`starlights-deploy-web.sh`, the verified pre-deploy backups) until it moves to it.

@@ -1,6 +1,6 @@
 ---
 name: starlights-testing
-description: Run and troubleshoot Starlights frontend and backend tests and responsive checks.
+description: Run and troubleshoot Starfall frontend and backend tests and responsive checks.
 ---
 
 Read Validation and CODEX_HANDOFF.md for the latest evidence. Build workspace packages before the app. Run npm run test -w apps/builder-app from src/frontend and dotnet test from root. Check global.json and Node engine requirements on tool failures. Keep synthetic fixtures separate from production data. Report blocked checks honestly.

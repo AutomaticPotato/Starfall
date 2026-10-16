@@ -1,6 +1,6 @@
 ---
 name: starlights-encounters
-description: Load before working on Starlights encounters — a campaign encounter run as a fight, adding party and monsters, monster stat blocks and actions, the battle simulator's link to fights, and encounter difficulty (2014/2024 XP maths and the optional magic-item estimate).
+description: Load before working on Starfall encounters — a campaign encounter run as a fight, adding party and monsters, monster stat blocks and actions, the battle simulator's link to fights, and encounter difficulty (2014/2024 XP maths and the optional magic-item estimate).
 ---
 
 # Encounters

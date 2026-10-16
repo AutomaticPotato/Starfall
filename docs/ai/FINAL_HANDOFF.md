@@ -1,4 +1,4 @@
-# Starlights — final handoff (maintenance mode)
+# Starfall — final handoff (maintenance mode)
 
 **v0.10.0 public beta, released 2026-10-16** (tag `v0.10.0` on `aurora-server`; [release notes](../releases/v0.10.0.md)).
 Codex prepared the candidate (`release/v0.10.0`, wrapped-5etools fix `e718fad`) and held it on checks its sandbox

@@ -1,5 +1,5 @@
 # shellcheck shell=bash disable=SC2034
-# Shared helpers for the Starlights maintenance scripts (backup, verify, restore, update, rollback).
+# Shared helpers for the Starfall maintenance scripts (backup, verify, restore, update, rollback).
 # Sourced, not run. Works on the install in deploy/ (docker-compose.yml + .env next to it), whatever its compose
 # project name. Secrets are never printed or put on a command line: SQL runs inside the database container with
 # the password that container already has.
@@ -40,7 +40,7 @@ require_install() {
   need docker; need python3; need sha256sum; need tar
   docker compose version >/dev/null 2>&1 || die "Docker's compose plugin is missing." "See https://docs.docker.com/compose/install/"
   [ -f "$DEPLOY_DIR/docker-compose.yml" ] || die "no docker-compose.yml in $DEPLOY_DIR."
-  [ -f "$DEPLOY_DIR/.env" ] || die "no .env in $DEPLOY_DIR: this folder is not a Starlights install (run ./setup.sh first)."
+  [ -f "$DEPLOY_DIR/.env" ] || die "no .env in $DEPLOY_DIR: this folder is not a Starfall install (run ./setup.sh first)."
 }
 
 # a value from deploy/.env as docker compose reads it: the last KEY=value line wins, an "export " prefix is allowed,

@@ -1,6 +1,6 @@
 ---
 name: starlights-architecture
-description: Load when you need to find where something lives in Starlights (server modules, endpoints, importer, web app pages, rules libraries) before searching the code yourself.
+description: Load when you need to find where something lives in Starfall (server modules, endpoints, importer, web app pages, rules libraries) before searching the code yourself.
 ---
 
 # Where things are
