@@ -150,7 +150,19 @@ internal sealed class FiveEToolsData : IFiveEToolsLore
         }
 
         const string source = "Forgotten Realms: Heroes of Faerûn";
-        var chapter = document.RootElement.GetProperty("data").EnumerateArray()
+        var root = document.RootElement;
+        if (!root.TryGetProperty("data", out var chapters) && root.TryGetProperty("bookData", out var books)
+            && books.ValueKind == JsonValueKind.Array)
+        {
+            var book = books.EnumerateArray().FirstOrDefault(b =>
+                string.Equals(FiveEToolsRenderer.Text(b, "id"), "FRHoF", StringComparison.OrdinalIgnoreCase));
+            if (book.ValueKind == JsonValueKind.Object) book.TryGetProperty("data", out chapters);
+        }
+        if (chapters.ValueKind != JsonValueKind.Array)
+        {
+            return new List<LoreEntry>();
+        }
+        var chapter = chapters.EnumerateArray()
             .FirstOrDefault(c => FiveEToolsRenderer.Text(c, "name")?.Contains("Factions", StringComparison.OrdinalIgnoreCase) == true);
         if (chapter.ValueKind != JsonValueKind.Object)
         {

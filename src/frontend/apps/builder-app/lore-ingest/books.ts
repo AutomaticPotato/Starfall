@@ -85,7 +85,15 @@ export function ingestBooks(ctx: Context, writer: Writer) {
         ctx.report.problem(`${kind}: no file for ${id}`);
         continue;
       }
-      const chapters = (readJson(path).data as Json[]) ?? [];
+      const document = readJson(path);
+      // Current releases wrap each book/adventure; older releases put its chapters at the root.
+      const entries = document[`${listKey}Data`];
+      const wrapped = Array.isArray(entries)
+        ? (entries as Json[]).find((entry) => String(entry.id).toLowerCase() === id.toLowerCase())
+        : undefined;
+      const data = Array.isArray(document.data) ? document.data : wrapped?.data;
+      const chapters = Array.isArray(data) ? (data as Json[]) : [];
+      if (chapters.length === 0) ctx.report.problem(`${kind}: no chapters for ${id}`);
       const ids: Record<string, number> = {};
       const search: ReturnType<typeof searchOf> = [];
       const base = `reader/${kind}/${keyPart(id)}`;
