@@ -48,6 +48,8 @@ interface Registration {
 interface StatisticGroup {
   groupName: string;
   totalValue: number;
+  /** where each part comes from ("Level 3: Draconic Resilience") */
+  values?: { source: string; displayName?: string | null; value: number }[];
 }
 interface BatchEntry {
   id: string;
@@ -552,6 +554,10 @@ export function useSheetData(characterId: string): { data?: SheetData; isLoading
     proficiencyBonus,
     stat: (n: string) => stat(n),
     statNames: statistics2.map((x) => x.groupName),
+    statSource: (n: string) => {
+      const value = statistics2.find((x) => x.groupName === n)?.values?.[0];
+      return value?.displayName ?? value?.source ?? undefined;
+    },
     has: new Set(batch.data.entries.map((e) => e.auroraId).filter((id): id is string => !!id)),
     strength: abilities.data.abilityScores.find((a) => a.abbreviation === "STR")?.calculatedScore ?? 10,
   };

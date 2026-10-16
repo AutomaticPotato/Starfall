@@ -104,7 +104,8 @@ export function generatedName(r: Resolved): string {
 export function sheetArmor(inventory: Inventory, catalog: Catalog, facts: CharacterFacts, featureOf: (statistic: string) => string | undefined): SheetArmor {
   const ac = armorClass(inventory, catalog, facts);
   const unarmored = ac.parts[0]?.value ?? 10;
-  const feature = ac.calculation ? featureOf(ac.calculation) : undefined;
+  // every unarmored feature feeds ac:calculation, so its own source names it rather than a lookup by statistic
+  const feature = ac.calculationSource ?? (ac.calculation ? featureOf(ac.calculation) : undefined);
   return {
     total: ac.total,
     base: ac.parts[0]?.value ?? 10,

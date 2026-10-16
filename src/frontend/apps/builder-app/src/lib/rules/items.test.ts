@@ -235,6 +235,31 @@ describe("armor class", () => {
     expect(ac.total).toBe(16);
   });
 
+  // an autognome's Armored Casing is "armor casing:ac" in Aurora (no "ac:" prefix): only ac:calculation names it
+  const autognome = (dex: number, extra: Record<string, number> = {}) => ({
+    ...facts({ DEX: dex }, { "armor-casing:ac": 13 + Math.floor((dex - 10) / 2), "ac:calculation": 13 + Math.floor((dex - 10) / 2), ...extra }),
+    statSource: (n: string) => (n === "ac:calculation" ? "Armored Casing" : undefined),
+  });
+
+  it("uses Aurora's ac:calculation when the feature's statistic has another name (autognome's Armored Casing)", () => {
+    const ac = armorClass(inv(), catalog, autognome(16));
+    expect(ac.total).toBe(16);
+    expect(ac).toMatchObject({ calculation: "ac:calculation", calculationSource: "Armored Casing" });
+    expect(ac.parts[0]).toEqual({ label: "Armored Casing", value: 16 });
+    expect(armorClass(inv(entry("s", "shield", { equipped: "Off Hand" })), catalog, autognome(16)).total).toBe(18);
+  });
+
+  it("ignores ac:calculation under armor, and keeps a feature's own name when both say the same", () => {
+    expect(armorClass(inv(entry("a", "chain", { equipped: "Armor" })), catalog, autognome(16)).total).toBe(16);
+    const draconic = armorClass(inv(), catalog, { ...facts({ DEX: 14 }, { "ac:draconic-resilience": 15, "ac:calculation": 15 }), statSource: () => "Level 3: Draconic Resilience" });
+    expect(draconic).toMatchObject({ total: 15, calculation: "ac:draconic-resilience", calculationSource: undefined });
+  });
+
+  it("names the level-prefixed source without its level", () => {
+    const ac = armorClass(inv(), catalog, { ...facts({ DEX: 10 }, { "ac:calculation": 17 }), statSource: () => "Level 1: Natural Armor" });
+    expect(ac).toMatchObject({ total: 17, calculationSource: "Natural Armor" });
+  });
+
   it("drops monk-style unarmored defense when a shield is carried", () => {
     const stats = { "ac:unarmored-defense-monk": 17 };
     expect(armorClass(inv(), catalog, facts({ DEX: 16 }, stats)).total).toBe(17);

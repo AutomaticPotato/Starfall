@@ -78,7 +78,8 @@ export function useCharacterFacts(characterId: string): { facts?: CharacterFacts
   });
   const statistics = useQuery({
     queryKey: ["builder", characterId, "facts", "statistics"],
-    queryFn: () => apiClient.get<{ statistics: { groupName: string; totalValue: number }[] }>(`${base}/statistics`),
+    queryFn: () =>
+      apiClient.get<{ statistics: { groupName: string; totalValue: number; values?: { source: string; displayName?: string | null }[] }[] }>(`${base}/statistics`),
   });
   const registrations = useQuery({
     queryKey: ["builder", characterId, "facts", "registrations"],
@@ -114,6 +115,10 @@ export function useCharacterFacts(characterId: string): { facts?: CharacterFacts
       proficiencyBonus: stats.get("proficiency") ?? 2,
       stat: (n: string) => stats.get(n),
       statNames: [...stats.keys()],
+      statSource: (n: string) => {
+        const value = statistics.data.statistics.find((s) => s.groupName === n)?.values?.[0];
+        return value?.displayName ?? value?.source ?? undefined;
+      },
       has: auroraIds.data ?? new Set<string>(),
       strength: abilities.data.abilityScores.find((a) => a.abbreviation === "STR")?.calculatedScore ?? 10,
     } as CharacterFacts & { strength: number };
