@@ -55,3 +55,13 @@ describe("custom attacks in the Battle Action Simulator", () => {
     expect(model.weapons.map((w) => w.name)).toEqual(["Thunder Gauntlets"]);
   });
 });
+
+it("uses edited custom figures in the sheet/PDF data and battle, then removes deleted attacks", async () => {
+  const { saveCustomAttack, removeCustomAttack } = await import("@/lib/rules/custom-attacks");
+  const edited = { ...inventory, ...saveCustomAttack(inventory, { ...inventory.customAttacks![0], name: "Frost Gauntlets", damage: "2d8+4 cold", toHit: "+8 vs AC" }, false) };
+  expect(sheet(edited).attacks.find((a) => a.name === "Frost Gauntlets")).toMatchObject({ damage: "2d8+4 cold", attack: "+8 vs AC" });
+  expect(buildBattleModel(sheet(edited)).weapons.find((a) => a.name === "Frost Gauntlets")).toMatchObject({ bonus: 8, roll: { dice: [{ count: 2, sides: 8 }], bonus: 4, type: "cold" } });
+  const removed = { ...edited, ...removeCustomAttack(edited, "custom-1") };
+  expect(sheet(removed).attacks.map((a) => a.name)).toEqual(["Longsword"]);
+  expect(buildBattleModel(sheet(removed)).weapons.some((a) => a.name === "Frost Gauntlets")).toBe(false);
+});

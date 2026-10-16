@@ -1,9 +1,9 @@
 ---
 name: starlights-database
-description: Load before changing Starlights persistence — EF Core contexts, migrations, the character JSON columns, builder snapshots, row locks, or anything touching the live SQL Server or its backups.
+description: Load before changing Starfall persistence — EF Core contexts, migrations, the character JSON columns, builder snapshots, row locks, or anything touching the live SQL Server or its backups.
 ---
 
-# Starlights data
+# Starfall data
 
 - Two EF Core contexts on one SQL Server 2022: `CharactersContext` (schema `characters`;
   `src/modules/characters/Modules.Characters.Data.EntityFramework`) and `ElementsContext` (schema `elements`).

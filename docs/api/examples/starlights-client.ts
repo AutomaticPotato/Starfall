@@ -1,5 +1,5 @@
 /**
- * A small, read-only Starlights API client in TypeScript (fetch; Node 22.18+ runs it directly, or any bundler/browser).
+ * A small, read-only Starfall API client in TypeScript (fetch; Node 22.18+ runs it directly, or any bundler/browser).
  * Prints each character's attack list: the weapons on the attack list and the custom attacks written by hand.
  *
  *   node starlights-client.ts http://localhost:8093

@@ -9,7 +9,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { importCharacter, previewImport, readCharacterFile, serverMessage, type CharacterFile, type ImportPreview } from "@/lib/api/character-portability";
 
 /**
- * Import a character exported from another Starlights server (.starlights.json): read the file, show what it is and
+ * Import a character exported from another Starfall server (.starlights.json): read the file, show what it is and
  * what this server lacks, and only on confirmation create it as a new character of the current player.
  */
 export function StarlightsImportDialog({ player }: { player: string }) {
@@ -73,14 +73,14 @@ export function StarlightsImportDialog({ player }: { player: string }) {
       <DialogTrigger asChild>
         <Button variant="outline">
           <FileInputIcon size={16} />
-          Import Starlights character
+          Import Starfall character
         </Button>
       </DialogTrigger>
       <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-xl">
         <DialogHeader>
-          <DialogTitle>Import a Starlights character</DialogTitle>
+          <DialogTitle>Import a Starfall character</DialogTitle>
           <DialogDescription>
-            A <code>.starlights.json</code> file exported from any Starlights server. It becomes a new character of {player}; nothing existing is changed, and it joins no campaign.
+            A <code>.starlights.json</code> file exported from any Starfall server. It becomes a new character of {player}; nothing existing is changed, and it joins no campaign.
           </DialogDescription>
         </DialogHeader>
 

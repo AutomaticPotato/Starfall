@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""A small, read-only Starlights API client (Python 3.9+, standard library only).
+"""A small, read-only Starfall API client (Python 3.9+, standard library only).
 
 Lists a server's characters and, for each, its attack list as the sheet shows it: the weapons on the attack list
 and the custom attacks written by hand (Aurora's Manage -> Attacks), in their order.
@@ -21,7 +21,7 @@ import urllib.request
 
 
 class Starlights:
-    """GET/POST against one Starlights server, carrying the player tokens it was given."""
+    """GET/POST against one Starfall server, carrying the player tokens it was given."""
 
     TOKEN_HEADER = "X-Player-Token"
 
@@ -112,7 +112,7 @@ def attack_list(inventory, catalog):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("url", help="the Starlights address, e.g. http://localhost:8093")
+    parser.add_argument("url", help="the Starfall address, e.g. http://localhost:8093")
     parser.add_argument("--player", help="only this player's characters (unlocked with its password when locked)")
     parser.add_argument("--json", action="store_true", help="print JSON instead of text")
     args = parser.parse_args()

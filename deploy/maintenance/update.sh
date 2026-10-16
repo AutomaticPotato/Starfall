@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Updates this Starlights install to newer code, carefully. Nothing happens by itself: you run it, it shows what
+# Updates this Starfall install to newer code, carefully. Nothing happens by itself: you run it, it shows what
 # would change, and asks before doing anything.
 #
 #   deploy/maintenance/update.sh [--to REF] [--check] [--confirm NAME]

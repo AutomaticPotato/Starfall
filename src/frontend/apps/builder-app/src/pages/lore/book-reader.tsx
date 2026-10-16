@@ -135,7 +135,7 @@ function Reader({ meta }: { meta: LoreMeta }) {
     document.title = `${toc.data.name} · Compendium of Lore`;
     rememberRecent({ category: kind, key: id, name: toc.data.name, source: toc.data.source });
     return () => {
-      document.title = "Starlights";
+      document.title = "Starfall";
     };
   }, [toc.data, kind, id]);
 

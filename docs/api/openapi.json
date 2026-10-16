@@ -1,8 +1,8 @@
 {
   "openapi": "3.1.1",
   "info": {
-    "title": "Starlights API",
-    "description": "The HTTP API of a Starlights server (the web app uses it too). Guide: docs/api/README.md in the repository.",
+    "title": "Starfall API",
+    "description": "The HTTP API of a Starfall server (the web app uses it too). Guide: docs/api/README.md in the repository.",
     "version": "v1"
   },
   "paths": {
@@ -5718,6 +5718,15 @@
             "items": {
               "$ref": "#/components/schemas/CustomAttack"
             }
+          },
+          "removedAttackIds": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -7335,6 +7344,9 @@
       "CustomAttack": {
         "type": "object",
         "properties": {
+          "edited": {
+            "type": "boolean"
+          },
           "id": {
             "type": "string"
           },

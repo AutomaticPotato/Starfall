@@ -1,6 +1,6 @@
 ---
 name: starlights-campaign-ops
-description: Help the owner maintain Starlights campaign session notes, NPCs, places, quests, treasure and character grants through existing authenticated APIs. Prepare changes for approval before writing live data. Use for campaign operations, not application development or autonomous session invention.
+description: Help the owner maintain Starfall campaign session notes, NPCs, places, quests, treasure and character grants through existing authenticated APIs. Prepare changes for approval before writing live data. Use for campaign operations, not application development or autonomous session invention.
 ---
 
 # Campaign operations

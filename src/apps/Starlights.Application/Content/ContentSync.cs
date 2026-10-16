@@ -88,7 +88,7 @@ public sealed partial class ContentSync
     {
         // no redirects: every address is built here from a checked link, and nothing may send the server elsewhere
         var client = new HttpClient(new SocketsHttpHandler { AllowAutoRedirect = false, AutomaticDecompression = DecompressionMethods.None }) { Timeout = TimeSpan.FromMinutes(20) };
-        client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("Starlights", "1.0"));
+        client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("Starfall", "1.0"));
         return client;
     }
 

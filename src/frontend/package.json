@@ -1,5 +1,5 @@
 {
-  "name": "starlights",
+  "name": "starfall",
   "private": true,
   "workspaces": [
     "packages/api-client",

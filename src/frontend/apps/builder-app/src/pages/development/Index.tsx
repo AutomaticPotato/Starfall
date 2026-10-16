@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-// Starlights color palettes configuration
+// Starfall color palettes configuration
 const starlightsColors = [
   { name: "purple", label: "Purple", prefix: "starlights-" },
   { name: "red", label: "Red", prefix: "starlights-" },
@@ -45,7 +45,7 @@ const tailwindColors = [
 
 const tailwindShades = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950];
 
-// Hardcoded color class maps for Starlights colors
+// Hardcoded color class maps for Starfall colors
 const starlightsColorClassMap: Record<string, Record<number, string>> = {
   "starlights-purple": {
     50: "bg-starlights-purple-50",
@@ -322,7 +322,7 @@ export function DevelopmentPage() {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Starlights Colors</CardTitle>
+          <CardTitle>Starfall Colors</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">

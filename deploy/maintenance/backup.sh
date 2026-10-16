@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Backs up a Starlights install while it runs: the database with SQL Server's own BACKUP (checksummed, verified),
+# Backs up a Starfall install while it runs: the database with SQL Server's own BACKUP (checksummed, verified),
 # plus the portraits, campaign pictures, homebrew files and artwork in deploy/data.
 #
 #   deploy/maintenance/backup.sh [--label NAME] [--include-env]
@@ -48,7 +48,7 @@ trap 'cleanup_inner; printf "\nThe backup did not finish; what was written is in
 
 step "Backing up the database (SQL Server BACKUP, with checksums)"
 dc exec -T starlights-db mkdir -p "$CONTAINER_BACKUP_DIR"
-printf "BACKUP DATABASE [%s] TO DISK = N'%s' WITH COPY_ONLY, CHECKSUM, INIT, FORMAT, NAME = N'Starlights %s';\nGO\n" "$DB_NAME" "$inner" "$name" | sql \
+printf "BACKUP DATABASE [%s] TO DISK = N'%s' WITH COPY_ONLY, CHECKSUM, INIT, FORMAT, NAME = N'Starfall %s';\nGO\n" "$DB_NAME" "$inner" "$name" | sql \
   || die "SQL Server could not back up the database (see the message above)." "Nothing was changed. Common causes: a full disk, or the database container restarting."
 printf "RESTORE VERIFYONLY FROM DISK = N'%s' WITH CHECKSUM;\nGO\n" "$inner" | sql \
   || die "the new backup did not pass SQL Server's check (RESTORE VERIFYONLY)." "Do not rely on it. Check the disk (df -h, dmesg) and run the backup again."

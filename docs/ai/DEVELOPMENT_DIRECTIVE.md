@@ -1,12 +1,12 @@
-# Project Starlights — permanent development directive
+# Project Starfall — permanent development directive
 
 From the project owner, 2026-10-15. Applies to every agent and contributor (Claude, Codex, community).
 
 ## Mission
 
-Project Starlights is a free, open-source, self-hosted, browser-based D&D 5e platform.
+Project Starfall is a free, open-source, self-hosted, browser-based D&D 5e platform.
 
-Repository: https://github.com/CHassapis/starlights
+Repository: https://github.com/CHassapis/starfall
 
 Primary goals, in order:
 
@@ -25,7 +25,7 @@ Keep the existing React/TypeScript, .NET, SQL Server and Docker architecture.
 
 ## 1. Protect the live application
 
-Starlights has real users and persistent character and campaign data.
+Starfall has real users and persistent character and campaign data.
 
 Production is strictly off-limits unless I explicitly authorize an operation.
 
@@ -81,7 +81,7 @@ Preserve approved changes from other contributors when updating development bran
 
 Use this decision order:
 
-1. Reuse existing Starlights functionality.
+1. Reuse existing Starfall functionality.
 2. Improve the existing implementation.
 3. Find an appropriate implementation in Borealis.
 4. Reuse or adapt compatible licensed code.
@@ -197,6 +197,6 @@ A completed feature is not authorization to release it.
 
 ## Governing principle
 
-**Make Starlights simpler, more reliable and more useful without damaging the existing application or increasing complexity unnecessarily.**
+**Make Starfall simpler, more reliable and more useful without damaging the existing application or increasing complexity unnecessarily.**
 
 Character creation, campaign management and live tabletop play take precedence over additional features.

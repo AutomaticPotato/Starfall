@@ -1,6 +1,6 @@
 ---
 name: starlights-homebrew
-description: Load before working on Starlights homebrew — the Homebrew page, homebrew items/monsters/spells/classes/subclasses, the homebrew folder and import, who may create it, and how it reaches the builder, compendium, campaigns, inventories and the battle simulator.
+description: Load before working on Starfall homebrew — the Homebrew page, homebrew items/monsters/spells/classes/subclasses, the homebrew folder and import, who may create it, and how it reaches the builder, compendium, campaigns, inventories and the battle simulator.
 ---
 
 # Homebrew

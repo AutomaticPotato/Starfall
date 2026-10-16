@@ -1,5 +1,5 @@
 /**
- * The Starlights ornament components (styles in styles/ornament.css): theme-coloured, decorative only — they are
+ * The Starfall ornament components (styles in styles/ornament.css): theme-coloured, decorative only — they are
  * hidden from assistive technology and never take clicks. Use them by the component's job: decorative on the home
  * page and landing sections, restrained on summary panels, none on dense controls and data.
  */
@@ -57,7 +57,7 @@ export function FantasySectionHeader({ eyebrow, title, description, as: Heading 
   );
 }
 
-/** The Starlights compass star, drawn in the theme's ornament colours (for empty states and small brand marks). */
+/** The Starfall compass star, drawn in the theme's ornament colours (for empty states and small brand marks). */
 export function CelestialEmblem({ size = 40, className }: { size?: number; className?: string }) {
   return (
     <svg aria-hidden viewBox="0 0 48 48" width={size} height={size} className={cn("shrink-0", className)}>

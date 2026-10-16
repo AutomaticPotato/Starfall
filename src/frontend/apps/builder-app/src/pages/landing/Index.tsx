@@ -121,7 +121,7 @@ export function LandingPage2() {
       <HourlyBackdrop />
       <header className="mb-8 grid items-center gap-6 sm:grid-cols-[minmax(0,22rem)_1fr]">
         <h1 data-ornament="restrained" className="overflow-hidden rounded-2xl bg-[#0b1424] shadow-sm">
-          <img src="/branding/starlights-logo.webp" alt="Project Starlights" width={1000} height={750} fetchPriority="high" className="h-auto w-full" />
+          <img src="/branding/starlights-logo.webp" alt="Project Starfall" width={1000} height={750} fetchPriority="high" className="h-auto w-full" />
         </h1>
         <div className="max-w-xl">
           <p className="text-sm font-semibold uppercase tracking-widest text-primary-text">Your table's companion</p>

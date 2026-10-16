@@ -1,4 +1,4 @@
-# Project Starlights
+# Project Starfall
 Expanded Aurora-compatible character builder and tabletop companion. Local Git is the source of truth.
 
 ## Stack and locations

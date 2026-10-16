@@ -1,6 +1,6 @@
 ---
 name: starlights-battle-simulator
-description: Work on Starlights combat UI, action economy, spells, items and resources.
+description: Work on Starfall combat UI, action economy, spells, items and resources.
 ---
 
 Read Sheet and battle, then the Battle section of FRONTEND_GUIDE.md. Reuse buildBattleModel and existing combat/magic/inventory hooks. Presentation work must not rewrite combat calculations. Encounter calculator integration requires checking Claude ownership.

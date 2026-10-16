@@ -4,7 +4,7 @@ description: This prompt instructs the agent to implement or update HTTP API end
 model: GPT-5.2
 ---
 
-# Implement / Update API Endpoint (Starlights)
+# Implement / Update API Endpoint (Starfall)
 
 ## Role
 

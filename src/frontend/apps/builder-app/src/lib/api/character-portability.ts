@@ -1,7 +1,7 @@
 import { apiClient } from "@/lib/api-client";
 
 /**
- * Starlights character files: a whole character for another Starlights server (docs/character-portability.md).
+ * Starfall character files: a whole character for another Starfall server (docs/character-portability.md).
  * Exporting and importing are done by the server; this only moves the file in and out of the browser.
  */
 
@@ -50,7 +50,7 @@ export async function readCharacterFile(file: File): Promise<CharacterFile> {
   try {
     return JSON.parse(await file.text()) as CharacterFile;
   } catch {
-    throw new Error("This file is not a Starlights character file (it isn't JSON).");
+    throw new Error("This file is not a Starfall character file (it isn't JSON).");
   }
 }
 

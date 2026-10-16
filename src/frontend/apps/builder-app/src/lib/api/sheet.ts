@@ -298,7 +298,7 @@ export function hitPointsForClasses(classes: { level: number; die: number }[], c
   return dice + level * con + bonus;
 }
 
-/** Aurora statistic names to the Starlights convention (same as the importer). */
+/** Aurora statistic names to the Starfall convention (same as the importer). */
 function statisticName(auroraName: string): string {
   let name = auroraName.trim().toLowerCase();
   name = name.replace(/^(strength|dexterity|constitution|intelligence|wisdom|charisma):save\b/, "$1-saving-throw").replace(/ /g, "-");

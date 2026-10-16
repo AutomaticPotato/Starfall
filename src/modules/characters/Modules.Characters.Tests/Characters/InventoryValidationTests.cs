@@ -112,4 +112,22 @@ public class InventoryValidationTests
         var edited = new CharacterInventory { CustomAttacks = [ArmorAttack() with { Damage = "2d8+3 thunder" }] };
         edited.KeepingCustomAttacksOf(stored).CustomAttacks!.Single().Damage.Should().Be("2d8+3 thunder");
     }
+    [TestMethod]
+    public void AttackEditAndDeletionMetadata_RoundTrips_AndOlderClientsKeepDeletions()
+    {
+        var inventory = new CharacterInventory
+        {
+            CustomAttacks = [ArmorAttack() with { Edited = true }],
+            RemovedAttackIds = ["deleted-aurora-attack"]
+        };
+        var web = new System.Text.Json.JsonSerializerOptions(System.Text.Json.JsonSerializerDefaults.Web);
+        var json = System.Text.Json.JsonSerializer.Serialize(inventory, web);
+        var restored = System.Text.Json.JsonSerializer.Deserialize<CharacterInventory>(json, web)!;
+        restored.CustomAttacks!.Single().Edited.Should().BeTrue();
+        (new CharacterInventory { CustomAttacks = [ArmorAttack()] }).KeepingCustomAttacksOf(restored).CustomAttacks!.Single().Edited.Should().BeTrue();
+        restored.RemovedAttackIds.Should().Equal("deleted-aurora-attack");
+        new CharacterInventory().KeepingCustomAttacksOf(restored).RemovedAttackIds.Should().Equal(restored.RemovedAttackIds);
+        (new CharacterInventory { RemovedAttackIds = [] }).KeepingCustomAttacksOf(restored).RemovedAttackIds.Should().BeEmpty();
+        (inventory with { RemovedAttackIds = [new string('x', 65)] }).Validate().Should().NotBeNull();
+    }
 }

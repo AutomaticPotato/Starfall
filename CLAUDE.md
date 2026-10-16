@@ -1,7 +1,7 @@
-# Starlights — Claude notes
+# Starfall — Claude notes
 
-Starlights is an Aurora-compatible D&D 5e character builder and table companion (fork of swdriessen/starlights,
-branch `aurora-server`, published to `mine` = github.com/CHassapis/starlights; never push to `origin`). It runs in
+Starfall is an Aurora-compatible D&D 5e character builder and table companion (fork of swdriessen/starlights,
+branch `aurora-server`, published to `mine` = github.com/CHassapis/starfall; never push to `origin`). It runs in
 Docker on the homelab server (`~/homelab/compose/starlights`, site :8093, public door :8098 via Tailscale Funnel).
 
 ## Directive (binding; full text: [docs/ai/DEVELOPMENT_DIRECTIVE.md](docs/ai/DEVELOPMENT_DIRECTIVE.md))
@@ -9,7 +9,7 @@ Docker on the homelab server (`~/homelab/compose/starlights`, site :8093, public
   tests, completion report (format in `starlights-session-handoff`), then stop. A roadmap is not a work order.
 - Production (containers, DB, volumes, config, migrations), merge, push and deploy only with the owner's explicit
   approval for that operation. A finished feature is not approval to release it.
-- Reuse first: existing Starlights → improve it → Borealis (github.com/alon-mini/borealis) → licensed code → small
+- Reuse first: existing Starfall → improve it → Borealis (github.com/alon-mini/borealis) → licensed code → small
   port → from scratch. No Rust/Tauri/Electron or new rules engine; keep attribution; flag licensing questions.
 - Codex's design system and themes are the UI baseline once integrated; no competing component or theme systems.
 - Priorities: character creation, then campaign management, then live play, then reference content.

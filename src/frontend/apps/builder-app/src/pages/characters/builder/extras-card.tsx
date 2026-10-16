@@ -54,7 +54,7 @@ const GROUPS = [
   { category: "Additional Ability Score Improvement", title: "Ability scores", hint: "+1 (or −1) to one ability score" },
 ];
 
-// Aurora's own switches for features its app gates; Starlights does not gate them, so they would do nothing here
+// Aurora's own switches for features its app gates; Starfall does not gate them, so they would do nothing here
 const isSwitch = (item: ItemInfo) => /unlocker$/i.test(item.name);
 
 /**

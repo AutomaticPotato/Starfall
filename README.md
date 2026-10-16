@@ -1,20 +1,20 @@
-# Project Starlights
+# Starfall
 
-**v0.10.0 public beta** ([release](https://github.com/CHassapis/starlights/releases/tag/v0.10.0) ·
+**v0.10.0 public beta** ([release](https://github.com/CHassapis/starfall/releases/tag/v0.10.0) ·
 [release notes](docs/releases/v0.10.0.md) · [verification report](docs/ai/V0_10_0_VERIFICATION.md)). Development is in
 maintenance mode: bug fixes and live-play reliability only.
 
-> **About this fork (branch `aurora-server`).** A self-hosted build of Project Starlights by C Hassapis, packaged to
-> run in Docker for a D&D group. All credit for Starlights and Aurora Builder goes to their creator, **Bas Driessen**
+> **About this fork (branch `aurora-server`).** Starfall is a self-hosted fork of Project Starlights by C Hassapis, packaged to
+> run in Docker for a D&D group. Credit for the original Project Starlights and Aurora Builder goes to their creator, **Bas Driessen**
 > ([swdriessen/starlights](https://github.com/swdriessen/starlights), [aurorabuilder.com](https://www.aurorabuilder.com)).
 > The content comes from [Aurora Legacy](https://github.com/AuroraLegacy/elements) and the Compendium's data from
 > [5etools](https://github.com/5etools-mirror-3/5etools-src). Unofficial fan project, not affiliated with or endorsed by
 > Wizards of the Coast; no book content is part of this repository. The original README follows the fork's sections.
 
 <p align="center">
-  <img src="assets/images/screenshots/home-desktop.jpg" alt="The Starlights home page on a desktop" width="65%">
+  <img src="assets/images/screenshots/home-desktop.jpg" alt="The Starfall home page on a desktop" width="65%">
   &nbsp;
-  <img src="assets/images/screenshots/home-phone.jpg" alt="The Starlights home page on a phone" width="28%">
+  <img src="assets/images/screenshots/home-phone.jpg" alt="The Starfall home page on a phone" width="28%">
 </p>
 <p align="center"><sub>The home page on a desktop and on a phone (Midnight theme), as a new install shows it.</sub></p>
 
@@ -34,9 +34,10 @@ maintenance mode: bug fixes and live-play reliability only.
 - **Character sheets like Aurora's**, on screen and as PDF, built in (nothing to copy from Aurora), with the portrait
   sized and placed as you like and a last page showing the whole picture; bring in players' Aurora character files.
 - **Interactive play sheet** shares hit points, conditions, rests, equipment and spell preparation with Battle.
-  Aurora imports retain custom attacks, their written figures and display order in the sheet, PDF and Battle.
+  **Equipment → Custom Attacks** creates, edits, deletes and reorders attacks, including Aurora imports.
+  Manual edits and deletions survive reimports; figures and display order reach the sheet, PDF and Battle.
   Unarmored armor class also recognizes Aurora's natural-armor calculations, including an autognome's Armored Casing.
-- **Portable characters**: export and import a Starlights character file between installations with matching content.
+- **Portable characters**: export and import a Starfall character file between installations with matching content.
   See [character portability](docs/character-portability.md) for compatibility requirements.
 - **Porcelain, Slate and Midnight themes**, responsive navigation and searchable, paginated spell cards.
   Verified identical printings from the same rules edition share a choice; different editions and homebrew stay separate.
@@ -84,8 +85,8 @@ validation status](docs/installation.md) before installing.
 
 ```bash
 cd ~
-git clone --branch aurora-server https://github.com/CHassapis/starlights.git
-cd starlights/deploy
+git clone --branch aurora-server https://github.com/CHassapis/starfall.git
+cd starfall/deploy
 ./setup.sh --check     # checks Docker, memory, disk and the port; changes nothing
 ./setup.sh
 ```
@@ -152,7 +153,7 @@ elsewhere. It holds `campaign.json` and a `pictures/` folder:
 | the books' and homebrew items the campaign's magic items are, by id, name and book | homebrew files themselves (back up `data/homebrew`), other campaigns and characters |
 | the campaign's pictures and the party's portraits and story pictures | |
 
-The export holds your DM notes: keep it private. Starlights can't import it yet; it is a readable, complete copy
+The export holds your DM notes: keep it private. Starfall can't import it yet; it is a readable, complete copy
 (`campaign.json` maps each picture to the address the campaign uses). For a full backup of the server, see
 [Backups](#backups-and-restoring).
 
@@ -203,7 +204,7 @@ only describes in words stays words on the sheet. Aurora's version always wins: 
 own elements are used and the translation stops (a character who already took the translated one keeps it). To turn
 this off, set `FiveETools__Generate=false` for the API in `deploy/docker-compose.yml`.
 
-The page also shows where things stand: the **server** (the Starlights version it was built from, whether every
+The page also shows where things stand: the **server** (the Starfall version it was built from, whether every
 database change is applied, and how many characters, campaigns, elements and homebrew items there are) and the
 **content** (Aurora Legacy's commit, the 5etools release, the last update that worked, and whether one is running).
 **Check for updates** asks GitHub, only when you press it, what is newer: Aurora Legacy's new commits and the files
@@ -303,15 +304,23 @@ personal use): install it on the server and on each player's device, then open `
 First copy anything in `data/backups/` you want to keep somewhere else: the last command deletes it too.
 
 ```bash
-cd starlights/deploy
+cd starfall/deploy
 docker compose down
 docker rmi $(docker compose config --images | grep -v mssql)   # this install's own images
 docker run --rm -v "$PWD:/d" alpine rm -rf /d/data     # deletes everything, including characters, campaigns and backups
 ```
 
+## Starfall compatibility
+
+Starfall continues this fork under its new name. Existing installations need no database migration or directory rename.
+Keep existing `STARLIGHTS_*` settings, Docker project/volume names, storage keys and `.starlights.json` character files.
+API routes, scoped packages and internal namespaces remain unchanged. For an existing clone, update only the fork remote
+after the GitHub rename: `git remote set-url mine https://github.com/CHassapis/starfall.git` (use your fork remote’s name).
+Do not change an `origin` remote that points to Bas Driessen’s upstream repository. The default branch stays `aurora-server`.
+
 ## Developer API
 
-Other programs can read your group's characters from a Starlights server: the web app runs on the same HTTP API.
+Other programs can read your group's characters from a Starfall server: the web app runs on the same HTTP API.
 
 - **Guide:** [docs/api/README.md](docs/api/README.md): players and passwords (`X-Player-Token`), characters,
   attacks (custom attacks included), inventory, magic and combat, with what the API does not do yet.

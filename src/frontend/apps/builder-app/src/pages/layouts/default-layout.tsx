@@ -108,10 +108,10 @@ export function MainNavigation() {
       <nav className="flex items-center justify-between h-16 ">
         <div className="flex min-w-0 items-center justify-start gap-2 ">
           {/* the home button never gives up its room: the links shrink to icons first */}
-          <Link to="/" aria-label="Project Starlights home" className="flex shrink-0 items-center gap-2 font-heading relative">
+          <Link to="/" aria-label="Project Starfall home" className="flex shrink-0 items-center gap-2 font-heading relative">
             <img src="/branding/starlights-emblem.webp" alt="" width={44} height={44} className="size-11 shrink-0 rounded-lg border border-[color-mix(in_srgb,var(--ornament)_45%,var(--border))]" />
-            <span className="hidden 2xl:inline tracking-widest mt-0.5">Project Starlights</span>
-            <span className="hidden xl:inline 2xl:hidden tracking-widest mt-0.5">Starlights</span>
+            <span className="hidden 2xl:inline tracking-widest mt-0.5">Project Starfall</span>
+            <span className="hidden xl:inline 2xl:hidden tracking-widest mt-0.5">Starfall</span>
           </Link>
 
           <MainLinks className="ms-2 hidden lg:flex" />

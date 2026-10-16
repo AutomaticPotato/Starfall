@@ -85,6 +85,9 @@ public sealed record CustomItem
 /// </summary>
 public sealed record CustomAttack
 {
+    /// <summary>Manual edits take precedence over Aurora reimports.</summary>
+    public bool Edited { get; init; }
+
     /// <summary>Stable id (Aurora's identifier of the attack).</summary>
     public string Id { get; init; } = string.Empty;
 
@@ -137,9 +140,19 @@ public sealed record CharacterInventory
     /// </summary>
     public List<CustomAttack>? CustomAttacks { get; init; }
 
+    /// <summary>Deleted custom attack identifiers suppressed during reimports.</summary>
+    public List<string>? RemovedAttackIds { get; init; }
+
     /// <summary>This save, with the stored custom attacks when it leaves them out (an empty list removes them).</summary>
     public CharacterInventory KeepingCustomAttacksOf(CharacterInventory stored) =>
-        CustomAttacks is null ? this with { CustomAttacks = stored.CustomAttacks } : this;
+        this with
+        {
+            CustomAttacks = CustomAttacks?.Select(a => a with
+            {
+                Edited = a.Edited || (stored.CustomAttacks?.Any(previous => previous.Id == a.Id && previous.Edited) ?? false)
+            }).ToList() ?? stored.CustomAttacks,
+            RemovedAttackIds = RemovedAttackIds ?? stored.RemovedAttackIds
+        };
 
     public static readonly IReadOnlySet<string> CoinKinds = new HashSet<string> { "cp", "sp", "ep", "gp", "pp" };
 
@@ -180,6 +193,10 @@ public sealed record CharacterInventory
         if ((Treasure?.Length ?? 0) > 20_000 || (QuestItems?.Length ?? 0) > 20_000)
         {
             return "The treasure and quest item texts are too long.";
+        }
+        if (RemovedAttackIds is { } removed && (removed.Count > 1000 || removed.Any(id => string.IsNullOrWhiteSpace(id) || id.Length > 64)))
+        {
+            return "At most 1000 removed attack identifiers, each between 1 and 64 characters.";
         }
         if (CustomAttacks is { } attacks)
         {

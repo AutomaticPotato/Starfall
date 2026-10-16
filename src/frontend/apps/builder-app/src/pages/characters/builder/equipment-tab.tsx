@@ -54,6 +54,8 @@ import type { BuilderChoice } from "@/lib/api/builder";
 import { cn } from "@/lib/utils";
 import { TradeDialog, type TradeItem } from "./trade-dialog";
 
+import { CustomAttacksEditor } from "./custom-attacks-editor";
+
 const newId = () => crypto.randomUUID?.() ?? `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
 
 /**
@@ -245,6 +247,8 @@ export function EquipmentTab({ characterId, itemChoices = [], renderChoice }: { 
         />
       ))}
       <Group title="Stored elsewhere" icon={<BackpackIcon className="size-4" />} items={groups.stored} note="not carried" {...rowProps} />
+
+      <CustomAttacksEditor characterId={characterId} inventory={inventory} />
 
       <Coins inventory={inventory.coins} onChange={(coins) => save.update(() => ({ coins }), failed)} onGive={() => setGiving("coins")} />
       {giving && <TradeDialog characterId={characterId} item={giving === "coins" ? null : giving} purse={inventory.coins} onClose={() => setGiving(null)} />}

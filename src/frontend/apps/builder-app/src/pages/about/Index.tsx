@@ -8,7 +8,7 @@ export default function AboutPage() {
       <header className="space-y-2">
         <h1 className="font-heading text-3xl font-semibold">About &amp; credits</h1>
         <p className="text-muted-foreground">
-          This site is a self-hosted build of Project Starlights for our own table, packaged to run in Docker by C Hassapis. It stands on the work of the people
+          Starfall is a self-hosted fork of Project Starlights for our own table, packaged to run in Docker by C Hassapis. It stands on the work of the people
           below. Thank you to all of them.
         </p>
       </header>
@@ -19,13 +19,13 @@ export default function AboutPage() {
           name="Project Starlights"
           by="Bas Driessen"
           href="https://github.com/swdriessen/starlights"
-          text="The original Starlights: the online character builder, its rules engine and the app this site is based on. Released under the MIT licence, which is kept with this build."
+          text="The original Project Starlights: the online character builder, its rules engine and the app this site is based on. Released under the MIT licence, which is kept with this build."
         />
         <Credit
           name="Aurora Builder"
           by="Bas Driessen"
           href="https://www.aurorabuilder.com"
-          text="The character builder Starlights continues. Characters, choices and sheets follow how Aurora works, and players' Aurora files can be brought in."
+          text="The character builder Starfall continues. Characters, choices and sheets follow how Aurora works, and players' Aurora files can be brought in."
         />
         <Credit
           name="Aurora Legacy"
@@ -60,7 +60,7 @@ export default function AboutPage() {
         <h2 className="font-heading text-xl font-semibold">Run your own</h2>
         <p className="text-sm text-muted-foreground">
           The code is on{" "}
-          <a href="https://github.com/CHassapis/starlights/tree/aurora-server" target="_blank" rel="noreferrer" className="underline">
+          <a href="https://github.com/CHassapis/starfall/tree/aurora-server" target="_blank" rel="noreferrer" className="underline">
             GitHub (branch aurora-server)
           </a>
           . Its README explains how to install it with Docker: one script fetches the Aurora Legacy content and the 5etools data and sets everything up.

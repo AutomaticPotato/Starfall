@@ -15,6 +15,6 @@ Everything the character sheet PDF is made from, built into the web app so the s
 - **`sheet-fields-regular.ttf`**: Adobe's Source Sans 3 Regular cut down to Latin, for the values in the form boxes.
   SIL Open Font License 1.1, see `OFL-sheet-fields.txt`.
 
-The fonts are renamed (Starlights Sheet Text, Starlights Sheet Fields) because the license reserves the names Carlito
+The fonts are renamed (Starfall Sheet Text, Starfall Sheet Fields) because the license reserves the names Carlito
 and Source for unchanged copies. Cut down with fonttools `pyftsubset` (Latin, Latin Extended, Greek, Cyrillic,
 punctuation and symbols; no ligatures, which pdf-lib turned into gaps).

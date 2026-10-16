@@ -90,7 +90,7 @@ class SheetBuilder {
     const doc = await PDFDocument.create();
     doc.registerFontkit(fontkit);
     doc.setTitle("Character Sheet");
-    doc.setCreator("Starlights");
+    doc.setCreator("Starfall");
     const [field, regular, bold, italic, boldItalic] = await Promise.all(
       ["sheet-fields-regular.ttf", "sheet-text-regular.ttf", "sheet-text-bold.ttf", "sheet-text-italic.ttf", "sheet-text-bold-italic.ttf"].map(asset),
     );

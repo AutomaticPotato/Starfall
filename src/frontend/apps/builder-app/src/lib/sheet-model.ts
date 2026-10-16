@@ -2,7 +2,7 @@ import { armorClass, attunementMax, displayName, resolve, sheetAttacks, weight, 
 import { preparedIds, spellSlots, type Caster, type KnownSpell, type MagicState, type Spellcasting } from "@/lib/rules/magic";
 
 /*
- * What Aurora's sheet shows of a character's equipment and spellcasting, worked out from Starlights' inventory,
+ * What Aurora's sheet shows of a character's equipment and spellcasting, worked out from Starfall's inventory,
  * spellcasting and magic state, following Aurora's own sheets (their form fields are the reference, see
  * homelab/scripts/starlights-compare-sheet.py): gear in [brackets] when equipped or attuned, Aurora's generated item
  * names in the lists and the player's own on the cards, prepared spells first and ticked, then the rest of the
