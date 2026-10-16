@@ -18,6 +18,10 @@ internal class CharacterSnapshotsRepository : RepositoryBase<CharacterSnapshot>,
     // the character's own columns the builder changes (not its id, player or fight)
     private static readonly string[] CharacterColumns = ["name", "restricted_sources", "story", "extras", "inventory", "magic"];
 
+    // a character moved to another server takes its play state too (hit points, conditions, resources, used slots),
+    // still not its id, player, campaign or fight
+    private static readonly string[] PortableCharacterColumns = [.. CharacterColumns, "combat"];
+
     // table, and the condition on alias t that picks the character's rows (@id), in the order they are inserted
     private static readonly (string Table, string Where)[] Tables =
     [
@@ -59,11 +63,32 @@ internal class CharacterSnapshotsRepository : RepositoryBase<CharacterSnapshot>,
 
     public void Remove(CharacterSnapshot snapshot) => Entities.Remove(snapshot);
 
-    public async Task<string> CaptureAsync(Guid characterId)
+    public Task<string> CaptureAsync(Guid characterId) => CaptureAsync(characterId, CharacterColumns);
+
+    public Task<string> CapturePortableAsync(Guid characterId) => CaptureAsync(characterId, PortableCharacterColumns);
+
+    public Task RestoreAsync(Guid characterId, string data) => RestoreAsync(characterId, data, CharacterColumns);
+
+    public Task RestorePortableAsync(Guid characterId, string data) => RestoreAsync(characterId, data, PortableCharacterColumns);
+
+    public async Task<Dictionary<string, List<string>>> GetCaptureColumnsAsync()
+    {
+        var connection = Context.Database.GetDbConnection();
+        await EnsureOpenAsync(connection);
+        var all = await ColumnsAsync(connection);
+        var result = new Dictionary<string, List<string>> { ["character"] = [.. PortableCharacterColumns.Where(c => all["character"].ContainsKey(c))] };
+        foreach (var (table, _) in Tables)
+        {
+            result[table] = [.. all[table].Keys];
+        }
+        return result;
+    }
+
+    private async Task<string> CaptureAsync(Guid characterId, string[] characterColumns)
     {
         // (JSON_QUERY: a single object nests as JSON, not as a string)
         var sql = new StringBuilder("SELECT JSON_QUERY((SELECT ");
-        sql.Append(string.Join(", ", CharacterColumns.Select(c => $"t.[{c}]")));
+        sql.Append(string.Join(", ", characterColumns.Select(c => $"t.[{c}]")));
         sql.Append(" FROM characters.character t WHERE t.id = @id FOR JSON PATH, INCLUDE_NULL_VALUES, WITHOUT_ARRAY_WRAPPER)) AS [character]");
         foreach (var (table, where) in Tables)
         {
@@ -87,7 +112,7 @@ internal class CharacterSnapshotsRepository : RepositoryBase<CharacterSnapshot>,
         return json.ToString();
     }
 
-    public async Task RestoreAsync(Guid characterId, string data)
+    private async Task RestoreAsync(Guid characterId, string data, string[] characterColumns)
     {
         var connection = Context.Database.GetDbConnection();
         await EnsureOpenAsync(connection);
@@ -104,9 +129,9 @@ internal class CharacterSnapshotsRepository : RepositoryBase<CharacterSnapshot>,
             sql.AppendLine($"DELETE FROM characters.[{table}] WHERE parent_character = @id;");
         }
         // the character's own columns as they were
-        sql.Append("UPDATE c SET ").Append(string.Join(", ", CharacterColumns.Select(n => $"c.[{n}] = j.[{n}]")));
+        sql.Append("UPDATE c SET ").Append(string.Join(", ", characterColumns.Select(n => $"c.[{n}] = j.[{n}]")));
         sql.Append(" FROM characters.character c CROSS JOIN OPENJSON(@data, '$.character') WITH (");
-        sql.Append(string.Join(", ", CharacterColumns.Select(n => $"[{n}] {columns["character"][n]} '$.{n}'")));
+        sql.Append(string.Join(", ", characterColumns.Select(n => $"[{n}] {columns["character"][n]} '$.{n}'")));
         sql.AppendLine(") j WHERE c.id = @id;");
         sql.AppendLine("UPDATE characters.character SET inventory = JSON_MODIFY(inventory, '$.Revision', " +
             "(SELECT MAX(v) FROM (VALUES (ISNULL(@revision, 0)), (ISNULL(TRY_CAST(JSON_VALUE(inventory, '$.Revision') AS int), 0))) AS r(v)) + 1) " +

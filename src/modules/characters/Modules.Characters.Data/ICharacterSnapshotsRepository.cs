@@ -21,6 +21,18 @@ public interface ICharacterSnapshotsRepository : IRepository
     /// <summary>Whether the character still has changes being worked through (events not yet processed).</summary>
     Task<bool> IsProcessingAsync(Guid characterId);
 
+    /// <summary>
+    /// As <see cref="CaptureAsync"/>, plus the character's play state (combat: hit points, conditions, resources, used
+    /// slots), for exporting a whole character to another Starlights server.
+    /// </summary>
+    Task<string> CapturePortableAsync(Guid characterId);
+
+    /// <summary>Puts a portable capture (<see cref="CapturePortableAsync"/>) into an existing character, play state too.</summary>
+    Task RestorePortableAsync(Guid characterId, string data);
+
+    /// <summary>The columns of the tables a capture spans (table → column names), to compare captures across versions.</summary>
+    Task<Dictionary<string, List<string>>> GetCaptureColumnsAsync();
+
     void Add(CharacterSnapshot snapshot);
 
     void Remove(CharacterSnapshot snapshot);
