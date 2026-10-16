@@ -80,6 +80,11 @@ Test copy torn down afterwards (copy DB dropped, its .bak and :test images delet
 - `pages/homebrew/homebrew-tabs.tsx`: `Field` exported; items/monsters accept `startNew`.
 - Spell selection redesign (D&D Beyond style) is Codex's (`codex/frontend-modernisation` fd6bd92); not touched.
 - Merge order: either; the two branches touch different lines. Re-run web tests after both merge.
+- `feature/visual-refinement` (owner's request 2026-10-16, not deployed): `pages/layouts/default-layout.tsx` (home
+  button can't shrink; secondary nav labels icon-only below xl; `nav-active`, `app-header` classes), new
+  `styles/ornament.css` (imported after `themes.css`; ornament colours per existing `data-theme`, no new theme
+  system) and `components/ornaments.tsx`; landing tiles framed; characters list header wraps on phones.
+  Before/after harness: static builds + `tools/frontend/smoke.mjs` (90/90 both).
 
 ## Next
 Nothing pending from this task. Candidates if asked: custom-monster CR calculator; Mystic Arcanum / third-casters.

@@ -1,5 +1,6 @@
 @import "@starlights/ui/styles.css";
 @import "./styles/themes.css";
+@import "./styles/ornament.css";
 @source "../../../packages/ui/src";
 
 :root {
