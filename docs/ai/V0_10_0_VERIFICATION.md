@@ -3,9 +3,12 @@
 **Decision: HOLD. No v0.10.0 tag or GitHub release was created. Maintenance mode; no feature work.**
 
 Baseline: `ec3b83fe06bb7729d876a0ac4eeadba29bcb8cc5`, local and remote `aurora-server`, independently confirmed
-through the GitHub connector. Worktree: `/home/chassapis/starlights-release-v010`, branch `release/v0.10.0`.
+through the GitHub connector. During finalization the branch advanced to
+`8237b3788fb483c938500fd17b1a764a7c0661f2` (README screenshots only), confirmed locally and remotely and merged
+into this isolated candidate without conflicts. Both screenshots and Claude's README additions are preserved.
+Worktree: `/home/chassapis/starlights-release-v010`, branch `release/v0.10.0`.
 Compatibility fix: `e718fad9863b560cd25897b932f4de2345a42c1a`. The final preparation commit is obtained with
-`git log -1 --format=%H release/v0.10.0`. Neither commit has been merged or pushed by this task.
+`git log -1 --format=%H release/v0.10.0`. No candidate changes have been merged into `aurora-server` or pushed.
 Release URL: **none**. [Release notes](../releases/v0.10.0.md) are a local draft, not a publication.
 
 No production data, homelab configuration, live services or deployment scripts were used. Existing worktrees and
@@ -144,6 +147,8 @@ source: serve `docs/api` to render it; its pinned jsDelivr bundle needs internet
   `src/frontend/apps/builder-app/public/images/` (`compendium.jpeg`, `development.jpg`, `drow.jpg`, `group.jpg`,
   `spiritdragon_olivierbernard_full.jpg`) or Aurora PDF template artwork/D&D logos. Attribution is not evidence of
   permission. Resolve rights or approve suitable asset changes before a public release. Existing artwork was preserved.
+  The newly added README screenshots were visually inspected: they show the landing page and also reproduce that
+  bundled artwork, so the same unresolved permissions apply to those screenshots.
 - The watermarked Homebrew tile mentioned in the prior handoff is outside Git and was not bundled. No production art
   was read or copied. External rules/books remain outside Git.
 - PDF.js 6.2.108 is pinned, matching Mozilla's fix for
