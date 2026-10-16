@@ -25,6 +25,8 @@ public sealed record CharacterExportFile
     public CharacterExportSummary Summary { get; init; } = new();
     /// <summary>Every rules element the character refers to, by id (ids come from the content's own ids, so the same book gives the same ids everywhere).</summary>
     public List<CharacterExportDependency> Dependencies { get; init; } = [];
+    /// <summary>The rules of those elements the character's choices refer to (also derived from the content's ids).</summary>
+    public List<Guid> RuleIds { get; init; } = [];
     public CharacterExportPortrait? Portrait { get; init; }
     /// <summary>Pictures in the character's story (file name → data URL); its story refers to them by file name.</summary>
     public List<CharacterExportImage> StoryImages { get; init; } = [];

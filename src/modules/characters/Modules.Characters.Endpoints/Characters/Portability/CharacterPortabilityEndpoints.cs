@@ -12,6 +12,7 @@ using Starlights.Modules.Characters.Services.Players;
 using Starlights.Modules.Characters.Services.Portability;
 using Starlights.Modules.Characters.Services.Processing;
 using Starlights.Modules.Elements.Integration;
+using Starlights.Modules.Elements.Integration.Models;
 using Starlights.Platform.Data;
 
 namespace Starlights.Modules.Characters.Endpoints.Characters.Portability;
@@ -92,7 +93,9 @@ internal static class CharacterPortability
         // the rules elements it refers to (rules content keeps its ids from server to server)
         var referenced = CharacterPortableData.FindGuids(data);
         var groups = await elements.GetSourceGroups();
-        var dependencies = (await elements.GetElementsWithRules(referenced))
+        var found = await elements.GetElementsWithRules(referenced);
+        var ruleIds = RuleIds(found).Where(referenced.Contains).Distinct().Order().ToList();
+        var dependencies = found
             .Select(e => new CharacterExportDependency(e.Id, e.Name, e.Type, e.Source,
                 groups.TryGetValue(e.Source ?? string.Empty, out var g) && g == "homebrew"))
             .DistinctBy(d => d.Id)
@@ -108,6 +111,7 @@ internal static class CharacterPortability
             SourceCharacterId = characterId,
             Summary = CharacterPortableData.Summarize(root, dependencies.ToDictionary(d => d.Id)),
             Dependencies = dependencies,
+            RuleIds = ruleIds,
             Portrait = await PortraitAsync(config, character.GetRequiredComponent<AppearanceComponent>().PortraitUrl),
             StoryImages = await StoryImagesAsync(config, characterId),
             Columns = await snapshots.GetCaptureColumnsAsync(),
@@ -122,7 +126,9 @@ internal static class CharacterPortability
             return new CharacterImportPreview { Error = error, FormatVersion = file?.Version ?? 0 };
         }
 
-        var found = (await elements.GetElementsWithRules(file!.Dependencies.Select(d => d.Id).ToList())).Select(e => e.Id).ToHashSet();
+        var here = await elements.GetElementsWithRules(file!.Dependencies.Select(d => d.Id).ToList());
+        var found = here.Select(e => e.Id).ToHashSet();
+        var missingRules = file.RuleIds.Except(RuleIds(here)).Count();
         var groups = await elements.GetSourceGroups();
         bool HomebrewHere(string source) => groups.TryGetValue(source, out var g) && g == "homebrew";
         var missing = file.Dependencies.Where(d => !found.Contains(d.Id)).ToList();
@@ -130,13 +136,17 @@ internal static class CharacterPortability
             .Select(d => new CharacterImportHomebrew(d.Name, d.Type, d.Source, found.Contains(d.Id))).ToList();
 
         var warnings = new List<string>();
-        var here = await persistence.GetRepository<ICharacterSnapshotsRepository>().GetCaptureColumnsAsync();
-        var unknown = CharacterPortableData.UnknownColumns(file.Columns, here);
+        if (missingRules > 0 && missing.Count == 0)
+        {
+            warnings.Add($"This server's books are a different version from the exporting server's: {missingRules} of the rules the character's choices use are not here. Bring both servers' content up to date (Content page) and try again.");
+        }
+        var columnsHere = await persistence.GetRepository<ICharacterSnapshotsRepository>().GetCaptureColumnsAsync();
+        var unknown = CharacterPortableData.UnknownColumns(file.Columns, columnsHere);
         if (unknown.Count > 0)
         {
             warnings.Add($"The file comes from a different Starlights version: these details have no place on this server and will not be kept: {string.Join(", ", unknown)}.");
         }
-        var absent = CharacterPortableData.AbsentColumns(file.Columns, here);
+        var absent = CharacterPortableData.AbsentColumns(file.Columns, columnsHere);
         if (absent.Count > 0)
         {
             warnings.Add($"The file comes from an older Starlights: these details start empty: {string.Join(", ", absent)}.");
@@ -155,7 +165,7 @@ internal static class CharacterPortability
 
         return new CharacterImportPreview
         {
-            CanImport = missing.Count == 0,
+            CanImport = missing.Count == 0 && missingRules == 0,
             FormatVersion = file.Version,
             ExportedAt = file.ExportedAt,
             ExportedFrom = file.ExportedFrom,
@@ -177,6 +187,10 @@ internal static class CharacterPortability
         if (preview.Error is not null)
         {
             return (null, preview.Error);
+        }
+        if (!preview.CanImport && preview.Missing.Count == 0)
+        {
+            return (null, preview.Warnings.FirstOrDefault() ?? "The character can't be imported on this server.");
         }
         if (!preview.CanImport)
         {
@@ -219,7 +233,9 @@ internal static class CharacterPortability
                 portraitUrl = builtIn;
             }
 
-            var keep = (await elements.GetElementsWithRules(file.Dependencies.Select(d => d.Id).ToList())).Select(e => e.Id);
+            // kept: rules content this server has (elements and their rules), nothing else
+            var content = await elements.GetElementsWithRules(file.Dependencies.Select(d => d.Id).ToList());
+            var keep = content.Select(e => e.Id).Concat(RuleIds(content));
             var data = file.Data.GetRawText();
             data = CharacterPortableData.Remap(data, CharacterPortableData.NewIds(data, keep, file.SourceCharacterId, newId));
             data = CharacterPortableData.RewriteStoryImages(data, file.SourceCharacterId, newId);
@@ -229,21 +245,46 @@ internal static class CharacterPortability
         }
         catch (Exception ex)
         {
-            // leave nothing half-made behind
-            await characters.DeleteCharacterAsync(new CharacterId(newId));
-            await persistence.GetRepository<IRegistrationRepository>().DeleteRegistrationsAsync(new CharacterId(newId));
-            await persistence.SaveChangesAsync();
-            PortraitFiles.DeleteUploaded(config, portraitUrl);
+            await RemoveAsync(persistence, config, newId, portraitUrl);
             return (null, ex is InvalidOperationException ? ex.Message : "The character could not be imported; nothing was kept. The server's log has the details.");
         }
 
-        // worked out again with this server's rules content, as after a content update (keeps every pick)
-        var result = await processor.ReproccessRegistrations(new CharacterId(newId));
-        if (result.HasError)
+        // worked out again with this server's rules content, as after a content update (keeps every pick); if that
+        // fails the imported character doesn't fit this server's rules, so it isn't kept
+        try
         {
-            warnings.Add($"The character was imported, but working it through this server's rules reported: {result.ErrorMessage}. Open it in the builder to check.");
+            var result = await processor.ReproccessRegistrations(new CharacterId(newId));
+            if (result.HasError)
+            {
+                warnings.Add($"The character was imported, but working it through this server's rules reported: {result.ErrorMessage}. Open it in the builder to check.");
+            }
+        }
+        catch (Exception)
+        {
+            await RemoveAsync(persistence, config, newId, portraitUrl);
+            return (null, "The character doesn't fit this server's rules content (a different version of its books?), so it was not imported; nothing was kept. The server's log has the details.");
         }
         return (new CharacterImportResponse(newId, preview.Name, warnings), null);
+    }
+
+    // the rules of elements (their ids come from the content's ids like the elements')
+    private static IEnumerable<Guid> RuleIds(IEnumerable<ElementDataModel> elements) =>
+        elements.SelectMany(e => e.IncludeRules.Select(r => r.RuleId)
+            .Concat(e.StatisticRules.Select(r => r.RuleId))
+            .Concat(e.SelectionRules.Select(r => r.RuleId)));
+
+    // a half-made import goes again: the character, its registrations, its uploaded pictures
+    private static async Task RemoveAsync(IPersistence persistence, IConfiguration config, Guid characterId, string? portraitUrl)
+    {
+        await persistence.GetRepository<ICharactersRepository>().DeleteCharacterAsync(new CharacterId(characterId));
+        await persistence.GetRepository<IRegistrationRepository>().DeleteRegistrationsAsync(new CharacterId(characterId));
+        await persistence.SaveChangesAsync();
+        PortraitFiles.DeleteUploaded(config, portraitUrl);
+        var story = StoryImages.Folder(config, characterId);
+        if (Directory.Exists(story))
+        {
+            Directory.Delete(story, recursive: true);
+        }
     }
 
     private static async Task<bool> WaitForProcessingAsync(ICharacterSnapshotsRepository snapshots, Guid characterId, TimeSpan limit)
