@@ -1,6 +1,6 @@
 /**
- * The site's background art. The pictures are not part of the app: they live in a private folder on the server
- * (config/starlights-art in the homelab repo), which nginx serves at /art/ behind the same site password.
+ * The site's background art at /art/. The app ships lore.webp, battle.webp and homebrew.webp (public/art); nginx
+ * serves a group's own pictures of the same name from its art folder (deploy/data/art) first.
  */
 export const ART_BASE = "/art/";
 

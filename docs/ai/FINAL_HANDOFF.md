@@ -49,5 +49,6 @@ show the exact changes; write live data only after approval. Rules and book look
 - GitHub Actions: pushes have not triggered CI (run it with Actions → Run workflow); one backend integration test
   (`ReorderElementRulesEndpointTests`) fails intermittently on parallel host start-up.
 - Windows/WSL2 install and the PowerShell launcher are unverified on real Windows.
-- Licensing open: upstream art in `public/images`, D&D logos on the Aurora sheet templates, the watermarked Tasha
-  homebrew tile picture (outside git) — the owner decides.
+- Licensing open: upstream art in `public/images`, D&D logos on the Aurora sheet templates — the owner decides. The
+  background art (`public/art`: lore, battle and the watermarked Tasha homebrew tile picture) was published with the
+  owner's approval on 2026-10-16.

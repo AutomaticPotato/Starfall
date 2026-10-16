@@ -98,7 +98,8 @@ services:
     volumes:
       # the Compendium of Lore, built by the app from the 5etools data
       - ./data/lore:/srv/lore-data:ro
-      # optional: background pictures (home-1.webp … home-5.webp, lore.webp, battle.webp)
+      # optional: your own background pictures, used instead of the ones the app ships with (lore.webp, battle.webp,
+      # homebrew.webp)
       - ./data/art:/srv/art:ro
     depends_on:
       - starlights-api
