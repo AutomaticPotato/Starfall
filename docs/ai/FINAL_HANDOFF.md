@@ -60,5 +60,6 @@ show the exact changes; write live data only after approval. Rules and book look
 - The serializer/startup race remains an investigation lead, not a confirmed diagnosis or fix. No CI runs were
   returned for the verified remote baseline. See the release report before making a release-readiness claim.
 - Windows/WSL2 install and the PowerShell launcher are unverified on real Windows.
-- Licensing open: upstream art in `public/images`, D&D logos on the Aurora sheet templates, the watermarked Tasha
-  homebrew tile picture (outside git) — the owner decides.
+- Licensing open: upstream art in `public/images`, D&D logos on the Aurora sheet templates — the owner decides. The
+  background art (`public/art`: lore, battle and the watermarked Tasha homebrew tile picture) was published with the
+  owner's approval on 2026-10-16.

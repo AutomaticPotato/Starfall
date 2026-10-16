@@ -16,8 +16,7 @@ for results and the [draft release notes](docs/releases/v0.10.0.md). Development
   &nbsp;
   <img src="assets/images/screenshots/home-phone.jpg" alt="The Starlights home page on a phone" width="28%">
 </p>
-<p align="center"><sub>The home page on a desktop and on a phone (Porcelain theme). A new install shows it like this; the
-three plain tiles take pictures you add yourself.</sub></p>
+<p align="center"><sub>The home page on a desktop and on a phone (Midnight theme), as a new install shows it.</sub></p>
 
 **Contents:** [What this fork adds](#what-this-fork-adds) · [Install](#install-with-docker) ·
 [Using it](#using-it) · [Settings](#settings) · [Content](#how-aurora-legacy-and-5etools-are-connected) ·
@@ -214,7 +213,8 @@ Only GitHub links are accepted. The downloads live in `deploy/data/content`, the
 your homebrew (`deploy/data/homebrew`) is never touched. The character sheet needs nothing extra: its templates and
 fonts are part of the app. An optional extra:
 
-- **Background pictures**: put `home-1.webp` … `home-5.webp`, `lore.webp` and `battle.webp` in `deploy/data/art`.
+- **Background pictures**: the app comes with its own. To use yours, put `lore.webp`, `battle.webp` or `homebrew.webp`
+  in `deploy/data/art`; a picture there is used instead of the one with the same name.
 
 Installed before the sheet was built in? The `deploy/data/aurora-sheets` folder is no longer used and can be deleted.
 
