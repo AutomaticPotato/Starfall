@@ -344,8 +344,9 @@ function CharactersPageContent() {
     <>
       <div className="container mx-auto px-4 mt-12">
         <CardWrapper>
-          <Card className="rounded-lg shadow-none">
-            <CardHeader className="border-b">
+          <Card data-ornament="restrained" className="rounded-lg shadow-none">
+            {/* phones: the actions go under the title and wrap, instead of running off the screen */}
+            <CardHeader className="border-b max-md:flex max-md:flex-col">
               <CardTitle className="mb-3">{showAll ? "Everyone's Characters" : `${player}'s Characters`}</CardTitle>
               <CardDescription className="flex flex-wrap items-center gap-x-3 gap-y-2">
                 <span>Playing as {player}.</span>
@@ -362,8 +363,8 @@ function CharactersPageContent() {
                   </Button>
                 </ButtonGroup>
               </CardDescription>
-              <CardAction>
-                <ButtonGroup>
+              <CardAction className="max-md:mt-2">
+                <ButtonGroup className="max-sm:flex-wrap max-sm:gap-2 max-sm:[&>*]:rounded-md! max-sm:[&>*]:border-l!">
                   {player && <AuroraImportDialog player={player} />}
                   {player && <StarlightsImportDialog player={player} />}
                   <Button variant="outline">

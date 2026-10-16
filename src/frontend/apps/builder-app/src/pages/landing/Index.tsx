@@ -2,6 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 import { HourlyBackdrop } from "@/components/hourly-backdrop";
 import { BATTLE_BACKGROUND, HOMEBREW_TILE, LORE_BACKGROUND } from "@/lib/art";
+import { CelestialDivider, OrnamentalFrame } from "@/components/ornaments";
 
 function LandingTile({
   title,
@@ -29,7 +30,7 @@ function LandingTile({
     <>
       <Link
         to={url}
-        className={`block h-full relative overflow-hidden rounded-xl group border border-border bg-[#101827] shadow-sm ${enabled ? "" : "pointer-events-none"} `}
+        className={`ornament-hover block h-full relative overflow-hidden rounded-xl group border border-[var(--ornament-faint)] bg-[#101827] shadow-sm ${enabled ? "" : "pointer-events-none"} `}
       >
         {image ? (
           <img
@@ -119,7 +120,7 @@ export function LandingPage2() {
     <>
       <HourlyBackdrop />
       <header className="mb-8 grid items-center gap-6 sm:grid-cols-[minmax(0,22rem)_1fr]">
-        <h1 className="overflow-hidden rounded-2xl bg-[#0b1424] shadow-sm">
+        <h1 data-ornament="restrained" className="overflow-hidden rounded-2xl bg-[#0b1424] shadow-sm">
           <img src="/branding/starlights-logo.webp" alt="Project Starlights" width={1000} height={750} fetchPriority="high" className="h-auto w-full" />
         </h1>
         <div className="max-w-xl">
@@ -128,6 +129,7 @@ export function LandingPage2() {
         </div>
       </header>
 
+      <OrnamentalFrame level="decorative" className="p-3 sm:p-4">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-5 sm:grid-rows-2 sm:h-[34rem]">
         <div className="h-72 sm:col-span-3 sm:row-span-2 sm:h-auto">
           <LandingTile {...tiles[0]} />
@@ -149,14 +151,17 @@ export function LandingPage2() {
           </div>
         </div>
       </div>
+      </OrnamentalFrame>
 
-      <section className="my-12 grid gap-6 sm:grid-cols-3">
+      <CelestialDivider className="mt-12" />
+
+      <section className="mt-8 mb-12 grid gap-6 sm:grid-cols-3">
         {[
           ["Characters", "Every Aurora book and Aurora Legacy's newest content; the sheet prints exactly like Aurora's."],
           ["At the table", "Campaigns with a locked DM side, player notes, and the Battle Action Simulator for each turn."],
           ["Reference", "The Compendium of Lore with every rule, monster and book, linked from wherever you are."],
         ].map(([title, text]) => (
-          <div key={title} className="rounded-xl border bg-background/60 p-4 backdrop-blur-sm">
+          <div key={title} data-ornament="restrained" className="rounded-xl border border-[var(--ornament-faint)] bg-background/60 p-4 backdrop-blur-sm">
             <h2 className="font-heading text-lg tracking-wide">{title}</h2>
             <p className="mt-1 text-sm text-muted-foreground">{text}</p>
           </div>

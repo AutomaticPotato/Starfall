@@ -106,9 +106,10 @@ export function MainNavigation() {
   return (
     <>
       <nav className="flex items-center justify-between h-16 ">
-        <div className="flex items-center justify-start gap-2 ">
-          <Link to="/" aria-label="Project Starlights home" className="flex items-center font-heading relative">
-            <img src="/branding/starlights-emblem.webp" alt="" width={44} height={44} className="size-11 rounded-lg border border-border" />
+        <div className="flex min-w-0 items-center justify-start gap-2 ">
+          {/* the home button never gives up its room: the links shrink to icons first */}
+          <Link to="/" aria-label="Project Starlights home" className="flex shrink-0 items-center gap-2 font-heading relative">
+            <img src="/branding/starlights-emblem.webp" alt="" width={44} height={44} className="size-11 shrink-0 rounded-lg border border-[color-mix(in_srgb,var(--ornament)_45%,var(--border))]" />
             <span className="hidden 2xl:inline tracking-widest mt-0.5">Project Starlights</span>
             <span className="hidden xl:inline 2xl:hidden tracking-widest mt-0.5">Starlights</span>
           </Link>
@@ -170,19 +171,19 @@ function MainLinks({ className, compact }: { className?: string; compact?: boole
         <NavLink
           key={to}
           to={to}
-          aria-label={compact ? label : undefined}
-          title={compact ? label : undefined}
+          aria-label={label}
+          title={label}
           className={({ isActive }) =>
             cn(
               "flex items-center gap-1.5 rounded-md text-sm transition-colors hover:bg-muted hover:text-foreground",
               compact ? "p-2" : "px-2.5 py-1.5",
-              isActive ? "text-foreground bg-muted/60" : "text-muted-foreground",
+              isActive ? "text-foreground bg-muted/60 nav-active" : "text-muted-foreground",
               compact && (to === "/compendium" || to === "/homebrew" || to === "/content") && "hidden sm:flex",
             )
           }
         >
           <LinkIcon className={compact ? "size-5" : "size-4"} />
-          {!compact && <span className={cn(to === "/compendium" || to === "/homebrew" || to === "/content" ? "hidden lg:inline" : "")}>{label}</span>}
+          {!compact && <span className={cn(to === "/lore" || to === "/compendium" || to === "/homebrew" || to === "/content" ? "hidden xl:inline" : "")}>{label}</span>}
         </NavLink>
       ))}
     </nav>
@@ -220,7 +221,7 @@ function PlayerChip() {
 
 export function Header() {
   return (
-    <div className="sticky top-0 bg-background/80 backdrop-blur-md z-20 border-b print:hidden">
+    <div className="app-header sticky top-0 bg-background/80 backdrop-blur-md z-20 border-b print:hidden">
       <header className="container mx-auto px-4 ">
         <MainNavigation />
       </header>

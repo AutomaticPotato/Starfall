@@ -1,0 +1,97 @@
+/*
+ * Project Starlights ornament layer: one restrained fantasy identity over the shared components, coloured per theme.
+ * Structure is the same in every theme; only the ornament colours change. Decoration follows the component's job:
+ *   minimal     (everywhere)  hairlines, active states, table heads, borders of floating panels
+ *   restrained  (opt-in)      small filigree corners: dialogs, [data-ornament] cards, .ornament-frame[data-level=restrained]
+ *   decorative  (home page)   framed sections with large corners, celestial dividers, hover glow on feature tiles
+ * Ornaments are CSS masks coloured with --ornament, never images stretched over content; they never take clicks.
+ */
+
+/* Midnight: antique gold, moonlight ivory, restrained sapphire */
+:root[data-theme="midnight"] {
+  --ornament: #c4a564; --ornament-strong: #e2c88c; --ornament-accent: #6f8fe0; --ornament-ivory: #efe6d2;
+}
+/* Porcelain: champagne gold, desaturated blue */
+:root, :root[data-theme="porcelain"] {
+  --ornament: #b0904f; --ornament-strong: #8a6a30; --ornament-accent: #6b84a8; --ornament-ivory: #fffdf8;
+}
+/* Slate: brushed silver, pale blue */
+:root[data-theme="slate"] {
+  --ornament: #8796ab; --ornament-strong: #5c6c83; --ornament-accent: #7ea2cf; --ornament-ivory: #f4f7fb;
+}
+:root {
+  --ornament-line: color-mix(in srgb, var(--ornament) 60%, transparent);
+  --ornament-faint: color-mix(in srgb, var(--ornament) 28%, var(--border));
+  --ornament-glow: color-mix(in srgb, var(--ornament) 22%, transparent);
+  /* a filigree corner (top-left; the others are mirrored) and a four-pointed celestial star */
+  --ornament-corner: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64' fill='none' stroke='black' stroke-linecap='round' stroke-linejoin='round'><path d='M4 4h52M4 4v52' stroke-width='1.6'/><path d='M10 10h26M10 10v26' stroke-width='1'/><path d='M10 10c11 0 16 5 16 13 0 6-6 8-9 4-2-3 1-6 4-4' stroke-width='1.4'/><path d='M10 10c0 11 5 16 13 16' stroke-width='1.4'/><path d='M38 10c4 3 9 3 13 0M10 38c3 4 3 9 0 13' stroke-width='1.2'/><path d='M4 0l4 4-4 4-4-4z' fill='black' stroke='none'/><circle cx='56' cy='4' r='1.6' fill='black' stroke='none'/><circle cx='4' cy='56' r='1.6' fill='black' stroke='none'/></svg>");
+  --ornament-star: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 0c1 7 5 11 12 12-7 1-11 5-12 12-1-7-5-11-12-12 7-1 11-5 12-12z' fill='black'/></svg>");
+}
+
+@layer components {
+  /* ---- minimal: shared primitives ---- */
+  [data-slot="card"] { border-color: var(--ornament-faint); box-shadow: inset 0 1px 0 var(--ornament-line), 0 1px 2px #0000000a; }
+  [data-slot="card-title"] { font-family: var(--font-heading); letter-spacing: 0.02em; }
+  [data-slot="card-header"].border-b { border-image: linear-gradient(90deg, var(--ornament-line), var(--ornament-faint) 45%, var(--border)) 1; }
+  [data-slot="dialog-content"], [data-slot="alert-dialog-content"], [data-slot="sheet-content"], [data-slot="drawer-content"] {
+    border-color: var(--ornament-faint); box-shadow: inset 0 1px 0 var(--ornament-line), 0 18px 48px #0000002e;
+  }
+  [data-slot="popover-content"], [data-slot="dropdown-menu-content"], [data-slot="dropdown-menu-sub-content"], [data-slot="select-content"], [data-sonner-toast] {
+    border-color: var(--ornament-faint) !important;
+  }
+  [data-slot="tabs-trigger"][data-state="active"] { box-shadow: inset 0 -2px 0 var(--ornament); }
+  [data-slot="table-header"] [data-slot="table-row"] { border-bottom-color: var(--ornament-line); }
+  [data-slot="table-head"] { color: var(--muted-foreground); letter-spacing: 0.04em; }
+  [data-slot="button"][class*="border"]:hover { border-color: var(--ornament-line); }
+  .app-header { border-image: linear-gradient(90deg, transparent, var(--ornament-line) 20%, var(--ornament-line) 80%, transparent) 1; }
+  .nav-active { box-shadow: inset 0 -2px 0 var(--ornament); }
+  /* page and section titles: a fine rule fading out under them (a background, so it fits truncated and flex titles) */
+  h1.font-heading, h2.font-heading.text-2xl {
+    background-image: linear-gradient(90deg, var(--ornament-line), transparent 70%);
+    background-size: 100% 1px; background-position: left bottom; background-repeat: no-repeat; padding-bottom: 0.35rem;
+  }
+
+  /* ---- restrained: small corners on dialogs and opted-in cards ---- */
+  [data-slot="dialog-content"]::before, [data-slot="alert-dialog-content"]::before,
+  [data-slot="dialog-content"]::after, [data-slot="alert-dialog-content"]::after,
+  [data-ornament]::before, [data-ornament]::after {
+    content: ""; position: absolute; width: 22px; height: 22px; pointer-events: none; background-color: var(--ornament);
+    -webkit-mask: var(--ornament-corner) no-repeat center / contain; mask: var(--ornament-corner) no-repeat center / contain;
+    opacity: 0.85;
+  }
+  [data-slot="dialog-content"]::before, [data-slot="alert-dialog-content"]::before, [data-ornament]::before { top: 5px; left: 5px; }
+  [data-slot="dialog-content"]::after, [data-slot="alert-dialog-content"]::after, [data-ornament]::after { bottom: 5px; right: 5px; transform: scale(-1); }
+  [data-ornament] { position: relative; }
+  [data-ornament="decorative"]::before, [data-ornament="decorative"]::after { width: 30px; height: 30px; }
+
+  /* ---- decorative: frames, corners, dividers, feature tiles ---- */
+  .ornament-frame { position: relative; border: 1px solid var(--ornament-faint); border-radius: 1.1rem; }
+  .ornament-frame[data-level="decorative"] { box-shadow: 0 0 0 5px var(--background), 0 0 0 6px var(--ornament-faint); }
+  .ornament-corner {
+    position: absolute; width: var(--ornament-corner-size, 30px); height: var(--ornament-corner-size, 30px); pointer-events: none;
+    background-color: var(--ornament); -webkit-mask: var(--ornament-corner) no-repeat center / contain; mask: var(--ornament-corner) no-repeat center / contain;
+  }
+  .ornament-frame[data-level="decorative"] > .ornament-corner { --ornament-corner-size: 46px; }
+  .ornament-corner[data-corner="tl"] { top: -7px; left: -7px; }
+  .ornament-corner[data-corner="tr"] { top: -7px; right: -7px; transform: scaleX(-1); }
+  .ornament-corner[data-corner="bl"] { bottom: -7px; left: -7px; transform: scaleY(-1); }
+  .ornament-corner[data-corner="br"] { bottom: -7px; right: -7px; transform: scale(-1); }
+  .celestial-divider { display: flex; align-items: center; gap: 0.6rem; color: var(--ornament); }
+  .celestial-divider > .celestial-divider-line { flex: 1; height: 1px; background: linear-gradient(90deg, transparent, var(--ornament-line)); }
+  .celestial-divider > .celestial-divider-line:last-child { background: linear-gradient(90deg, var(--ornament-line), transparent); }
+  .celestial-divider > .celestial-divider-star {
+    width: 14px; height: 14px; flex: none; background-color: var(--ornament);
+    -webkit-mask: var(--ornament-star) no-repeat center / contain; mask: var(--ornament-star) no-repeat center / contain;
+  }
+  .celestial-divider[data-align="start"] > .celestial-divider-line:first-child { display: none; }
+  .fantasy-eyebrow { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.28em; text-transform: uppercase; color: var(--primary-text); }
+  .ornament-hover { transition: box-shadow 200ms ease, border-color 200ms ease, transform 200ms ease; }
+  .ornament-hover:hover, .ornament-hover:focus-visible { border-color: var(--ornament); box-shadow: 0 0 0 1px var(--ornament-line), 0 8px 26px var(--ornament-glow); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ornament-hover { transition: none; }
+}
+@media print {
+  [data-ornament]::before, [data-ornament]::after, .ornament-corner, .celestial-divider { display: none !important; }
+}
