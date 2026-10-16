@@ -159,7 +159,8 @@ internal class ElementsModuleQueries : IElementsModuleQueries
         // as the sources list (GetSourcesEndpoint): a book belongs to the folder most of its elements come from
         return rows
             .Where(r => !string.IsNullOrWhiteSpace(r.Source))
-            .GroupBy(r => r.Source!)
+            // the same book can be spelled with different capitals in different files
+            .GroupBy(r => r.Source!, StringComparer.OrdinalIgnoreCase)
             .ToDictionary(g => g.Key, g => g.GroupBy(r => r.File.Split('/')[0]).OrderByDescending(f => f.Count()).First().Key, StringComparer.OrdinalIgnoreCase);
     }
 }
