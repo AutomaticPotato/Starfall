@@ -4,12 +4,19 @@ import { usePlayer } from "@/lib/player";
 import { PlayerGate } from "./player-picker";
 import { PlayerPasswordDialog } from "./player-password-dialog";
 import { AuroraImportDialog } from "./aurora-import-dialog";
+import { StarlightsImportDialog } from "./starlights-import-dialog";
+import { exportCharacter, serverMessage } from "@/lib/api/character-portability";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { AnvilIcon, FileSpreadsheetIcon, MenuIcon, PlusIcon, SwordsIcon, Trash2Icon } from "lucide-react";
+import { AnvilIcon, DownloadIcon, FileSpreadsheetIcon, MenuIcon, PlusIcon, SwordsIcon, Trash2Icon } from "lucide-react";
+
+/** Downloads the character as a Starlights character file (for another Starlights server). */
+function exportCard(card: CharacterCard) {
+  exportCharacter(card.characterId, card.name).catch((e) => toast.error("Could not export the character", { description: serverMessage(e) }));
+}
 import {
   AlertDialog,
   AlertDialogAction,
@@ -141,6 +148,10 @@ function CharacterDetailsDrawer({ card }: { card: CharacterCard }) {
                     <FileSpreadsheetIcon />
                     <span className="text-xs text-center">Sheet</span>
                   </Button>
+                  <Button variant={"outline"} className="flex-1 border-none" onClick={() => exportCard(card)}>
+                    <DownloadIcon />
+                    <span className="text-xs text-center">Export</span>
+                  </Button>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <Button variant={"destructive"} size={"icon"} disabled={deleteCharacter.isPending} className="">
@@ -263,6 +274,18 @@ function CharactersCollection({ showAll }: { showAll: boolean }) {
               )}
 
               {isMobile ? null : (
+                <Button
+                  variant={"secondary"}
+                  title="Export character (for another Starlights server)"
+                  onClick={() => exportCard(card)}
+                  className="absolute inset-e-11 top-3 rounded-lg size-6 hidden group-hover:flex opacity-100 hover:opacity-100"
+                >
+                  <DownloadIcon className="size-3.5" />
+                  <span className="sr-only">Export character</span>
+                </Button>
+              )}
+
+              {isMobile ? null : (
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button
@@ -342,6 +365,7 @@ function CharactersPageContent() {
               <CardAction>
                 <ButtonGroup>
                   {player && <AuroraImportDialog player={player} />}
+                  {player && <StarlightsImportDialog player={player} />}
                   <Button variant="outline">
                     <Link to="/characters/create" className="flex items-center gap-2">
                       <PlusIcon size={16} />
