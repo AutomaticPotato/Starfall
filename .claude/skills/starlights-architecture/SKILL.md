@@ -16,7 +16,11 @@ Overview: `docs/ai/ARCHITECTURE.md` and `FRONTEND_GUIDE.md` (Codex's; on its bra
 - `src/modules/characters`: `Domain/*` (Character, Campaign, Player, CharacterSnapshot), `Services/Processing/
   RegistrationProcessor.cs` (rules engine), `Services/Players/PlayerAccess.cs` + `UnlockLimiter.cs`,
   `Services/Campaigns/*` (InventoryTrade, PartyItemEffect, BuilderSnapshotInventory),
-  `Modules.Characters.Endpoints/{Characters,Campaigns,Generation}/*`.
+  `Modules.Characters.Endpoints/{Characters,Campaigns,Generation}/*`. Character files (export/import between servers):
+  `Services/Portability/CharacterExportFile.cs` (format, id remapping) + `Endpoints/Characters/Portability/*`
+  (reuses the builder snapshot capture/restore; docs/character-portability.md).
+- Campaign sessions page: `pages/campaigns/campaign-page.tsx` + `session-navigation.ts` (Codex 014A). Final overview:
+  `docs/ai/FINAL_HANDOFF.md`.
 - Web app `src/frontend/apps/builder-app/src`: `pages/*` (builder, battle, campaigns incl. `encounter-page.tsx`,
   homebrew, lore, landing), `lib/api/*` hooks, `lib/rules/*` pure tested rules, `components/search-select.tsx`.
 - Homelab glue: `~/homelab/compose/starlights/docker-compose.yml`, `~/homelab/scripts/starlights-*.sh`.
