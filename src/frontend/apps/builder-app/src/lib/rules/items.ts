@@ -359,6 +359,8 @@ export interface CharacterFacts {
   /** a statistic's total (the server's statistics, names like "ac:misc") */
   stat: (name: string) => number | undefined;
   statNames: string[];
+  /** where a statistic's value comes from, as the server names it ("Level 3: Draconic Resilience"), when known */
+  statSource?: (name: string) => string | undefined;
   /** Aurora ids of every element the character has (weapon proficiencies) */
   has: ReadonlySet<string>;
 }
@@ -367,6 +369,8 @@ export interface ArmorClass {
   total: number;
   /** without armor: the statistic of the feature whose calculation wins ("ac:draconic-resilience"), if any */
   calculation?: string;
+  /** without armor, when the winning calculation is only known as Aurora's ac:calculation: the feature it comes from */
+  calculationSource?: string;
   /** how it adds up, for the info card */
   parts: { label: string; value: number }[];
   armor?: Resolved;
@@ -390,6 +394,7 @@ export function armorClass(inventory: Inventory, catalog: Catalog, c: CharacterF
   const dex = c.mod("DEX");
   const parts: { label: string; value: number }[] = [];
   let calculation: string | undefined;
+  let calculationSource: string | undefined;
 
   if (armor?.armor) {
     parts.push({ label: armor.name, value: armor.armor.armorClass });
@@ -402,10 +407,19 @@ export function armorClass(inventory: Inventory, catalog: Catalog, c: CharacterF
     const options = c.statNames
       .filter((n) => n.startsWith("ac:") && !NOT_A_CALCULATION.test(n))
       .filter((n) => !shield || !/monk|dazzling/.test(n))
-      .map((n) => ({ label: n.slice(3).replace(/-/g, " ").replace(/^\w/, (x) => x.toUpperCase()), value: c.stat(n) ?? 0, statistic: n as string | undefined }));
-    const best = options.reduce((a, b) => (b.value > a.value ? b : a), { label: "Unarmored (10 + Dexterity)", value: 10 + dex, statistic: undefined as string | undefined });
+      .map((n) => ({ label: n.slice(3).replace(/-/g, " ").replace(/^\w/, (x) => x.toUpperCase()), value: c.stat(n) ?? 0, statistic: n as string | undefined, source: undefined as string | undefined }));
+    // Aurora's ac:calculation: the best of the calculations the character's rules name, whatever their statistic is
+    // called ("armor-casing:ac" of an autognome, a tortle's or loxodon's natural armor); the server applies their
+    // conditions (no armor, no shield). Last, so a calculation already listed by name keeps its name on a tie.
+    const calculated = c.stat("ac:calculation");
+    if (calculated !== undefined) {
+      const source = c.statSource?.("ac:calculation")?.replace(/^Level \d+:\s*/, "");
+      options.push({ label: source ?? "Natural armor", value: calculated, statistic: "ac:calculation", source: source ?? "Natural armor" });
+    }
+    const best = options.reduce((a, b) => (b.value > a.value ? b : a), { label: "Unarmored (10 + Dexterity)", value: 10 + dex, statistic: undefined as string | undefined, source: undefined as string | undefined });
     parts.push({ label: best.label, value: best.value });
     calculation = best.statistic;
+    calculationSource = best.source;
   }
   if (shield?.armor) {
     parts.push({ label: shield.name, value: shield.armor.armorClass });
@@ -425,6 +439,7 @@ export function armorClass(inventory: Inventory, catalog: Catalog, c: CharacterF
     shield,
     stealthDisadvantage: !!armor?.armor?.stealthDisadvantage,
     calculation,
+    calculationSource,
   };
 }
 
