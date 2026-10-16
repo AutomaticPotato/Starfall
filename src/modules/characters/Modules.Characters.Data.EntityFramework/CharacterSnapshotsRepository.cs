@@ -71,6 +71,23 @@ internal class CharacterSnapshotsRepository : RepositoryBase<CharacterSnapshot>,
 
     public Task RestorePortableAsync(Guid characterId, string data) => RestoreAsync(characterId, data, PortableCharacterColumns);
 
+    public async Task DeleteRowsAsync(Guid characterId)
+    {
+        var connection = Context.Database.GetDbConnection();
+        await EnsureOpenAsync(connection);
+        var sql = new StringBuilder("DELETE FROM characters.registration WHERE character_id = @id;");
+        foreach (var (table, _) in Tables.Where(t => t.Table.StartsWith("component_", StringComparison.Ordinal)))
+        {
+            sql.Append($"DELETE FROM characters.[{table}] WHERE parent_character = @id;");
+        }
+        sql.Append("DELETE FROM characters.character_snapshot WHERE id = @id; DELETE FROM characters.character WHERE id = @id;");
+        await using var command = connection.CreateCommand();
+        command.Transaction = Context.Database.CurrentTransaction?.GetDbTransaction();
+        command.CommandText = sql.ToString();
+        AddId(command, characterId);
+        await command.ExecuteNonQueryAsync();
+    }
+
     public async Task<Dictionary<string, List<string>>> GetCaptureColumnsAsync()
     {
         var connection = Context.Database.GetDbConnection();

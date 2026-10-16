@@ -2,6 +2,8 @@ using System.Text.Json;
 using FastEndpoints;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Starlights.Modules.Characters.Data;
 using Starlights.Modules.Characters.Domain;
 using Starlights.Modules.Characters.Domain.Appearances;
@@ -180,8 +182,8 @@ internal static class CharacterPortability
     }
 
     public static async Task<(CharacterImportResponse? Result, string? Problem)> ImportAsync(
-        IPersistence persistence, IElementsModuleQueries elements, ICharacterCreationService creation, IRegistrationProcessor processor,
-        IConfiguration config, CharacterExportFile file, string? playerName, CancellationToken ct)
+        IPersistence persistence, IElementsModuleQueries elements, ICharacterCreationService creation, IServiceScopeFactory scopes,
+        ILogger logger, IConfiguration config, CharacterExportFile file, string? playerName, CancellationToken ct)
     {
         var preview = await PreviewAsync(persistence, elements, file, playerName);
         if (preview.Error is not null)
@@ -245,7 +247,8 @@ internal static class CharacterPortability
         }
         catch (Exception ex)
         {
-            await RemoveAsync(persistence, config, newId, portraitUrl);
+            logger.LogError(ex, "importing character file {Source} as {Character} failed", file.SourceCharacterId, newId);
+            await RemoveAsync(snapshots, config, newId, portraitUrl);
             return (null, ex is InvalidOperationException ? ex.Message : "The character could not be imported; nothing was kept. The server's log has the details.");
         }
 
@@ -253,15 +256,19 @@ internal static class CharacterPortability
         // fails the imported character doesn't fit this server's rules, so it isn't kept
         try
         {
+            // in a scope of its own: this request's context still holds the rows the new character started with
+            using var scope = scopes.CreateScope();
+            var processor = scope.ServiceProvider.GetRequiredService<IRegistrationProcessor>();
             var result = await processor.ReproccessRegistrations(new CharacterId(newId));
             if (result.HasError)
             {
                 warnings.Add($"The character was imported, but working it through this server's rules reported: {result.ErrorMessage}. Open it in the builder to check.");
             }
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            await RemoveAsync(persistence, config, newId, portraitUrl);
+            logger.LogError(ex, "reprocessing imported character {Character} failed", newId);
+            await RemoveAsync(snapshots, config, newId, portraitUrl);
             return (null, "The character doesn't fit this server's rules content (a different version of its books?), so it was not imported; nothing was kept. The server's log has the details.");
         }
         return (new CharacterImportResponse(newId, preview.Name, warnings), null);
@@ -274,11 +281,10 @@ internal static class CharacterPortability
             .Concat(e.SelectionRules.Select(r => r.RuleId)));
 
     // a half-made import goes again: the character, its registrations, its uploaded pictures
-    private static async Task RemoveAsync(IPersistence persistence, IConfiguration config, Guid characterId, string? portraitUrl)
+    // (in SQL directly: this request's context still tracks rows the restore already replaced)
+    private static async Task RemoveAsync(ICharacterSnapshotsRepository snapshots, IConfiguration config, Guid characterId, string? portraitUrl)
     {
-        await persistence.GetRepository<ICharactersRepository>().DeleteCharacterAsync(new CharacterId(characterId));
-        await persistence.GetRepository<IRegistrationRepository>().DeleteRegistrationsAsync(new CharacterId(characterId));
-        await persistence.SaveChangesAsync();
+        await snapshots.DeleteRowsAsync(characterId);
         PortraitFiles.DeleteUploaded(config, portraitUrl);
         var story = StoryImages.Folder(config, characterId);
         if (Directory.Exists(story))
@@ -446,15 +452,15 @@ public sealed class ImportCharacterEndpoint : Endpoint<CharacterImportRequest, C
     private readonly IPersistence _persistence;
     private readonly IElementsModuleQueries _elements;
     private readonly ICharacterCreationService _creation;
-    private readonly IRegistrationProcessor _processor;
+    private readonly IServiceScopeFactory _scopes;
     private readonly PlayerAccess _access;
 
-    public ImportCharacterEndpoint(IPersistence persistence, IElementsModuleQueries elements, ICharacterCreationService creation, IRegistrationProcessor processor, PlayerAccess access)
+    public ImportCharacterEndpoint(IPersistence persistence, IElementsModuleQueries elements, ICharacterCreationService creation, IServiceScopeFactory scopes, PlayerAccess access)
     {
         _persistence = persistence;
         _elements = elements;
         _creation = creation;
-        _processor = processor;
+        _scopes = scopes;
         _access = access;
     }
 
@@ -493,7 +499,7 @@ public sealed class ImportCharacterEndpoint : Endpoint<CharacterImportRequest, C
             return;
         }
 
-        var (result, problem) = await CharacterPortability.ImportAsync(_persistence, _elements, _creation, _processor, Config, req.File, player, ct);
+        var (result, problem) = await CharacterPortability.ImportAsync(_persistence, _elements, _creation, _scopes, Logger, Config, req.File, player, ct);
         if (result is null)
         {
             AddError(problem ?? "The character could not be imported.");

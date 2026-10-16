@@ -30,6 +30,9 @@ public interface ICharacterSnapshotsRepository : IRepository
     /// <summary>Puts a portable capture (<see cref="CapturePortableAsync"/>) into an existing character, play state too.</summary>
     Task RestorePortableAsync(Guid characterId, string data);
 
+    /// <summary>Deletes a character and every row it spans directly in the database (for undoing a failed import).</summary>
+    Task DeleteRowsAsync(Guid characterId);
+
     /// <summary>The columns of the tables a capture spans (table → column names), to compare captures across versions.</summary>
     Task<Dictionary<string, List<string>>> GetCaptureColumnsAsync();
 
