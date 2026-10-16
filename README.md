@@ -1,8 +1,8 @@
 # Project Starlights
 
-**v0.10.0 public beta: release preparation, not yet published.** The independent release check found remaining
-backend, browser, dependency and asset-permission blockers. See the [verification report](docs/ai/V0_10_0_VERIFICATION.md)
-for results and the [draft release notes](docs/releases/v0.10.0.md). Development is in maintenance mode.
+**v0.10.0 public beta** ([release](https://github.com/CHassapis/starlights/releases/tag/v0.10.0) ·
+[release notes](docs/releases/v0.10.0.md) · [verification report](docs/ai/V0_10_0_VERIFICATION.md)). Development is in
+maintenance mode: bug fixes and live-play reliability only.
 
 > **About this fork (branch `aurora-server`).** A self-hosted build of Project Starlights by C Hassapis, packaged to
 > run in Docker for a D&D group. All credit for Starlights and Aurora Builder goes to their creator, **Bas Driessen**
@@ -323,16 +323,24 @@ Keep the server on your private network; the documentation lives here, not on th
 
 ## Verification and beta limitations
 
-The release worktree passes **234 frontend tests**, including the optional real-content checks, and the full frontend
-build. The installer has **39 passing contract tests**. All 19 bundled PDF templates parse; a synthetic character
-exports through the real PDF generator. These checks do not establish end-to-end backend or browser correctness.
-The release fix supports both legacy and wrapped 5etools book/adventure files; its matching backend organization-reader
-change still needs compilation and tests. Full evidence and commands are in the [verification report](docs/ai/V0_10_0_VERIFICATION.md).
+The release commit passes the full backend suite (**803 tests: 779 passed, 0 failed, 24 skipped**, including the
+OpenAPI drift check and the wrapped 5etools book tests), a clean `npm ci`, the full frontend build, **235 frontend
+tests** with the optional real-content checks, and the **39 installer contract tests**; CI ran on the release commit.
+All 19 bundled PDF templates parse, and a synthetic character exports through the real PDF generator. Both legacy and
+wrapped 5etools books and adventures are read: built from 5etools 2.38, all 101 adventures and 67 books have their
+chapters. Full evidence and commands are in the [verification report](docs/ai/V0_10_0_VERIFICATION.md).
 
-- Backend/integration tests, the intermittent JSON serializer failure, SQL persistence and browser journeys remain
-  release gates. The current environment cannot run .NET, Docker, a local web server or Chromium.
-- Builds used cached dependencies. A clean `npm ci`, current dependency vulnerability audits and verification of
-  the exact release commit in CI are still required. Existing lint debt is 38 errors and one warning.
+- Browser journeys on a disposable install (homebrew, sheet and PDF downloads, spells, Battle, permissions,
+  persistence) were not rerun on this exact commit; earlier checks of those features are historical.
+- `npm audit` lists 24 advisories in the production dependency tree. They are in server-side packages brought in by
+  the `shadcn` command-line tool (a developer tool in `packages/ui-framework`) or in react-router's server (RSC) mode;
+  the released web app is static files served by nginx and runs none of them. Existing lint debt is 38 errors and
+  one warning.
+- `ReorderElementRulesEndpointTests` has failed intermittently in CI before (a likely start-up race in the test
+  hosts, not a confirmed cause). On the release commit it passed 10 of 10 runs alone and 3 of 3 runs of the whole
+  integration project.
+- The server's NuGet audit lists a transitive `System.Security.Cryptography.Pkcs` 9.0.4 with one high and one
+  moderate advisory (and older `Pkcs`/`MessagePack` in the development-only AppHost); updating it is a follow-up.
 - Homebrew saving needs a completed initial content import. Custom classes do not implement Mystic Arcanum,
   third-casters or custom resource pools. Simultaneous builder/Battle edits can leave charge displays stale.
 - Custom attack figures stay as written; they are not recalculated on level-up. The API exposes the ingredients for
@@ -340,8 +348,9 @@ change still needs compilation and tests. Full evidence and commands are in the 
   content-administration response codes in the OpenAPI description.
 - Campaign exports are readable archives; campaign import is not implemented. Character imports require matching
   books and homebrew. Windows/WSL2 and exhaustive class/content/accessibility coverage are not certified.
-- The software's MIT licence does not establish redistribution rights for third-party artwork or sheet logos.
-  The unresolved assets are listed in the release report; public release is held pending their resolution.
+- The software's MIT licence does not establish redistribution rights for third-party artwork or sheet logos. No
+  grant is on record for the bundled pictures or the sheet templates' D&D logos; the owner chose to publish them as
+  they are.
 
 ## Credits and legal
 

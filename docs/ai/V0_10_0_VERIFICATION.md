@@ -2,6 +2,11 @@
 
 **Decision: HOLD. No v0.10.0 tag or GitHub release was created. Maintenance mode; no feature work.**
 
+> Codex's report as written. Superseded the same day by the [Claude addendum](#claude-addendum--gates-run-on-the-merged-candidate-2026-10-16)
+> at the end: the open gates were run on the merged candidate, the owner decided the asset question, and v0.10.0 was
+> published. Two statements below no longer hold: the background art (the watermarked Homebrew tile included) now
+> ships in `public/art`, and the release is no longer a draft.
+
 Baseline: `ec3b83fe06bb7729d876a0ac4eeadba29bcb8cc5`, local and remote `aurora-server`, independently confirmed
 through the GitHub connector. During finalization the branch advanced to
 `8237b3788fb483c938500fd17b1a764a7c0661f2` (README screenshots only), confirmed locally and remotely and merged
@@ -172,3 +177,37 @@ source: serve `docs/api` to render it; its pinned jsDelivr bundle needs internet
    covers publication after successful checks; it does not authorize deployment.
 
 Stop here in maintenance mode. Do not infer permission for new features or production work from this release task.
+
+## Claude addendum — gates run on the merged candidate, 2026-10-16
+
+Candidate: branch `release/v0.10.0-final` = Codex's `release/v0.10.0` (`8d10a53`) with `aurora-server` `383b022`
+merged in (`ddb4218`: Midnight README screenshots, background art bundled with the owner's approval), plus
+`ed9a946` (Compendium: subraces that copy another subrace) and this documentation. Run on the homelab host with
+Docker, in the images CI uses (.NET 10 SDK + Node 22.19); no production data, service or configuration was used.
+
+| Gate | Check | Result |
+| --- | --- | --- |
+| 1 | `dotnet restore`, `dotnet build -c Release`, `dotnet test -c Release` (whole solution, TRX) | **build 0 errors; 803 tests: 779 passed, 0 failed, 24 skipped** (the 24 are pre-existing skips) |
+| 1 | Codex's backend wrapped-book tests `Organizations_ReadLegacyAndWrappedBooks` (legacy, wrapped) | **both passed** |
+| 1 | OpenAPI drift `ThePublishedOpenApiDocument_MatchesTheEndpoints` | **passed** |
+| 1 | `ReorderElementRulesEndpointTests` alone, repeated | **10 of 10 runs passed** |
+| 1 | `Starlights.Integration.Tests` (140 tests), repeated with its normal parallelism | **3 of 3 runs passed** (no failure seen; the start-up race stays a lead, not a reproduced cause) |
+| 2 | `npm ci` from the lockfile in a clean container, `npm run build` | **pass** |
+| 2 | Vitest with `LORE_SRC` = 5etools-src `90d343c` (v2.38.0), read-only | **235 passed, 0 failed, 0 skipped; 27 files** (one earlier run timed out at 5 s in the adventure test while the backend suite loaded the CPU; alone it takes 2.7 s) |
+| 2 | `npm audit --omit=dev` | 24 advisories (1 critical, 17 high, 6 moderate). All are server-side packages reached through the `shadcn` CLI in `packages/ui-framework` (`@modelcontextprotocol/sdk`, `hono`, `undici`, `proxy-addr`, …), build tooling (`postcss`, `braces`, …) or react-router's RSC server mode. The shipped app is static files served by nginx; none of these runs in production. Not upgraded (maintenance scope). |
+| 2 | `dotnet list package --vulnerable --include-transitive` | `Starlights.Application`: transitive `System.Security.Cryptography.Pkcs` 9.0.4, GHSA-846f-f764-76mx (high) and GHSA-2fmv-rv2c-59x7 (moderate). `Starlights.AppHost` (development only): `Pkcs` 10.0.8, `MessagePack` 2.5.302 (moderate). **Follow-up:** pin a patched `Pkcs`. |
+| 2 | CI on the exact release commit | run by hand after the push; the release is tagged only on the commit it passed |
+| 3 | Compendium build from the candidate on real 5etools 2.38 (scratch output) | **all 101 adventures and 67 books have chapters** (Curse of Strahd: 26); live, built with the old reader, had none of the 168. Report: 1 problem left, a 5etools data error (Umbraxakar's legendary group "Shadow Dragon (Bronze Dragon)" (MM) does not exist), left as it is |
+| 3 | `docs/api/index.html` served locally, rendered in Chromium (Playwright) | **Scalar renders the description**, no page errors |
+| 3 | Disposable SQL/browser journeys (homebrew, sheets/PDF downloads, spells, Battle, permissions, persistence) | **not run on this commit**; earlier evidence is historical |
+| 4 | Bundled-asset rights | **owner's decision**: publish as they are, the upstream pictures in `public/images`, the background art in `public/art` (the watermarked Tasha tile included) and the sheet templates' D&D logos |
+
+`ed9a946`: 5etools makes the Amonkhet human (PSA) a `_copy` of the PHB human Variant subrace. The species reader
+looked up the race before resolving copies, so it reported "race undefined (undefined) not found" and left it out.
+Subraces now resolve their copies first, keyed by race as well as name and source; a synthetic test covers it, and
+"Human (Amonkhet)" is in the species index built from 2.38. The server's 5etools translation already resolves that
+copy (only one "Variant" PHB subrace exists), so it is unchanged.
+
+Production follow-up approved by the owner: rebuild the live Compendium from the release (the nightly only rebuilds
+on a new 5etools release). The homelab nightly now treats any "no chapters"/"no file" problem in a new build's
+report as a failure (ntfy, high priority), so a future 5etools format change is caught the same night.

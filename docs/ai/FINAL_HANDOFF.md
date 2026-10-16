@@ -1,14 +1,11 @@
 # Starlights — final handoff (maintenance mode)
 
-**v0.10.0 release check, 2026-10-16: HOLD — no tag or GitHub release published.**
-Independent verification and the remaining gates are in [V0_10_0_VERIFICATION.md](V0_10_0_VERIFICATION.md).
-Local candidate: `release/v0.10.0`, based on `ec3b83f` and retaining the later remote/local README screenshot
-commit `8237b37`; compatibility fix `e718fad`.
-234 frontend tests and the full frontend build pass; 39 installer tests pass; a synthetic PDF exports.
-Backend/integration tests (including the serializer failure), SQL/browser journeys, clean dependency audits,
-exact-commit CI and bundled-asset permissions remain open. The backend compatibility patch is uncompiled/untested.
-No production access, deployment, merge into `aurora-server` or push occurred.
-[Release notes](../releases/v0.10.0.md) remain a draft.
+**v0.10.0 public beta, released 2026-10-16** (tag `v0.10.0` on `aurora-server`; [release notes](../releases/v0.10.0.md)).
+Codex prepared the candidate (`release/v0.10.0`, wrapped-5etools fix `e718fad`) and held it on checks its sandbox
+could not run; Claude ran them on the merged candidate (backend 803 tests, 0 failed; clean `npm ci`, build and 235
+frontend tests with real content; CI on the release commit) and the owner accepted the bundled artwork as it is.
+Evidence: [V0_10_0_VERIFICATION.md](V0_10_0_VERIFICATION.md) (Codex's report, then Claude's addendum). Not rerun on
+this commit: browser journeys on a disposable install.
 
 Development is closed; from here: bug fixes and live-play improvements, one small mission at a time
 (`docs/ai/DEVELOPMENT_DIRECTIVE.md`). Read this, then only the skill for the subject.
