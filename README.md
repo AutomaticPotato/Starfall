@@ -12,7 +12,7 @@
   &nbsp;
   <img src="assets/images/screenshots/home-phone.jpg" alt="The Starlights home page on a phone" width="28%">
 </p>
-<p align="center"><sub>The home page on a desktop and on a phone (Porcelain theme). A new install shows it like this; the
+<p align="center"><sub>The home page on a desktop and on a phone (Midnight theme). A new install shows it like this; the
 three plain tiles take pictures you add yourself.</sub></p>
 
 **Contents:** [What this fork adds](#what-this-fork-adds) · [Install](#install-with-docker) ·
