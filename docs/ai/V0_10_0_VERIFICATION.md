@@ -208,6 +208,10 @@ Subraces now resolve their copies first, keyed by race as well as name and sourc
 "Human (Amonkhet)" is in the species index built from 2.38. The server's 5etools translation already resolves that
 copy (only one "Variant" PHB subrace exists), so it is unchanged.
 
+The Compendium build format goes from 7 to 8 (version `2.38.0-90d343c-f8`): the files of a build are cached by
+browsers for good, and an install builds again only for a new version, so a fixed build of the same 5etools release
+needs a new name. The app reads the name from `current.json` and pins no format.
+
 Production follow-up approved by the owner: rebuild the live Compendium from the release (the nightly only rebuilds
 on a new 5etools release). The homelab nightly now treats any "no chapters"/"no file" problem in a new build's
 report as a failure (ntfy, high priority), so a future 5etools format change is caught the same night.

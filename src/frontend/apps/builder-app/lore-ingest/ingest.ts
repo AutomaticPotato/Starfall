@@ -23,8 +23,12 @@ import { ingestSimple, ingestSpecies } from "./simple.ts";
 import { bookSections, ingestBooks, ingestMaps } from "./books.ts";
 import { ingestSpells } from "./spells.ts";
 
-/** Goes up whenever the generated files change shape, so the app never reads old files with new code. */
-const FORMAT = 7;
+/**
+ * Goes up whenever the generated files change shape, so the app never reads old files with new code, and whenever a
+ * build of the same data comes out different (8: wrapped books and adventures, copied subraces), because browsers
+ * keep a build's files for good and an existing install builds again only for a new version.
+ */
+const FORMAT = 8;
 const DEFAULT_IMAGE_BASE = "https://raw.githubusercontent.com/5etools-mirror-3/5etools-img/main/";
 
 /** 5etools page names of the redirect table → our categories. */
