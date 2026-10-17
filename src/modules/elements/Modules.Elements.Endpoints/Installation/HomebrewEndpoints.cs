@@ -30,7 +30,7 @@ internal static partial class HomebrewFiles
 
 public sealed record HomebrewElementModel(string Name, string Type, string? Source);
 
-public sealed record HomebrewFileModel(string File, List<HomebrewElementModel> Elements);
+public sealed record HomebrewFileModel(string File, List<HomebrewElementModel> Elements, List<string>? AppendTargets = null);
 
 public sealed record GetHomebrewResponse(List<HomebrewFileModel> Files);
 
@@ -57,7 +57,7 @@ public sealed class GetHomebrewEndpoint : EndpointWithoutRequest<GetHomebrewResp
                     var document = XDocument.Load(path);
                     files.Add(new HomebrewFileModel(Path.GetFileName(path), HomebrewFiles.Elements(document)
                         .Select(e => new HomebrewElementModel((string)e.Attribute("name")!, (string)e.Attribute("type")!, (string?)e.Attribute("source")))
-                        .ToList()));
+                        .ToList(), HomebrewUploadXml.AppendTargets(document)));
                 }
                 catch (XmlException)
                 {
@@ -116,9 +116,9 @@ public sealed class UploadHomebrewEndpoint : Endpoint<UploadHomebrewRequest>
             return;
         }
 
-        if (document.Root?.Name.LocalName != "elements" || !HomebrewFiles.Elements(document).Any())
+        if (HomebrewUploadXml.Validate(document) is { } validationError)
         {
-            AddError(r => r.Content, "This is not an Aurora elements file (<elements> with <element id=… name=… type=…>).");
+            AddError(r => r.Content, validationError);
             await Send.ErrorsAsync(cancellation: ct);
             return;
         }
@@ -132,10 +132,18 @@ public sealed class UploadHomebrewEndpoint : Endpoint<UploadHomebrewRequest>
             await Send.ErrorsAsync(cancellation: ct);
             return;
         }
-        document.Save(Path.Combine(folder, name));
+        await HomebrewContent.Gate.WaitAsync(ct);
+        try
+        {
+            document.Save(Path.Combine(folder, name));
 
-        var result = await _importer.ImportAsync(AuroraImporterIndex.Homebrew, replace: false, update: true, ct);
-        await Send.OkAsync(new { File = name, result.ElementsImported, result.ElementsReplaced }, ct);
+            var result = await _importer.ImportAsync(AuroraImporterIndex.Homebrew, replace: false, update: true, ct);
+            await Send.OkAsync(new { File = name, result.ElementsImported, result.ElementsReplaced, result.Warnings }, ct);
+        }
+        finally
+        {
+            HomebrewContent.Gate.Release();
+        }
     }
 }
 
@@ -159,14 +167,24 @@ public sealed class DeleteHomebrewEndpoint : EndpointWithoutRequest
     {
         var name = HomebrewFiles.SafeName(Route<string>("file") ?? string.Empty);
         var path = Path.Combine(HomebrewFiles.Folder(Config), name);
-        if (!File.Exists(path) || HomebrewContent.IsManaged(name))
+        await HomebrewContent.Gate.WaitAsync(ct);
+        try
         {
-            await Send.NotFoundAsync(ct);
-            return;
-        }
+            if (!File.Exists(path) || HomebrewContent.IsManaged(name))
+            {
+                await Send.NotFoundAsync(ct);
+                return;
+            }
 
-        File.Delete(path);
-        var removed = await _importer.RemoveAsync("homebrew/" + name, ct);
-        await Send.OkAsync(new { Removed = removed }, ct);
+            File.Delete(path);
+            var removed = await _importer.RemoveAsync("homebrew/" + name, ct);
+            // Rebuild patched targets from source after removing this file. Other files’ appends still apply.
+            var result = await _importer.ImportAsync(AuroraImporterIndex.Homebrew, replace: false, update: true, ct);
+            await Send.OkAsync(new { Removed = removed, result.Warnings }, ct);
+        }
+        finally
+        {
+            HomebrewContent.Gate.Release();
+        }
     }
 }

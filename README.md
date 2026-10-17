@@ -159,6 +159,13 @@ The export holds your DM notes: keep it private. Starfall can't import it yet; i
 
 ### Homebrew
 
+Aurora XML uploads can contain new `<element>` definitions, `<append id="…">` patches, or both, inside one
+`<elements>` root. Append-only files are supported. The Files tab lists patch target IDs and warns when their
+source content is missing. Install that content and upload the patch again to apply it. Uploading the same
+filename replaces the patch; removing the file removes its additions while retaining other files’ patches.
+Patches modify the target's original source content, so they apply to characters using that source rather than
+creating a separate Homebrew book.
+
 On the **Homebrew** page (admin password needed) make magic items, monsters, spells, subclasses and classes with forms, or upload Aurora element
 files (`.xml`) for classes, species, backgrounds and anything else. Homebrew starts switched off everywhere:
 

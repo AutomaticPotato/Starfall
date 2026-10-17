@@ -8967,6 +8967,15 @@
             "items": {
               "$ref": "#/components/schemas/HomebrewElementModel"
             }
+          },
+          "appendTargets": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
           }
         }
       },

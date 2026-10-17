@@ -117,4 +117,70 @@ public class AuroraImporterAppendTests
         second.Values.Select(e => e.GetRequiredComponent<AuroraSourceComponent>().RawXml)
             .Should().Equal(first.Values.Select(e => e.GetRequiredComponent<AuroraSourceComponent>().RawXml));
     }
+    [TestMethod]
+    public async Task FirstImport_AlsoIncludesAppendTargetsOutsideHomebrew()
+    {
+        File.Move(Path.Combine(_root, "homebrew", "b-elements.xml"), Path.Combine(_root, "content", "base.xml"));
+        var elements = await ImportAsync();
+        elements["ID_TEST_SKILL"].GetRequiredComponent<SupportsComponent>().Supports.Should().Contain("Artificer");
+        elements["ID_TEST_FEATURE"].GetComponents<IncludeRuleComponent>().Should().ContainSingle();
+    }
+
+    [TestMethod]
+    public async Task AppendOnlyUpload_RefreshesExternalTargets_AndRestoresThemAfterReplacementAndDeletion()
+    {
+        // Definitions live in installed content, not in the homebrew file being imported.
+        File.Move(Path.Combine(_root, "homebrew", "b-elements.xml"), Path.Combine(_root, "content", "base.xml"));
+        File.Delete(Path.Combine(_root, "homebrew", "c-repeated.xml"));
+        var saved = new Dictionary<Guid, Element>();
+        var repository = new Mock<IElementsRepository>();
+        repository.Setup(x => x.GetElementSummariesAsync()).ReturnsAsync(() => saved.Values
+            .Select(e => new ElementSummary(e.Id.Value, e.Name, e.Type, "Test")).ToList());
+        repository.Setup(x => x.GetAuroraXmlAsync()).ReturnsAsync(() => saved.ToDictionary(p => p.Key,
+            p => p.Value.GetRequiredComponent<AuroraSourceComponent>().RawXml));
+        repository.Setup(x => x.Add(It.IsAny<Element>())).Callback<Element>(e => saved[e.Id.Value] = e);
+        repository.Setup(x => x.DeleteElementAsync(It.IsAny<Guid>())).ReturnsAsync((Guid id) => saved.Remove(id));
+        var persistence = new Mock<IPersistence>();
+        persistence.Setup(x => x.GetRepository<IElementsRepository>()).Returns(repository.Object);
+        var importer = new AuroraImporter(NullLogger<AuroraImporter>.Instance, persistence.Object,
+            new AuroraImporterOptions(Path.Combine(_root, "content"), HomebrewPath: Path.Combine(_root, "homebrew")),
+            new FiveEToolsData(new FiveEToolsOptions(Path.Combine(_root, "no-5etools")), NullLogger<FiveEToolsData>.Instance));
+        Element Get(string id) => saved.Values.Single(e => e.GetRequiredComponent<AuroraSourceComponent>().AuroraId == id);
+
+        // Start with an already imported base, exactly as on a tester's installed server.
+        File.Delete(Path.Combine(_root, "homebrew", "a-appends.xml"));
+        File.WriteAllText(Path.Combine(_root, "content", "base.index"), "<index><files><file name='base.xml'/></files></index>");
+        await importer.ImportAsync("base.index");
+        var originalId = Get("ID_TEST_SKILL").Id;
+        File.WriteAllText(Path.Combine(_root, "homebrew", "a-appends.xml"), Appends);
+        var first = await importer.ImportAsync(AuroraImporterOptions.HomebrewIndex, update: true);
+        first.ElementsReplaced.Should().Be(2);
+        Get("ID_TEST_SKILL").Id.Should().Be(originalId);
+        first.Warnings.Should().ContainSingle(w => w.Contains("ID_TEST_MISSING"));
+        Get("ID_TEST_SKILL").GetRequiredComponent<SupportsComponent>().Supports.Should().Contain("Artificer");
+        Get("ID_TEST_SKILL").GetRequiredComponent<AuroraSourceComponent>().File.Should().Be("base.xml");
+        var skillId = Get("ID_TEST_SKILL").Id;
+        (await importer.ImportAsync(AuroraImporterOptions.HomebrewIndex, update: true)).ElementsReplaced.Should().Be(0);
+
+        // A second patch must survive both replacement and deletion of the first.
+        File.WriteAllText(Path.Combine(_root, "homebrew", "other.xml"),
+            "<elements><append id='ID_TEST_SKILL'><supports>OtherPatch</supports></append></elements>");
+        File.WriteAllText(Path.Combine(_root, "homebrew", "a-appends.xml"),
+            "<elements><append id='ID_TEST_FEATURE'><supports>Replacement</supports></append></elements>");
+        await importer.ImportAsync(AuroraImporterOptions.HomebrewIndex, update: true);
+        Get("ID_TEST_SKILL").Id.Should().Be(skillId);
+        Get("ID_TEST_SKILL").GetRequiredComponent<SupportsComponent>().Supports.Should().Equal("Skill", "Intelligence", "OtherPatch");
+        Get("ID_TEST_FEATURE").GetComponents<IncludeRuleComponent>().Should().BeEmpty();
+        Get("ID_TEST_FEATURE").GetComponents<SelectionRuleComponent>().Should().ContainSingle();
+        Get("ID_TEST_FEATURE").GetRequiredComponent<SupportsComponent>().Supports.Should().Contain("Replacement");
+
+        File.Delete(Path.Combine(_root, "homebrew", "a-appends.xml"));
+        await importer.ImportAsync(AuroraImporterOptions.HomebrewIndex, update: true);
+        Get("ID_TEST_FEATURE").GetComponent<SupportsComponent>().Should().BeNull();
+        Get("ID_TEST_SKILL").GetRequiredComponent<SupportsComponent>().Supports.Should().Contain("OtherPatch");
+        File.Delete(Path.Combine(_root, "homebrew", "other.xml"));
+        await importer.ImportAsync(AuroraImporterOptions.HomebrewIndex, update: true);
+        Get("ID_TEST_SKILL").GetRequiredComponent<SupportsComponent>().Supports.Should().Equal("Skill", "Intelligence");
+        (await importer.ImportAsync(AuroraImporterOptions.HomebrewIndex, update: true)).ElementsReplaced.Should().Be(0);
+    }
 }
