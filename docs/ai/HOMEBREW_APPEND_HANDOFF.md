@@ -33,4 +33,13 @@ Implementation commit: `04ca66c`. The original shell push failed with `Could not
 
 The GitHub connector is available even though shell DNS and local backend tooling remain unavailable. Remote `aurora-server` is `b3008b8bb0e2c08271789d124e8195dd4f942064` (PR #2 merged the rebrand/custom-attacks branch). Its tree `d65eb90e2a5deb63619c420b65a2bb63bde8ee92` exactly matches local baseline `29bec01`; those dependencies are now integrated. The repository is still `CHassapis/starlights`.
 
-Publish the 13-file append fix on a separate review branch through the connector, then open a draft PR to run the existing build/test workflow. This workflow contains no deployment job. Connector-created commits have different IDs from the preserved local implementation commits; verify the published tree matches the local tree. Backend and browser results remain unverified until their checks actually run. No merge, repository rename or deployment is part of this follow-up.
+Published the 13-file fix through the connector as `a31d254a24b82705f85c0ef46de72b254bc13794` on `fix/homebrew-append-upload`; opened draft [PR #3](https://github.com/CHassapis/starlights/pull/3). Its tree `0dd19a41fca0a32713b6af9f09a5801b79a771ad` exactly matches local `c625a9f`. The connector creates distinct commit IDs; local history is preserved. GitHub reports the PR mergeable without conflicts.
+
+No CI run appeared after opening the PR. The available connector cannot dispatch workflows. From a network-enabled authenticated shell, start the existing build/test workflow with:
+
+```sh
+gh workflow run development-build.yml --repo CHassapis/starlights --ref fix/homebrew-append-upload
+gh run list --repo CHassapis/starlights --branch fix/homebrew-append-upload
+```
+
+This workflow contains no deployment job. Backend and browser results remain unverified until their checks actually run. No merge, repository rename or deployment was performed.
