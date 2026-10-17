@@ -350,8 +350,8 @@ internal sealed class AuroraImporter : IAuroraImporter
         }
 
         await _persistence.SaveChangesAsync();
+        Items.ElementsContentVersion.BumpWhenCommitted(); // before Complete(): Transaction.Current throws after it
         transaction.Complete();
-        Items.ElementsContentVersion.Bump();
 
         var imported = importedByType.Values.Sum();
         var dependencies = toImport.Count - requestedCount;
@@ -373,7 +373,7 @@ internal sealed class AuroraImporter : IAuroraImporter
             }
         }
         await _persistence.SaveChangesAsync();
-        Items.ElementsContentVersion.Bump();
+        Items.ElementsContentVersion.BumpWhenCommitted();
 
         _logger.LogInformation("removed {Removed} elements imported from '{PathPrefix}'", removed, pathPrefix);
         return removed;

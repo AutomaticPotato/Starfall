@@ -1,3 +1,4 @@
+using System.Transactions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Starlights.Modules.Elements.Data;
@@ -17,6 +18,26 @@ public static class ElementsContentVersion
     public static long Current => Interlocked.Read(ref _version);
 
     public static void Bump() => Interlocked.Increment(ref _version);
+
+    /// <summary>
+    /// Bumps once the ambient transaction commits (right away without one): a cache rebuilt before the commit would
+    /// otherwise keep the old content under the new version, and a rolled-back change needs no rebuild.
+    /// </summary>
+    public static void BumpWhenCommitted()
+    {
+        if (Transaction.Current is not { } transaction)
+        {
+            Bump();
+            return;
+        }
+        transaction.TransactionCompleted += (_, e) =>
+        {
+            if (e.Transaction?.TransactionInformation.Status == TransactionStatus.Committed)
+            {
+                Bump();
+            }
+        };
+    }
 }
 
 /// <summary>
