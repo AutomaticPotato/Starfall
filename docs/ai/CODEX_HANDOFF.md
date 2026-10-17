@@ -1,3 +1,5 @@
+> Latest follow-up (2026-10-16): [append-only homebrew uploads](HOMEBREW_APPEND_HANDOFF.md), on `fix/homebrew-append-upload`. Backend verification and delivery remain subject to the documented environment blockers.
+
 > Current work (2026-10-16): [Starfall rebrand and Custom Attacks](STARFALL_HANDOFF.md). Implementation is committed separately; backend/browser verification and GitHub operations remain blocked. The historical frontend QA handoff below is retained.
 
 # Codex handoff — frontend QA complete

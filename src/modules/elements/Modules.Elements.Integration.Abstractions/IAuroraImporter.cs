@@ -32,7 +32,10 @@ public record AuroraImportResult(
     int AlreadyImported,
     int SkippedConditionalRules,
     int SkippedUnresolvedGrants,
-    IReadOnlyDictionary<string, int> ImportedByType);
+    IReadOnlyDictionary<string, int> ImportedByType)
+{
+    public IReadOnlyList<string> Warnings { get; init; } = [];
+}
 
 public static class AuroraImporterIndex
 {

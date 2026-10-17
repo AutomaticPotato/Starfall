@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { FlaskConicalIcon, Trash2Icon, UploadIcon } from "lucide-react";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { HomebrewItems, HomebrewMonsters } from "./homebrew-tabs";
 import { HomebrewClasses, HomebrewSpells, HomebrewSubclasses } from "./workshop-tabs";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -11,10 +11,12 @@ import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { apiClient } from "@/lib/api-client";
 import { withNewBooksOff } from "@/lib/api/homebrew";
+import { homebrewUploadError } from "@/lib/homebrew-upload-error";
 import { isAdmin } from "@/lib/player";
 
 interface HomebrewFile {
   file: string;
+  appendTargets?: string[] | null;
   elements: { name: string; type: string; source: string | null }[];
 }
 
@@ -25,6 +27,8 @@ interface HomebrewFile {
 function FilesTab() {
   const qc = useQueryClient();
   const input = useRef<HTMLInputElement>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [warnings, setWarnings] = useState<string[]>([]);
   const admin = isAdmin();
   const { data, isLoading } = useQuery({ queryKey: ["homebrew"], queryFn: () => apiClient.get<{ files: HomebrewFile[] }>("/api/elements/homebrew") });
 
@@ -32,22 +36,30 @@ function FilesTab() {
     qc.invalidateQueries({ queryKey: ["homebrew"] }).catch(() => {});
     qc.invalidateQueries({ queryKey: ["compendium"] }).catch(() => {});
     qc.invalidateQueries({ queryKey: ["sources"] }).catch(() => {});
+    for (const key of ["item-catalog", "items", "builder", "sheet"]) qc.invalidateQueries({ queryKey: [key] }).catch(() => {});
   };
 
   const upload = useMutation({
-    mutationFn: (files: File[]) =>
-      withNewBooksOff(async () => {
+    mutationFn: async (files: File[]) => {
+      setWarnings([]);
+      setUploadError(null);
+      await withNewBooksOff(async () => {
         for (const file of files) {
-          await apiClient.post("/api/elements/homebrew", { fileName: file.name, content: await file.text() });
+          try {
+            const result = await apiClient.post<{ fileName: string; content: string }, { warnings?: string[] }>("/api/elements/homebrew", { fileName: file.name, content: await file.text() });
+            if (result.warnings?.length) setWarnings((current) => [...new Set([...current, ...result.warnings!])]);
+          } catch (error) { throw new Error(`${file.name}: ${homebrewUploadError(error as Error)}`, { cause: error }); }
         }
-      }),
+      });
+    },
     onSuccess: (_, files) => toast.success(`${files.length} homebrew ${files.length === 1 ? "file" : "files"} added`),
-    onError: (e) => toast.error("Could not add the homebrew", { description: e.message }),
+    onError: (e) => { setUploadError(e.message); toast.error("Could not add the homebrew", { description: e.message }); },
     onSettled: refresh,
   });
 
   const remove = useMutation({
-    mutationFn: (file: string) => apiClient.delete(`/api/elements/homebrew/${encodeURIComponent(file)}`),
+    mutationFn: (file: string) => apiClient.delete<{ warnings?: string[] }>(`/api/elements/homebrew/${encodeURIComponent(file)}`),
+    onSuccess: (result) => setWarnings(result.warnings ?? []),
     onError: (e) => toast.error("Could not remove it", { description: e.message }),
     onSettled: refresh,
   });
@@ -82,6 +94,12 @@ function FilesTab() {
         )}
       </header>
 
+      <p className="text-sm text-muted-foreground">Files can define new elements or use &lt;append id="…"&gt; to change existing ones. Wrap them in one &lt;elements&gt; root. Patches affect their original source content; they do not create a separate Homebrew book. Upload the same filename to replace a patch.</p>
+      {uploadError && <p role="alert" className="rounded-md border border-destructive/40 p-3 text-sm text-destructive">{uploadError}</p>}
+      {warnings.length > 0 && <div role="status" className="space-y-2 rounded-md border border-amber-500/50 bg-amber-500/5 p-3 text-sm">
+        <p className="font-medium">Files saved, but some patches need attention</p>
+        <ul className="list-inside list-disc break-words">{warnings.map((warning) => <li key={warning}>{warning}</li>)}</ul>
+      </div>}
       {isLoading && <Spinner className="mx-auto my-8 size-6" />}
       {data?.files.length === 0 && <p className="text-muted-foreground">No homebrew yet.</p>}
 
@@ -119,6 +137,10 @@ function FilesTab() {
                   </li>
                 ))}
             </ul>
+            {!!f.appendTargets?.length && <div className="mt-3 space-y-1 text-sm">
+              <p className="font-medium">Patches {f.appendTargets.length} existing {f.appendTargets.length === 1 ? "element" : "elements"}</p>
+              <ul className="space-y-1 break-all text-xs text-muted-foreground">{f.appendTargets.map((id) => <li key={id}>{id}</li>)}</ul>
+            </div>}
           </section>
         ))}
       </div>

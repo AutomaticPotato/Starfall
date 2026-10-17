@@ -63,6 +63,9 @@ internal sealed class AuroraImporter : IAuroraImporter
     // all once, with no --replace needed
     private const string ImportVersion = "2";
 
+    // Persisted with raw XML so removed/retargeted patches can refresh their former targets.
+    private const string HomebrewAppendMarker = "starlights-homebrew-append";
+
     private readonly ILogger<AuroraImporter> _logger;
     private readonly IPersistence _persistence;
     private readonly AuroraImporterOptions _options;
@@ -81,7 +84,10 @@ internal sealed class AuroraImporter : IAuroraImporter
         using var _ = ElementsInstrumentation.StartActivity();
 
         var root = Path.GetFullPath(_options.ContentPath);
-        var (byId, byFile) = BuildCatalog(root);
+        var (byId, byFile, warnings) = BuildCatalog(root);
+        var repository = _persistence.GetRepository<IElementsRepository>();
+        var homebrewImport = string.Equals(indexPath, AuroraImporterOptions.HomebrewIndex, StringComparison.OrdinalIgnoreCase);
+        var storedXml = homebrewImport && (update || replace) ? await repository.GetAuroraXmlAsync() : null;
 
         // "homebrew" imports every file of the homebrew folder, "5etools" what is generated from the 5etools data;
         // anything else is an .index of the content repository
@@ -137,6 +143,18 @@ internal sealed class AuroraImporter : IAuroraImporter
         {
             byFile.GetValueOrDefault(file, []).ForEach(e => Add(byId.GetValueOrDefault(e.Id, e)));
         }
+        if (homebrewImport)
+        {
+            // Append-only files have no definitions in byFile. Include their targets and the former targets
+            // recorded in stored XML, so replacing/removing a patch also removes its old contributions.
+            foreach (var element in byId.Values)
+            {
+                if (element.Xml.Attribute(HomebrewAppendMarker) is not null
+                    || (storedXml is not null && storedXml.TryGetValue(ToElementId(element.Id).Value, out var previous)
+                        && previous.Contains(HomebrewAppendMarker + "=", StringComparison.Ordinal)))
+                    Add(element);
+            }
+        }
         var requestedCount = toImport.Count;
 
         while (queue.TryDequeue(out var element))
@@ -179,7 +197,6 @@ internal sealed class AuroraImporter : IAuroraImporter
             }
         }
 
-        var repository = _persistence.GetRepository<IElementsRepository>();
         var existing = (await repository.GetElementSummariesAsync()).Select(e => e.Id).ToHashSet();
 
         // replace: re-create everything imported before; update: only what changed upstream. Component ids are
@@ -187,7 +204,7 @@ internal sealed class AuroraImporter : IAuroraImporter
         var replaced = 0;
         if (replace || update)
         {
-            var stored = update && !replace ? await repository.GetAuroraXmlAsync() : null;
+            var stored = update && !replace ? storedXml ?? await repository.GetAuroraXmlAsync() : null;
             foreach (var aurora in toImport.Values)
             {
                 var id = ToElementId(aurora.Id).Value;
@@ -334,7 +351,7 @@ internal sealed class AuroraImporter : IAuroraImporter
         _logger.LogInformation("imported aurora index '{Index}': {Imported} elements ({Replaced} replaced, {Dependencies} pulled in as grant dependencies), {Existing} already present, {Conditional} conditional rules and {Unresolved} unresolved grants skipped",
             indexPath, imported, replaced, dependencies, alreadyImported, skippedConditional, skippedUnresolved);
 
-        return new AuroraImportResult(files.Count, imported, replaced, dependencies, alreadyImported, skippedConditional, skippedUnresolved, importedByType);
+        return new AuroraImportResult(files.Count, imported, replaced, dependencies, alreadyImported, skippedConditional, skippedUnresolved, importedByType) { Warnings = warnings };
     }
 
     public async Task<int> RemoveAsync(string pathPrefix, CancellationToken cancellationToken = default)
@@ -365,7 +382,7 @@ internal sealed class AuroraImporter : IAuroraImporter
     /// Every element of the content repository and of the homebrew folder (under "homebrew/"), so grants and
     /// choices resolve across both.
     /// </summary>
-    private (Dictionary<string, AuroraElement> ById, Dictionary<string, List<AuroraElement>> ByFile) BuildCatalog(string root)
+    private (Dictionary<string, AuroraElement> ById, Dictionary<string, List<AuroraElement>> ByFile, List<string> Warnings) BuildCatalog(string root)
     {
         var byId = new Dictionary<string, AuroraElement>(StringComparer.Ordinal);
         var byFile = new Dictionary<string, List<AuroraElement>>(StringComparer.Ordinal);
@@ -508,7 +525,11 @@ internal sealed class AuroraImporter : IAuroraImporter
 
         _logger.LogInformation("aurora catalog: {Elements} elements in {Files} files ({Duplicates} duplicate ids ignored, {Appended} appends applied, {Unmatched} appends for elements not loaded)",
             byId.Count, byFile.Count, duplicates, appended, unmatched);
-        return (byId, byFile);
+        var warnings = documents.Where(d => d.File.StartsWith(HomebrewPrefix, StringComparison.Ordinal))
+            .SelectMany(d => HomebrewUploadXml.AppendTargets(d.Document).Where(id => !byId.TryGetValue(id, out var target) || target.Xml.Attribute(HomebrewAppendMarker) is null)
+                .Select(id => $"{d.File}: append target {id} was not found in the loaded Aurora source files. Install its source content, then upload this patch again."))
+            .ToList();
+        return (byId, byFile, warnings);
     }
 
     /// <summary>
@@ -546,7 +567,8 @@ internal sealed class AuroraImporter : IAuroraImporter
             .ToLookup(e => (string)e.Attribute("id")!, StringComparer.Ordinal);
 
         int applied = 0, unmatched = 0;
-        foreach (var append in documents.OrderBy(d => d.File, StringComparer.Ordinal).SelectMany(d => d.Document.Descendants("append")))
+        foreach (var (file, append) in documents.OrderBy(d => d.File, StringComparer.Ordinal)
+            .SelectMany(d => d.Document.Descendants("append").Select(a => (d.File, a))))
         {
             var targets = elements[(string?)append.Attribute("id") ?? string.Empty].ToList();
             if (targets.Count == 0)
@@ -559,6 +581,8 @@ internal sealed class AuroraImporter : IAuroraImporter
             var appendedRules = append.Element("rules")?.Elements().ToList() ?? [];
             foreach (var target in targets)
             {
+                if (file.StartsWith(HomebrewPrefix, StringComparison.Ordinal))
+                    target.SetAttributeValue(HomebrewAppendMarker, "true");
                 if (supports.Count > 0)
                 {
                     if (target.Element("supports") is { } existing)
