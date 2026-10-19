@@ -1,18 +1,20 @@
 # Starfall Mk2 — verification report
 
 2026-10-19, Claude (sessions 4213521d on 2026-10-17 and 9e7d5e8e). Mission: the owner's "Starfall Mk2 — Final
-stabilization & release readiness" brief. Baseline: `aurora-server` **8adf858** (PR #3), which is also what is live.
-Nothing was merged or deployed; production was not touched (a copy of the live database was refused by the session's
-safety classifier, so real characters were re-imported from their Aurora files instead).
+stabilization & release readiness" brief. Baseline: `aurora-server` **8adf858** (PR #3), live until this release.
+Sections A–F were verified on disposable installs (a copy of the live database was refused by the session's safety
+classifier, so real characters were re-imported from their Aurora files instead). On 2026-10-19 the owner approved
+merging, deploying and publishing; the release script rehearsed the update on a copy of the live database, deployed
+it, ran the admin reprocess and compared every live character before and after (section H).
 
-## Overall: **PARTIALLY VERIFIED — TESTING INCOMPLETE**
+## Overall: **RELEASED as v0.11.0 — verified on disposable installs and on live data; the areas in G remain unverified**
 
-Every reported defect is fixed on its own pull request and verified on disposable SQL Server installs with the
-owner's real Aurora characters; CI runs on pull requests again and repository protection works. Not complete: the PRs are not merged or
-deployed (by the brief), several areas were checked only by loading their pages, and live data was never compared.
-Details under "Not verified" below.
+Every reported defect is fixed and verified on disposable SQL Server installs with the owner's real Aurora
+characters, then on a copy of the live database and on live itself (H). CI runs on pushes and pull requests again,
+including the SQL Server tests, and repository protection works. Several areas were checked only by loading their
+pages; they are listed under "Not verified" (G).
 
-## Pull requests (all drafts, base `aurora-server` 8adf858)
+## Pull requests (base `aurora-server` 8adf858, merged in the order F, A, B, G, C, D, E, then this report)
 
 | PR | Branch | Head | What |
 | --- | --- | --- | --- |
@@ -24,13 +26,13 @@ Details under "Not verified" below.
 | [#9](https://github.com/CHassapis/Starfall/pull/9) F | `ci/workflow-triggers` | 29528b4 | CI runs on push/PR again; SQL Server in CI; docs |
 | [#10](https://github.com/CHassapis/Starfall/pull/10) G | `fix/aurora-import-ability-order` | a456728 | Aurora import sets ability scores before equipment |
 
-**Suggested merge order:** F first (so the others get CI on update), then A, B, G, C, D, E, then this report (#12).
-In that order all eight merge onto 8adf858 without conflicts (checked). A, B, C, D, E and G were built and tested
-together as one install; F changes only CI and docs.
+F went first so that the others could get CI; in this order all eight merge onto 8adf858 without conflicts. A, B,
+C, D, E and G were built and tested together as one install; F changes only CI and docs.
 
-**After deploying B (and G): run the admin reprocess once** (`deploy/admin.sh reprocess`): characters saved
-without skills, or with an armour rule judged before their Strength was set, are put right; on the disposable copy
-it changed nothing else (all statistics, saves, registrations and inventories identical).
+**After deploying B (and G), the admin reprocess runs once** (`starlights-admin.sh reprocess` on the homelab,
+`./admin.sh reprocess` on an installer setup): characters saved without skills, or with an armour rule judged
+before their Strength was set, are put right; on the disposable copy it changed nothing else (all statistics,
+saves, registrations and inventories identical). The live run is in H.
 
 ## A. Reported bugs
 
@@ -62,7 +64,7 @@ nothing twice; deleting both files restores the element byte for byte; 14 other 
 | 2024 rules | PASS | real characters on 2024 content; 2024 Resilient and Thaumaturge unit tests; 2024 Chain Mail Strength rule (PR G) |
 | Multiclass | PASS (unit tests only) | rogue/ranger expertise test; **none of the 14 real files is multiclass** |
 | Imported Aurora characters | PASS | 14/14 imported through the dialog, 0 page errors, 0 server errors |
-| Existing saved characters | PASS on copies | characters saved by the old build healed by reprocess with nothing else changed; **live data NOT VERIFIED** |
+| Existing saved characters | PASS (live) | healed by reprocess on disposable copies, then on a copy of the live database and on live (H) |
 | Newly created characters | PASS | created through the builder API; fresh imports |
 | Character levelling | PASS (through import) | the import levels characters with the level endpoint (levels 1–6) |
 | Character export/import | PASS (backend tests) | portability tests in the backend suite; no browser round trip this session |
@@ -129,7 +131,7 @@ Commands and logs: `~/.cache/starlights-test/mk2/LEDGER.md` (evidence ledger) an
 | Item | Result | Evidence |
 | --- | --- | --- |
 | GitHub Actions functionality | PASS (after PR F) | old `development-build.yml`: 13 runs ever, all manual; push/PR events ignored for that path (exact copy under another name ran). Renamed `ci.yml` runs on pull_request (probe PR #8, PR #9 at d344dd7: green) |
-| SQL Server tests inside CI | NOT VERIFIED yet | run 39279953578 (A+F merged, `ci/verify-sql`) queued since 15:41 UTC by a GitHub Actions incident; the same 11 tests pass on a local SQL Server 2022 |
+| SQL Server tests inside CI | PASS | run 39279953578 (A+F merged, `ci/verify-sql`): 846 total, 822 passed, 0 failed, 24 skipped; the 11 SqlServer tests ran against the job's SQL Server 2022 service (`STARFALL_REQUIRE_SQLSERVER=1`) |
 | Required checks | PASS | ruleset requires "Build & Test Solution" (GitHub Actions) on `aurora-server` |
 | Branch protection | PASS | changes only through pull requests (0 approvals; admins may bypass only when merging a PR) |
 | Force-push prevention | PASS | ruleset; verified with an identical throwaway ruleset: `Cannot force-push to this branch` |
@@ -142,18 +144,20 @@ Commands and logs: `~/.cache/starlights-test/mk2/LEDGER.md` (evidence ledger) an
 
 ## G. Not verified / remaining actions
 
-- **Live data:** no comparison against the live database (copy refused). After deploying B, run reprocess and a
-  before/after character snapshot on live (`starlights-snapshot.py`), as the deploy procedure already does.
 - Lore content, campaign create/edit in the browser, a real multiclass character, character export/import in the
   browser, an automated accessibility audit, the Docker installer smoke test, Windows.
 - Deletion state of custom attacks across re-imports is covered by unit tests, not a browser run.
-- PRs A–E and G get pull-request CI after PR F is on `aurora-server` and they are updated. Until then: manual runs
-  green on A b6d8ec1, B 5a2b079, C 0634cff, D c6ae753 and F d344dd7 (pull-request event); **no finished run** for
-  E e7bf84e, G a456728, F's docs commit 29528b4 or the A+F SQL Server check (all queued since 15:27–15:43 UTC
-  behind a GitHub Actions incident); this report PR has none.
-- Owner decisions: merge order and merges; deploy; whether the faint Slate ornaments are acceptable.
+- CI before merging: manual runs green on A b6d8ec1, B 5a2b079, C 0634cff and D c6ae753; pull-request runs green
+  on F 29528b4; E and G were run again after a GitHub Actions incident left their first runs queued, and merged only
+  once green. The merged `aurora-server` passed push CI (with SQL Server) before the deploy (H).
+- Owner decision left: whether the faint Slate ornaments are acceptable.
 
 ## Release readiness
 
-Ready for review and staged merging. Not release-certified: merge F, then the fixes with CI, deploy, reprocess and
-compare live snapshots before calling it verified.
+Released as **v0.11.0**. It rests on the disposable-install verification above, CI on the merged code (with SQL
+Server), a rehearsal on a copy of the live database and live before/after character snapshots (H).
+
+## H. Live deployment
+
+<!-- LIVE-RESULTS -->
+
