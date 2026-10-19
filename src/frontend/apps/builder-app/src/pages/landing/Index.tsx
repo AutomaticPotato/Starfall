@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { HourlyBackdrop } from "@/components/hourly-backdrop";
 import { BATTLE_BACKGROUND, HOMEBREW_TILE, LORE_BACKGROUND } from "@/lib/art";
 import { CelestialDivider, OrnamentalFrame } from "@/components/ornaments";
+import { useTheme } from "@/components/theme-provider";
 
 function LandingTile({
   title,
@@ -116,12 +117,14 @@ const tiles = [
 ];
 
 export function LandingPage2() {
+  // the Starfall artwork drawn for the theme in use (512 × 870, shown whole: never cropped or stretched)
+  const { resolvedTheme } = useTheme();
   return (
     <>
       <HourlyBackdrop />
-      <header className="mb-8 grid items-center gap-6 sm:grid-cols-[minmax(0,22rem)_1fr]">
-        <h1 data-ornament="restrained" className="overflow-hidden rounded-2xl bg-[#0b1424] shadow-sm">
-          <img src="/branding/starlights-logo.webp" alt="Project Starfall" width={1000} height={750} fetchPriority="high" className="h-auto w-full" />
+      <header className="mb-8 grid items-center gap-6 sm:grid-cols-[minmax(0,14rem)_1fr]">
+        <h1 data-ornament="restrained" className="mx-auto w-full max-w-[12rem] overflow-hidden rounded-2xl bg-muted shadow-sm sm:max-w-none">
+          <img src={`/branding/starfall/starfall-${resolvedTheme}.webp`} alt="Starfall" width={512} height={870} fetchPriority="high" className="block h-auto w-full" />
         </h1>
         <div className="max-w-xl">
           <p className="text-sm font-semibold uppercase tracking-widest text-primary-text">Your table's companion</p>
