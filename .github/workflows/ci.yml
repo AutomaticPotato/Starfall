@@ -12,9 +12,14 @@ on:
       - dev
       - aurora-server
 
+# read only: the jobs check out and build, nothing is published or signed
 permissions:
-  id-token: write
   contents: read
+
+# a newer push to the same branch or pull request replaces the run in progress
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
   DOTNET_VERSION: "10.0.x"
@@ -24,6 +29,19 @@ jobs:
   build-solution:
     name: Build & Test Solution
     runs-on: ubuntu-latest
+    # a throwaway SQL Server for the SqlServer test category (transactions and rollback, which the in-memory
+    # provider cannot show); it lives only as long as this job
+    services:
+      sqlserver:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: "Y"
+          MSSQL_SA_PASSWORD: CiOnly-${{ github.run_id }}-Aa1
+        ports:
+          - 1433:1433
+        options: >-
+          --health-cmd "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P \"$MSSQL_SA_PASSWORD\" -Q 'SELECT 1' -b"
+          --health-interval 10s --health-timeout 5s --health-retries 18
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v7
@@ -59,4 +77,7 @@ jobs:
         run: npm test -w apps/builder-app
 
       - name: Run Unit Tests
+        env:
+          STARFALL_TEST_SQLSERVER: Server=localhost,1433;User Id=sa;Password=CiOnly-${{ github.run_id }}-Aa1;TrustServerCertificate=True
+          STARFALL_REQUIRE_SQLSERVER: "1"
         run: dotnet test --configuration Release --no-build

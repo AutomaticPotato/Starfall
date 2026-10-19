@@ -38,7 +38,7 @@ Published the 13-file fix through the connector as `a31d254a24b82705f85c0ef46de7
 No CI run appeared after opening the PR. The available connector cannot dispatch workflows. From a network-enabled authenticated shell, start the existing build/test workflow with:
 
 ```sh
-gh workflow run development-build.yml --repo CHassapis/starlights --ref fix/homebrew-append-upload
+gh workflow run ci.yml --repo CHassapis/Starfall --ref fix/homebrew-append-upload   # was development-build.yml (renamed, see docs/ai/CI.md)
 gh run list --repo CHassapis/starlights --branch fix/homebrew-append-upload
 ```
 
