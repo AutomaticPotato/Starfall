@@ -19,6 +19,9 @@
 /* Porcelain: champagne gold, desaturated blue */
 :root, :root[data-theme="porcelain"] {
   --ornament: #b0904f; --ornament-strong: #8a6a30; --ornament-accent: #6b84a8; --ornament-ivory: #fffdf8;
+}
+/* the pictures only once the theme is applied (after the first render), so the first paint loads no other theme's */
+:root[data-theme="porcelain"] {
   --ornament-page-corner: url("/ornaments/porcelain/page-corner.svg"); --ornament-panel-corner: url("/ornaments/porcelain/panel-corner.svg");
   --ornament-tile-corner: url("/ornaments/porcelain/tile-corner.svg"); --ornament-divider: url("/ornaments/porcelain/section-divider.svg");
   --ornament-marker: url("/ornaments/porcelain/section-marker.svg"); --ornament-underline: url("/ornaments/porcelain/nav-active-underline.svg");
