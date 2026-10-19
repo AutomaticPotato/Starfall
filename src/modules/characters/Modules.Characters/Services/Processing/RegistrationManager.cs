@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using Starlights.Modules.Characters.Data;
 using Starlights.Modules.Characters.Domain;
+using Starlights.Modules.Characters.Domain.Characters;
 using Starlights.Modules.Characters.Domain.Registrations;
 using Starlights.Platform.Data;
 
@@ -32,6 +33,17 @@ public sealed class RegistrationManager : IRegistrationManager
 
         var registrations = _persistence.GetRepository<IRegistrationRepository>();
         registrations.Add(newRegistration);
+    }
+
+    public async Task Repair(Character character, IEnumerable<Registration> existingRegistrations)
+    {
+        foreach (var registration in existingRegistrations)
+        {
+            foreach (var behavior in _behaviors)
+            {
+                await behavior.Repair(character, registration);
+            }
+        }
     }
 
     public async Task Unregister(Registration existingRegistration)
