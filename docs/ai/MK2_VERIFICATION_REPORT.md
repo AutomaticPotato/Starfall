@@ -8,7 +8,7 @@ safety classifier, so real characters were re-imported from their Aurora files i
 ## Overall: **PARTIALLY VERIFIED — TESTING INCOMPLETE**
 
 Every reported defect is fixed on its own pull request and verified on disposable SQL Server installs with the
-owner's real Aurora characters, and CI and repository protection work. Not complete: the PRs are not merged or
+owner's real Aurora characters; CI runs on pull requests again and repository protection works. Not complete: the PRs are not merged or
 deployed (by the brief), several areas were checked only by loading their pages, and live data was never compared.
 Details under "Not verified" below.
 
@@ -24,8 +24,9 @@ Details under "Not verified" below.
 | [#9](https://github.com/CHassapis/Starfall/pull/9) F | `ci/workflow-triggers` | 29528b4 | CI runs on push/PR again; SQL Server in CI; docs |
 | [#10](https://github.com/CHassapis/Starfall/pull/10) G | `fix/aurora-import-ability-order` | a456728 | Aurora import sets ability scores before equipment |
 
-**Suggested merge order:** F first (so the others get CI on update), then A, B, G, C, D, E. All seven were merged
-together locally without conflicts and tested as one.
+**Suggested merge order:** F first (so the others get CI on update), then A, B, G, C, D, E, then this report (#12).
+In that order all eight merge onto 8adf858 without conflicts (checked). A, B, C, D, E and G were built and tested
+together as one install; F changes only CI and docs.
 
 **After deploying B (and G): run the admin reprocess once** (`deploy/admin.sh reprocess`): characters saved
 without skills, or with an armour rule judged before their Strength was set, are put right; on the disposable copy
@@ -38,7 +39,7 @@ it changed nothing else (all statistics, saves, registrations and inventories id
 | Skill proficiency calculations | PASS | **Root cause found:** 6 of 14 real characters imported into SQL Server had *no skill rows* (Skills rule processed before Abilities rule; skills skipped, never retried). Fixed (PR B); fresh import: 0/14 without skills; healed copy: +18 skills each, nothing else changed |
 | Skill proficiency indicators | PASS | sheet values vs Aurora's own PDFs for every character with form fields: **0 proficiency/expertise differences**; expertise/Resilient given as statistics now marked (10 unit tests, 5 fail without the fix) |
 | Interactive sheet compatibility | PASS | 252/252 skill rows (14 characters) show the same level on `/play` as in the PDF fields |
-| PDF proficiency compatibility | PASS | field-level comparison above; PDFs generated for every character (valid `%PDF`) |
+| PDF proficiency compatibility | PASS | field-level comparison above; PDFs generated for all 19 characters on the install (valid `%PDF`) |
 | Aurora custom attacks with empty IDs | PASS | real file: Mace imported as `aurora-mace-d19fc537-1`, sheet attack row 1 = Aurora's |
 | Deterministic fallback identifiers | PASS | 7 unit tests (6 fail without the fix); same id on every import |
 | Stable imports and reimports | PASS | "Update from Aurora" ×2 in the browser: one Mace, same id |
@@ -73,7 +74,7 @@ nothing twice; deleting both files restores the element byte for byte; 14 other 
 | Character Builder | PASS | imports, builder API journey, page in 3 themes × 2 widths |
 | Interactive Character Sheet | PASS | all characters render; matches PDF |
 | PDF Export | PASS | values compared with Aurora; files generated for all characters |
-| Battle Simulator | PASS (readout + load) | readout (`?model`) for all 13 named characters, every tab opens; Fedra's includes the imported Mace; page in 3 themes × 2 widths |
+| Battle Simulator | PASS (readout + load) | readout (`?model`) for all 19 characters (14 imported + 5 test), every tab opens; Fedra's includes the imported Mace; page in 3 themes × 2 widths |
 | Campaign Management | PASS (load + backend tests) | no campaign created or edited in the browser |
 | Compendium | PASS | phone overflow fixed (PR E); page in all themes/widths |
 | Homebrew | PASS | uploads/replace/delete on SQL Server; page in all themes/widths |
@@ -111,10 +112,10 @@ nothing twice; deleting both files restores the element byte for byte; 14 other 
 | ESLint | changed files clean; whole repository 38 errors + 1 warning = baseline (pre-existing) |
 | Browser: import journey | 14/14 characters, 0 page errors, 0 5xx (three separate installs) |
 | Browser: homepage branding | 17/17 |
-| Browser: ornaments | 65/65 |
+| Browser: ornaments | 65/65 (integrated build, `ornaments-rerun.out`) |
 | Browser: Update from Aurora ×2 | pass |
-| PDF files | 13/13 generated, all valid PDF (20 MB) |
-| Battle readouts | 13/13, every tab opens |
+| PDF files | 19/19 generated (14 imported + 5 test characters), all valid PDF |
+| Battle readouts | 19/19, every tab opens |
 | Installer unit tests | 39/39 |
 | Sheets vs Aurora PDFs | 0 proficiency/expertise differences; remaining differences pre-existing (spell source labels, stack weights, resistance order, one reach range; one PDF a level ahead of its file) |
 
@@ -127,7 +128,8 @@ Commands and logs: `~/.cache/starlights-test/mk2/LEDGER.md` (evidence ledger) an
 
 | Item | Result | Evidence |
 | --- | --- | --- |
-| GitHub Actions functionality | PASS (after PR F) | old `development-build.yml`: 13 runs ever, all manual; push/PR events ignored for that path (exact copy under another name ran). Renamed `ci.yml` runs on pull_request (probe PR #8, PR #9) |
+| GitHub Actions functionality | PASS (after PR F) | old `development-build.yml`: 13 runs ever, all manual; push/PR events ignored for that path (exact copy under another name ran). Renamed `ci.yml` runs on pull_request (probe PR #8, PR #9 at d344dd7: green) |
+| SQL Server tests inside CI | NOT VERIFIED yet | run 39279953578 (A+F merged, `ci/verify-sql`) queued since 15:41 UTC by a GitHub Actions incident; the same 11 tests pass on a local SQL Server 2022 |
 | Required checks | PASS | ruleset requires "Build & Test Solution" (GitHub Actions) on `aurora-server` |
 | Branch protection | PASS | changes only through pull requests (0 approvals; admins may bypass only when merging a PR) |
 | Force-push prevention | PASS | ruleset; verified with an identical throwaway ruleset: `Cannot force-push to this branch` |
@@ -145,8 +147,10 @@ Commands and logs: `~/.cache/starlights-test/mk2/LEDGER.md` (evidence ledger) an
 - Lore content, campaign create/edit in the browser, a real multiclass character, character export/import in the
   browser, an automated accessibility audit, the Docker installer smoke test, Windows.
 - Deletion state of custom attacks across re-imports is covered by unit tests, not a browser run.
-- PRs A–E and G get pull-request CI after PR F is on `aurora-server` and they are updated; until then their CI is
-  manual runs on their heads (all green where finished).
+- PRs A–E and G get pull-request CI after PR F is on `aurora-server` and they are updated. Until then: manual runs
+  green on A b6d8ec1, B 5a2b079, C 0634cff, D c6ae753 and F d344dd7 (pull-request event); **no finished run** for
+  E e7bf84e, G a456728, F's docs commit 29528b4 or the A+F SQL Server check (all queued since 15:27–15:43 UTC
+  behind a GitHub Actions incident); this report PR has none.
 - Owner decisions: merge order and merges; deploy; whether the faint Slate ornaments are acceptable.
 
 ## Release readiness
