@@ -24,14 +24,21 @@ export function OrnamentalFrame({ level = "restrained", className, children }: {
   );
 }
 
-/** A horizontal rule with a four-pointed star (centred, or starting at the star). */
+/** The Starfall section divider, centred; or, starting at the left, the small section marker under a heading. */
 export function CelestialDivider({ align = "center", className }: { align?: "center" | "start"; className?: string }) {
+  return <div aria-hidden className={cn("celestial-divider", className)} data-align={align} />;
+}
+
+/**
+ * Filigree corners in the empty margins beside the page column, top left and right: on wide screens only, where
+ * the margin is wider than the corner, so they never reach the content (see .page-corner).
+ */
+export function PageCorners() {
   return (
-    <div aria-hidden className={cn("celestial-divider", className)} data-align={align}>
-      <span className="celestial-divider-line" />
-      <span className="celestial-divider-star" />
-      <span className="celestial-divider-line" />
-    </div>
+    <>
+      <span aria-hidden className="page-corner" data-corner="tl" />
+      <span aria-hidden className="page-corner" data-corner="tr" />
+    </>
   );
 }
 
