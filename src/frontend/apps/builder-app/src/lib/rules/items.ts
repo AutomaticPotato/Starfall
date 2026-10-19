@@ -705,6 +705,28 @@ export interface AuroraAttack {
 }
 
 /**
+ * Aurora writes `identifier=""` for some attacks entered by hand. Such an attack gets an identifier made from its
+ * name and how many attacks of that name without an identifier come before it in the file: the same on every
+ * import (so it is matched, edited and deleted like any other), unchanged when its figures change, and never a
+ * GUID like Aurora's and the editor's own. What the file cannot tell apart stays ambiguous: renaming such an attack
+ * in Aurora makes it a new one, and of two with the same name, removing the first renames the second.
+ */
+export function withAttackIdentifiers(attacks: AuroraAttack[]): AuroraAttack[] {
+  const seen = new Map<string, number>();
+  return attacks.map((a) => {
+    if (a.identifier.trim()) return a;
+    const name = a.name.normalize("NFC").trim().replace(/\s+/g, " ").toLowerCase();
+    const n = (seen.get(name) ?? 0) + 1;
+    seen.set(name, n);
+    // FNV-1a: two names cut to the same slug still differ
+    let hash = 0x811c9dc5;
+    for (let i = 0; i < name.length; i++) hash = Math.imul(hash ^ name.charCodeAt(i), 0x01000193) >>> 0;
+    const slug = name.replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 24).replace(/-+$/, "");
+    return { ...a, identifier: ["aurora", slug, hash.toString(16).padStart(8, "0"), n].filter(Boolean).join("-") };
+  });
+}
+
+/**
  * Aurora's attack list as Starfall keeps it. Each displayed attack gets its place (1, 2, …); the ones an
  * inventory entry stands behind (same identifier) become that entry's place, the rest custom attacks with their
  * figures as written, merged into those already stored by identifier (importing twice adds nothing twice).
@@ -718,7 +740,7 @@ export function auroraAttackList(
   const places = new Map<string, number>();
   const byId = new Map(stored.map((a) => [a.id, a]));
   const clip = (s: string | null | undefined, max: number) => (s?.trim() ? s.trim().slice(0, max) : null);
-  attacks
+  withAttackIdentifiers(attacks)
     .filter((a) => a.displayed !== false && a.identifier && a.name.trim())
     .slice(0, 100)
     .forEach((a, i) => {
