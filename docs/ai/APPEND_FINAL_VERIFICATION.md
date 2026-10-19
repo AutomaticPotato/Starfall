@@ -1,44 +1,88 @@
-# Aurora append verification — 2026-10-17
+# Aurora append verification
 
-Conclusion: **FAILED — REQUIRES CORRECTIONS**. This is not an end-to-end certification.
+Updated 2026-10-19 (first written 2026-10-17). Branch `fix/append-failure-safety` (PR #4), baseline `aurora-server`
+`8adf858` (PR #3, the version live since 2026-10-17).
 
-Baseline: `aurora-server` at `8adf85816d4c75dab65aad5a3fee84be8616bccf` (PR #3).
-GitHub repository ID 1406017678 now resolves to `CHassapis/Starfall`; the former name redirects.
-Correction branch: `fix/append-failure-safety`, isolated checkout `/home/chassapis/starfall-append-verification`.
+Conclusion for this PR: **SQL Server rollback VERIFIED; Character Builder end-to-end NOT VERIFIED** (see the table).
 
-## Findings and correction
+## The defect and the correction
 
-At the baseline, `AuroraImporter.ImportAsync` saves deletions before rebuilding and saving replacements, with no transaction covering both saves. A failure during rebuilding or the second save can leave original elements deleted. `UploadHomebrewEndpoint` overwrites the source XML before importing; deletion removes the file and commits definition removal before refreshing other patches. These are source-level findings, not reproduced SQL failures.
+At the baseline, `AuroraImporter.ImportAsync` saved the deletions of a replace before rebuilding and saving the
+replacements, with no transaction around both saves; `UploadHomebrewEndpoint` overwrote the source XML before
+importing, and deleting a file committed the removal of its definitions before refreshing the other files' patches.
+A failure in between left elements deleted. The SQL Server tests below reproduce this on the baseline code.
 
-The correction wraps importer saves in an async-flow transaction, joins upload/delete database work into one transaction, and restores the previous file bytes when importing, cancellation or transaction completion fails. Existing homebrew gating, validation, IDs and UI remain unchanged. Added 15 regression cases: six supported target types, six file-operation success/failure cases, cancellation, transaction-completion failure and importer second-save failure. Expanded the existing lifecycle test to cover upstream update/replacement while retaining patches and stable IDs.
+The correction (4184523) wraps the importer's saves in one `TransactionScope` (read committed, async flow), joins
+the upload/delete database work into it, and puts the previous file bytes back when importing, cancellation or the
+commit fails. 42ede19 adds:
 
-**Correction has not been compiled or executed against .NET/SQL Server.** It requires SQL Server enlistment/rollback verification, including failure injection after the deletion save and during final commit. File restoration is exception recovery, not a durable cross-filesystem/database transaction: process termination, disk failure or failure during restoration still require recovery from backup. Do not claim crash-proof atomicity.
+- **Content version after commit.** `ElementsContentVersion` (the item catalog and spell index caches) was bumped
+  inside the transaction. A cache rebuilt before the commit kept the old content under the new version, and a
+  rolled-back import still bumped it. `ElementsContentVersion.BumpWhenCommitted()` now bumps from the transaction's
+  `TransactionCompleted` event, only when it committed (unit tests `ElementsContentVersionTests`).
+- **Real SQL Server tests.** Integration hosts can use a prepared SQL Server database (`Integration:SqlServer`)
+  instead of the in-memory provider, which ignores transactions. `HomebrewSqlServerTests` (category `SqlServer`)
+  needs `STARFALL_TEST_SQLSERVER` (a connection string without a database; each test creates and drops its own).
+  Without it the tests are inconclusive, unless `STARFALL_REQUIRE_SQLSERVER` is set, where they fail.
+
+3d55fc1 removes a generated build file that 42ede19 had picked up and ignores the folder the Linux build writes it to.
+
+## What the SQL Server tests check
+
+Each test snapshots every table of the `elements` and `characters` schemas (row count + checksum) and the homebrew
+files, injects a failure through an EF `SaveChangesInterceptor` or a volatile enlistment that forces a rollback while
+the transaction prepares, and compares afterwards.
+
+- **Lifecycle (1 test):** append-only upload; six target types (proficiency, class, race, background, feat, spell);
+  a second file and a mixed file (own element + append) patching the same element; repeated upload and repeated
+  `homebrew --update` import change nothing; malformed XML and a blank id are rejected and change nothing; replacing a
+  file swaps its patch; deleting files removes only their patches; at the end the same element ids, the same stored
+  Aurora XML and the unrelated character are unchanged.
+- **Replacing a homebrew file (3):** failure before anything is saved, after the deletions were saved, while committing.
+- **Uploading a new file (2):** failure at the first save, while committing; the file is removed again.
+- **Deleting a file (3):** failure removing its elements, rebuilding the patched targets, committing; elements and file stay.
+- **Replace import (2):** failure after the deletions were saved, while committing; no existing element is lost.
 
 ## Results
 
-| Area | Result | Evidence / limit |
+| Area | Result | Evidence |
 | --- | --- | --- |
-| A. Aurora append compatibility | NOT VERIFIED | Regression source covers append-only, supports/rules and six target types; no executed backend import |
-| B. Homebrew upload and validation | NOT VERIFIED | Existing 11 XML validation/listing cases not executed; frontend error tests pass within suite |
-| C. Replacement and deletion safety | FAIL at baseline | Two separately committed saves and no file recovery; correction pending backend verification |
-| D. Character Builder integration | NOT VERIFIED | No disposable API/database or working browser; no character created/edited |
-| E. Frontend tests | PASS | 239 passed, 0 failed, 5 skipped; 28 files passed, 1 skipped; optional lore fixtures omitted |
-| E. TypeScript | PASS | Builder `tsc -b --force`, exit 0, no diagnostics |
-| E. Frontend build | PASS | Shared api-client and ui-framework bundles/declarations; builder production bundle; existing chunk-size warning |
-| E. Installer compatibility | PASS (unit tests only) | 39 passed, 0 failed, 0 skipped; no Docker installer smoke run |
-| E. .NET build/tests | NOT VERIFIED | Both commands exit 127: `dotnet: command not found`; 0 backend tests executed |
-| E. API integration tests | NOT VERIFIED | No .NET SDK; Docker socket denied; no disposable backend available |
-| E. Playwright | NOT VERIFIED | Browser launch exits SIGTRAP: `sandbox_host_linux.cc:41 ... Operation not permitted (1)`; 0 browser tests executed |
-| F. Existing data compatibility | NOT VERIFIED | Stable-ID logic retained; no actual character/campaign persistence or rollback test |
-| G. GitHub integration | PASS for original fix | Remote `aurora-server` independently read as `8adf85816d4c75dab65aad5a3fee84be8616bccf` |
-| H. Production deployment | UNKNOWN independently | Owner supplied successful deployment of `8adf858` with healthy containers; current API, frontend version and logs inaccessible |
+| SQL Server rollback (11 tests) | **PASS** | 11/11 on SQL Server 2022 (disposable container, `STARFALL_REQUIRE_SQLSERVER=1`), at 42ede19 and again at 3d55fc1 |
+| Negative control | **PASS** (tests catch the defect) | the same 11 tests with `AuroraImporter.cs` + `HomebrewEndpoints.cs` from 8adf858: 10/11 fail (elements snapshot differs) |
+| Full backend suite | **PASS** | 3d55fc1: 846 total, 811 passed, 0 failed, 35 skipped (24 pre-existing skips + the 11 SqlServer rows, inconclusive without a server) |
+| Append on full Aurora content | **PASS** | disposable API with all of AuroraLegacy.index (14,492 elements): append to `ID_PROFICIENCY_SKILL_ARCANA` adds the support, delete restores the element exactly |
+| Locking during a replace import | **PASS** (on an EF-created database) | 96 s and 110 s full replace in one transaction; reads polled every ~9 s all answered in < 0.12 s |
+| Homebrew upload/delete time | **PASS** | 0.58 s upload, 0.47 s repeat (no change), 0.56 s delete, on full content |
+| Frontend | unchanged by this PR | baseline 239 passed / 5 skipped |
+| Character Builder end-to-end (create a character on a patched element, save, reopen) | **NOT VERIFIED** | API and database level only; no browser journey on a patched element yet |
+| Production | not touched | no deployment; live is still 8adf858 |
 
-## Evidence and remaining checks
+## Limits and operating notes
 
-Fresh local output is in `/tmp/starfall-final-verification/`: `frontend-tests.log`, `typescript.log`, `frontend-build.log`, `api-package-build.log`, `ui-package-build.log`, `installer-tests.log`, `backend-build.log`, `backend-tests.log`, `playwright.log`.
+- **Not crash-proof.** The database work is one transaction; the homebrew file is restored by exception handling.
+  Process termination, power loss or a disk failure between writing the file and committing (or a failure while
+  restoring it) can leave the file and the database disagreeing. Recovery: restore the backup, or re-upload / delete
+  the file (an upload or delete rebuilds what that file patches).
+- **Readers and long imports.** A full replace import now holds one transaction for its whole length (~1.5–2 min for
+  AuroraLegacy). Readers were not blocked because a database created by the migration service has
+  `READ_COMMITTED_SNAPSHOT ON` (EF Core's database creation sets it). A database created another way (restored from
+  elsewhere, created by hand) may have it off; then reads of elements wait for the import. Check, read-only:
+  `SELECT name, is_read_committed_snapshot_on FROM sys.databases WHERE name = 'starlights'`. Either way, run full
+  replace imports when nobody is playing, as before.
+- **Transaction size.** The scope uses `TransactionManager.MaximumTimeout` (10 minutes by default on .NET). The
+  largest import measured took 110 s.
+- **Connection pools in tests.** Clearing all connection pools while a test's transaction is open makes SQL Server
+  promote it to a distributed transaction, which .NET on Linux does not support. The tests clear only their own
+  database's pool when dropping it. Production does not clear pools; if a second connection ever joined the
+  transaction it would fail and roll back, not commit partially.
 
-Production probes were read-only: `docker logs --since 20m --tail 30 starlights-api` and Docker version failed with socket permission denied; `GET http://127.0.0.1:8093/alive` failed to connect. No production writes, deployment, content import or database copy was performed. Owner's previous deployment output identifies backup `starlights-pre-append-20261017-110331.bak` and rollback tag `rollback-20261017-110331`; these were not independently inspected.
+## How to run
 
-Outstanding: run all backend/HTTP integration tests and SQL failure injection; test the supplied append structure against an actual installed fixture; verify Compendium and Builder effects, character save/reopen/edit, mixed files, overlapping patches, repeated uploads, replacement, deletion, upstream updates, malformed XML and unknown IDs; compare unrelated content/characters before and after. The added tests use synthetic `ID_APPEND_FIXTURE` with `AdditionalSupport`, but this fixture has not been imported into a running installation. Mixed-file replacement with removed definitions needs explicit end-to-end coverage as well.
-
-Frontend validation used Node 24.21.0, installed dependencies from the main checkout, and the TypeScript 7 native executable because the shared `.bin/tsc` is stale. Only the isolated worktree was built. No backend/browser success is inferred from passing frontend tests or the owner's deployment output. Do not deploy the correction until its backend and disposable-installation checks pass.
+```sh
+# disposable SQL Server (never the live one)
+docker run -d --name starfall-sql-test -p 127.0.0.1:14339:1433 -e ACCEPT_EULA=Y -e MSSQL_SA_PASSWORD='<password>' \
+  mcr.microsoft.com/mssql/server:2022-latest
+STARFALL_REQUIRE_SQLSERVER=1 \
+STARFALL_TEST_SQLSERVER='Server=127.0.0.1,14339;User Id=sa;Password=<password>;TrustServerCertificate=True' \
+  dotnet test --project src/tests/integration/Starlights.Integration.Tests --filter TestCategory=SqlServer
+```
