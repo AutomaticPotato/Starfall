@@ -22,9 +22,11 @@ from `~/starlights` at whatever `aurora-server` points to. Nothing is tried on l
      `reprocess`, only with nobody playing (a replace during play broke a level-up);
    - checks: version via `/api/admin/status`, character snapshot before/after (`starlights-snapshot.py`),
      sheets (`~/.cache/starlights-test/pw/sheet-pdfs.mjs`), public door still 401.
-3. **Publish**: run the checks from `~/homelab/scripts/starlights-publish.sh` (everything before `user=`), then
-   `git push mine aurora-server` only — the script itself pushes every branch. The repo is public: commit messages
-   factual, no exploit recipes, no book text.
+3. **Publish**: run the checks from `~/homelab/scripts/starlights-publish.sh` (everything before `user=`) on the
+   commits you add, push your **feature branch** and open a pull request to `aurora-server`; CI ("Build & Test
+   Solution") runs on it and must pass. `aurora-server` itself takes no direct, force or deleting pushes (repository
+   rulesets, see docs/ai/CI.md): it changes only by merging a pull request, which the owner does. The repo is
+   public: commit messages factual, no exploit recipes, no book text.
 4. **Afterwards**: remove test leftovers (`starlights_copy`, test `.bak`, `:test` images), update the handoff
    artifact (https://claude.ai/artifact/5HcNLHRWQapfCiNuK66gnT — read it first, other sessions edit it) and
    `docs/ai/CLAUDE_HANDOFF.md`.
