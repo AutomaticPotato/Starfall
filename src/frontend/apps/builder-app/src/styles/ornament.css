@@ -84,7 +84,7 @@
   .ornament-corner[data-corner="bl"] { bottom: -7px; left: -7px; transform: scaleY(-1); }
   .ornament-corner[data-corner="br"] { bottom: -7px; right: -7px; transform: scale(-1); }
   /* the supplied divider (512 × 42) centred, or the section marker (180 × 38) under a heading; drawn at their own proportions */
-  .celestial-divider { height: 1.3rem; background: var(--ornament-divider) no-repeat center / auto 100%; }
+  .celestial-divider { height: 1.3rem; pointer-events: none; background: var(--ornament-divider) no-repeat center / auto 100%; }
   .celestial-divider[data-align="start"] { height: 1.1rem; background-image: var(--ornament-marker); background-position: left center; }
   /* in the wide margins beside the page column only: Tailwind's container is 80rem from 1280px and 96rem from 1536px */
   .page-corner {
