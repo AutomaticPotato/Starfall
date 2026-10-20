@@ -3,12 +3,15 @@
 Starfall runs in your browser. Install it once on a computer that stays on while your group plays.
 The same `deploy/docker-compose.yml` runs on Linux and on Windows through WSL2. No desktop application is needed.
 
-**Validation status:** on Ubuntu 24.04 with real Docker (disposable installs, synthetic data, `--skip-content`): a
-clean install, a repeated setup, recovery with a stopped API, and backup, deep verification, restore, update and
-rollback with the maintenance tools, including a `.env` saved with Windows (CRLF) line endings. The installer's 39
-contract tests pass. **Not yet tested:** Windows (Docker Desktop, WSL2, the PowerShell launcher) on real Windows
-hardware, and a full content download through setup. The Windows instructions and launcher are implemented but
-unverified on Windows.
+**Validation status:** on Ubuntu 24.04 with real Docker (disposable installs): a clean install, a repeated setup,
+recovery with a stopped API, and backup, deep verification, restore, update and rollback with the maintenance tools,
+including a `.env` saved with Windows (CRLF) line endings. On 2026-10-20 also: a fresh `setup.sh` **with** the
+content download (Aurora Legacy and 5etools from GitHub, Compendium built) followed by importing 14 real Aurora
+characters, and an install of v0.10.0 with real content and characters updated with `maintenance/update.sh`, then
+`verify.sh --deep`, `rollback.sh`, `restore.sh` (data identical to before the update) and a second update. Those two
+ran from a clone with one test-only change binding the site to 127.0.0.1. The installer's 39 contract tests pass.
+**Not yet tested:** Windows (Docker Desktop, WSL2, the PowerShell launcher) on real Windows hardware. The Windows
+instructions and launcher are implemented but unverified on Windows.
 
 ## Before you start
 

@@ -30,7 +30,7 @@ try {
     const page = await context.newPage();
     const errors = [];
     page.on('pageerror', error => errors.push(error.message));
-    await page.goto(`${base}/characters/${CHARACTER_ID}/builder`);
+    await page.goto(`${base}/characters/${CHARACTER_ID}`);
     await page.getByRole('tab', { name: /^Equipment/ }).click();
     const section = page.getByRole('region', { name: 'Custom attacks' });
     await section.getByRole('button', { name: 'Edit Thunder Gauntlets', exact: true }).click();
