@@ -1,4 +1,5 @@
 using AwesomeAssertions;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Starlights.Modules.Characters.Domain.Abilities;
 using Starlights.Modules.Characters.Domain.Characters;
@@ -1247,6 +1248,114 @@ public sealed class StatisticsCalculatorTests
         result.Statistics.ContainsGroup("stat-circular-a").Should().BeFalse("Circular dependencies should not be resolved");
         result.Statistics.ContainsGroup("stat-circular-b").Should().BeFalse("Circular dependencies should not be resolved");
         result.HasErrors.Should().BeTrue();
+    }
+
+    #endregion
+
+    #region Statistics Nothing Defines
+
+    private sealed class RecordingLogger : ILogger<StatisticsCalculator>
+    {
+        public List<(LogLevel Level, string Message)> Entries { get; } = [];
+        public IEnumerable<string> Errors => Entries.Where(e => e.Level >= LogLevel.Error).Select(e => e.Message);
+        public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
+        public bool IsEnabled(LogLevel logLevel) => true;
+        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter) =>
+            Entries.Add((logLevel, formatter(state, exception)));
+    }
+
+    private static StatisticsCalculator CreateCalculator(ILogger<StatisticsCalculator> logger) =>
+        new(logger,
+            [new CharacterStatisticsInitializer(), new AbilitiesStatisticsInitializer()],
+            [new ProficiencyGroupProcessor(NullLogger<ProficiencyGroupProcessor>.Instance), new AbilitiesGroupProcessor()], []);
+
+    [TestMethod]
+    public void Calculate_WithAFamiliarsPerceptionAndNoCompanionProficiency_ShouldLeaveItOutWithoutAnError()
+    {
+        // Arrange: a hawk familiar (Find Familiar) refers to companion:proficiency, which nothing sets for a familiar
+        var logger = new RecordingLogger();
+        var character = CreateTestCharacter();
+        var registrations = new List<Registration>
+        {
+            CreateRegistrationWithStatisticRule(character, "Hawk", "Companion", "companion:speed:fly", "60", r => r.UpdateStackingBonus("base")),
+            CreateRegistrationWithStatisticRule(character, "Hawk", "Companion", "companion:perception:proficiency", "companion:proficiency", r => r.UpdateStackingBonus("base")),
+        };
+
+        // Act
+        var result = CreateCalculator(logger).Calculate(character, registrations);
+
+        // Assert
+        result.Statistics.GetValue("companion:speed:fly").Should().Be(60);
+        result.Statistics.ContainsGroup("companion:perception:proficiency").Should().BeFalse();
+        result.HasErrors.Should().BeFalse();
+        logger.Errors.Should().BeEmpty();
+        logger.Entries.Should().Contain(e => e.Level == LogLevel.Information && e.Message.Contains("'companion:perception:proficiency' left out") && e.Message.Contains("companion:proficiency"));
+    }
+
+    [TestMethod]
+    public void Calculate_WithACompanionProficiency_ShouldResolveTheCompanionsPerception()
+    {
+        // Arrange: the homunculus sets companion:proficiency to the character's proficiency bonus; Perception is PB x 2
+        var logger = new RecordingLogger();
+        var character = CreateTestCharacter();
+        var registrations = new List<Registration>
+        {
+            CreateRegistrationWithStatisticRule(character, "Proficiency Rule", "Rule", "proficiency", "2"),
+            CreateRegistrationWithStatisticRule(character, "Homunculus Servant", "Companion", "companion:proficiency", "proficiency", r => r.UpdateStackingBonus("base")),
+            CreateRegistrationWithStatisticRule(character, "Homunculus Servant", "Companion", "companion:perception:proficiency", "companion:proficiency", r => r.UpdateStackingBonus("base")),
+            CreateRegistrationWithStatisticRule(character, "Homunculus Servant", "Companion", "companion:perception:proficiency", "companion:proficiency", r => r.UpdateStackingBonus("double")),
+        };
+
+        // Act
+        var result = CreateCalculator(logger).Calculate(character, registrations);
+
+        // Assert
+        result.Statistics.GetValue("companion:proficiency").Should().Be(2);
+        result.Statistics.GetValue("companion:perception:proficiency").Should().Be(4);
+        logger.Errors.Should().BeEmpty();
+    }
+
+    [TestMethod]
+    public void Calculate_WithAGroupDependingOnALeftOutGroup_ShouldLeaveBothOutWithoutAnError()
+    {
+        // Arrange: stat-derived -> stat-missing -> nonexistent-stat
+        var logger = new RecordingLogger();
+        var character = CreateTestCharacter();
+        var registrations = new List<Registration>
+        {
+            CreateRegistrationWithStatisticRule(character, "Derived", "Feature", "stat-derived", "stat-missing"),
+            CreateRegistrationWithStatisticRule(character, "Missing", "Feature", "stat-missing", "nonexistent-stat"),
+        };
+
+        // Act
+        var result = CreateCalculator(logger).Calculate(character, registrations);
+
+        // Assert
+        result.Statistics.ContainsGroup("stat-derived").Should().BeFalse();
+        result.Statistics.ContainsGroup("stat-missing").Should().BeFalse();
+        logger.Errors.Should().BeEmpty();
+    }
+
+    [TestMethod]
+    public void Calculate_WithCircularDependencies_ShouldStillLogAnError()
+    {
+        // Arrange
+        var logger = new RecordingLogger();
+        var character = CreateTestCharacter();
+        var registrations = new List<Registration>
+        {
+            CreateRegistrationWithStatisticRule(character, "Circular A", "Feature", "stat-a", "stat-b"),
+            CreateRegistrationWithStatisticRule(character, "Circular B", "Feature", "stat-b", "stat-a"),
+            CreateRegistrationWithStatisticRule(character, "Depends On A", "Feature", "stat-c", "stat-a"),
+        };
+
+        // Act
+        var result = CreateCalculator(logger).Calculate(character, registrations);
+
+        // Assert
+        result.HasErrors.Should().BeTrue();
+        logger.Errors.Should().Contain(m => m.Contains("Circular dependency"));
+        logger.Errors.Should().Contain(m => m.Contains("'stat-c' could not be finalized"), "a group blocked by a real failure is still an error");
     }
 
     #endregion
