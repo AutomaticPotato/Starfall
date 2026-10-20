@@ -12,6 +12,12 @@ public record ElementDataModel
     public string Type { get; init; } = string.Empty;
     public string Source { get; init; } = string.Empty;
 
+    /// <summary>
+    /// Made by the server itself when it starts (abilities, skills, saving throws, the builder's own rules), not
+    /// imported from a book or homebrew: each server gives it, and its rules, ids of its own.
+    /// </summary>
+    public bool BuiltIn { get; init; }
+
     public List<IncludeRuleDataModel> IncludeRules { get; init; } = [];
     public List<StatisticRuleDataModel> StatisticRules { get; init; } = [];
     public List<SelectionRuleDataModel> SelectionRules { get; init; } = [];

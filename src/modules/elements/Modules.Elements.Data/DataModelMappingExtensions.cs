@@ -30,6 +30,7 @@ public static class DataModelMappingExtensions
             Name = element.Name,
             Type = element.Type,
             Source = element.GetComponent<AuroraSourceComponent>()?.Source ?? "Internal",
+            BuiltIn = element.GetComponent<AuroraSourceComponent>() is null,
             IncludeRules = [.. element.GetComponents<IncludeRuleComponent>().Select(rule => rule.AsIncludeRuleDataModel())],
             StatisticRules = [.. element.GetComponents<StatisticRuleComponent>().Select(rule => rule.AsStatisticRuleDataModel())],
             SelectionRules = [.. element.GetComponents<SelectionRuleComponent>().Select(rule => rule.AsSelectionRuleDataModel())],

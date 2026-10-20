@@ -99,7 +99,11 @@ internal static class CharacterPortability
         var ruleIds = RuleIds(found).Where(referenced.Contains).Distinct().Order().ToList();
         var dependencies = found
             .Select(e => new CharacterExportDependency(e.Id, e.Name, e.Type, e.Source,
-                groups.TryGetValue(e.Source ?? string.Empty, out var g) && g == "homebrew"))
+                groups.TryGetValue(e.Source ?? string.Empty, out var g) && g == "homebrew")
+            {
+                // built-in elements have ids of this server's own: their rules let another server find its copy
+                Rules = e.BuiltIn ? CharacterPortableData.RuleKeys(e) : null,
+            })
             .DistinctBy(d => d.Id)
             .OrderBy(d => d.Type, StringComparer.Ordinal).ThenBy(d => d.Name, StringComparer.OrdinalIgnoreCase)
             .ToList();
@@ -129,8 +133,9 @@ internal static class CharacterPortability
         }
 
         var here = await elements.GetElementsWithRules(file!.Dependencies.Select(d => d.Id).ToList());
-        var found = here.Select(e => e.Id).ToHashSet();
-        var missingRules = file.RuleIds.Except(RuleIds(here)).Count();
+        var builtIns = await MatchBuiltInsAsync(elements, file, here);
+        var found = here.Select(e => e.Id).Concat(builtIns.Keys).ToHashSet();
+        var missingRules = file.RuleIds.Except(RuleIds(here)).Except(builtIns.Keys).Count();
         var groups = await elements.GetSourceGroups();
         bool HomebrewHere(string source) => groups.TryGetValue(source, out var g) && g == "homebrew";
         var missing = file.Dependencies.Where(d => !found.Contains(d.Id)).ToList();
@@ -138,6 +143,10 @@ internal static class CharacterPortability
             .Select(d => new CharacterImportHomebrew(d.Name, d.Type, d.Source, found.Contains(d.Id))).ToList();
 
         var warnings = new List<string>();
+        if (missing.Any(d => d.Rules is null && d.Source == "Internal"))
+        {
+            warnings.Add("The file comes from a Starlights server that did not yet record its built-in rules (abilities, skills, saving throws), so this server can't match them. Export the character again from an updated server.");
+        }
         if (missingRules > 0 && missing.Count == 0)
         {
             warnings.Add($"This server's books are a different version from the exporting server's: {missingRules} of the rules the character's choices use are not here. Bring both servers' content up to date (Content page) and try again.");
@@ -237,9 +246,15 @@ internal static class CharacterPortability
 
             // kept: rules content this server has (elements and their rules), nothing else
             var content = await elements.GetElementsWithRules(file.Dependencies.Select(d => d.Id).ToList());
-            var keep = content.Select(e => e.Id).Concat(RuleIds(content));
+            var builtIns = await MatchBuiltInsAsync(elements, file, content);
+            var keep = content.Select(e => e.Id).Concat(RuleIds(content)).Concat(builtIns.Keys);
             var data = file.Data.GetRawText();
-            data = CharacterPortableData.Remap(data, CharacterPortableData.NewIds(data, keep, file.SourceCharacterId, newId));
+            var ids = CharacterPortableData.NewIds(data, keep, file.SourceCharacterId, newId);
+            foreach (var (theirs, ours) in builtIns)
+            {
+                ids[theirs] = ours;
+            }
+            data = CharacterPortableData.Remap(data, ids);
             data = CharacterPortableData.RewriteStoryImages(data, file.SourceCharacterId, newId);
             data = CharacterPortableData.WithIdentity(data, preview.Name, portraitUrl);
             await snapshots.RestorePortableAsync(newId, data);
@@ -272,6 +287,19 @@ internal static class CharacterPortability
             return (null, "The character doesn't fit this server's rules content (a different version of its books?), so it was not imported; nothing was kept. The server's log has the details.");
         }
         return (new CharacterImportResponse(newId, preview.Name, warnings), null);
+    }
+
+    // the file's built-in elements (and their rules) this server lacks by id, mapped to its own copies
+    private static async Task<Dictionary<Guid, Guid>> MatchBuiltInsAsync(IElementsModuleQueries elements, CharacterExportFile file, IReadOnlyCollection<ElementDataModel> here)
+    {
+        var found = here.Select(e => e.Id).ToHashSet();
+        var missing = file.Dependencies.Where(d => d.Rules is not null && !found.Contains(d.Id)).ToList();
+        var candidates = new List<ElementDataModel>();
+        foreach (var type in missing.Select(d => d.Type).Distinct())
+        {
+            candidates.AddRange(await elements.GetElementsByType(type));
+        }
+        return CharacterPortableData.MatchBuiltIns(missing, candidates);
     }
 
     // the rules of elements (their ids come from the content's ids like the elements')

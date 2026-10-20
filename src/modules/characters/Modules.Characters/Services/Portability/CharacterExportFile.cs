@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
+using Starlights.Modules.Elements.Integration.Models;
 
 namespace Starlights.Modules.Characters.Services.Portability;
 
@@ -23,7 +24,10 @@ public sealed record CharacterExportFile
     /// <summary>The character's id on the exporting server; the importing server gives it a new one.</summary>
     public Guid SourceCharacterId { get; init; }
     public CharacterExportSummary Summary { get; init; } = new();
-    /// <summary>Every rules element the character refers to, by id (ids come from the content's own ids, so the same book gives the same ids everywhere).</summary>
+    /// <summary>
+    /// Every rules element the character refers to, by id. Book and homebrew ids come from the content's own ids, so the
+    /// same book gives the same ids everywhere; built-in elements (abilities, skills, …) carry their rules to be matched.
+    /// </summary>
     public List<CharacterExportDependency> Dependencies { get; init; } = [];
     /// <summary>The rules of those elements the character's choices refer to (also derived from the content's ids).</summary>
     public List<Guid> RuleIds { get; init; } = [];
@@ -50,7 +54,19 @@ public sealed record CharacterExportSummary
 
 public sealed record CharacterExportClass(string Name, int Level);
 
-public sealed record CharacterExportDependency(Guid Id, string Name, string Type, string Source, bool Homebrew);
+public sealed record CharacterExportDependency(Guid Id, string Name, string Type, string Source, bool Homebrew)
+{
+    /// <summary>
+    /// For an element the server makes itself (abilities, skills, saving throws, the builder's own rules: their ids
+    /// differ from server to server), all its rules in their fixed order with what each says, so another server can
+    /// find its own copy (<see cref="CharacterPortableData.MatchBuiltIns"/>). Null for book and homebrew content, and
+    /// in files from servers before this was added.
+    /// </summary>
+    public List<CharacterExportRule>? Rules { get; init; }
+}
+
+/// <summary>One rule of a built-in element: its id on the exporting server and what it says (its kind and settings).</summary>
+public sealed record CharacterExportRule(Guid Id, string Key);
 
 public sealed record CharacterExportImage(string Name, string Data);
 
@@ -99,6 +115,52 @@ public static partial class CharacterPortableData
             }
         }
         map[sourceCharacterId] = newCharacterId;
+        return map;
+    }
+
+    /// <summary>
+    /// An element's rules in their fixed order (include, statistic, selection) with what each one says. Two servers'
+    /// copies of the same built-in element give the same list; only the ids differ.
+    /// </summary>
+    public static List<CharacterExportRule> RuleKeys(ElementDataModel element) =>
+    [
+        .. element.IncludeRules.Select(r => new CharacterExportRule(r.RuleId, $"include|{r.LevelRequirement}|{r.Requirements}")),
+        .. element.StatisticRules.Select(r => new CharacterExportRule(r.RuleId, $"statistic|{r.Name}|{r.Value}|{r.StackingBonus}|{r.LevelRequirement}|{r.Requirements}")),
+        .. element.SelectionRules.Select(r => new CharacterExportRule(r.RuleId, $"selection|{r.ElementType}|{r.Name}|{r.LevelRequirement}|{r.Supports}|{r.Quantity}|{r.Requirements}|{r.Optional}")),
+    ];
+
+    /// <summary>
+    /// The file's ids of built-in elements this server lacks, mapped to this server's own copies: an element of the
+    /// same type and name that this server also made itself (exactly one), whose rules say the same in the same order
+    /// (the file's id of each rule to this server's). Anything that differs is left out, so it stays missing and the
+    /// import is refused as before. Book and homebrew content is never matched by name.
+    /// </summary>
+    public static Dictionary<Guid, Guid> MatchBuiltIns(IEnumerable<CharacterExportDependency> missing, IEnumerable<ElementDataModel> here)
+    {
+        var builtIns = here.Where(e => e.BuiltIn).ToList();
+        var map = new Dictionary<Guid, Guid>();
+        foreach (var dependency in missing)
+        {
+            if (dependency.Rules is not { } fileRules)
+            {
+                continue;
+            }
+            var candidates = builtIns.Where(e => e.Type == dependency.Type && e.Name == dependency.Name).ToList();
+            if (candidates.Count != 1)
+            {
+                continue;
+            }
+            var rules = RuleKeys(candidates[0]);
+            if (rules.Count != fileRules.Count || rules.Zip(fileRules).Any(pair => pair.First.Key != pair.Second.Key))
+            {
+                continue;
+            }
+            map[dependency.Id] = candidates[0].Id;
+            foreach (var (ours, theirs) in rules.Zip(fileRules))
+            {
+                map[theirs.Id] = ours.Id;
+            }
+        }
         return map;
     }
 
