@@ -22,7 +22,8 @@ done
 need docker; need python3; need sha256sum
 [ -n "$backup" ] || backup=$(newest_backup)
 [ -n "$backup" ] || die "there are no backups in $BACKUP_ROOT yet." "Make one with: deploy/maintenance/backup.sh"
-backup=$(cd "$backup" 2>/dev/null && pwd) || die "no such backup folder: $backup"
+given="$backup"
+backup=$(user_dir "$given") || die "no such backup folder: $given"
 case "$backup" in *.incomplete) die "$backup did not finish when it was made; it cannot be used." ;; esac
 
 step "Checking $backup"

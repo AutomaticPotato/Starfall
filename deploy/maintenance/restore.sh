@@ -28,7 +28,8 @@ while [ $# -gt 0 ]; do
 done
 [ -n "$backup" ] || die "say which backup to restore." "Backups: ls $BACKUP_ROOT     then: deploy/maintenance/restore.sh $BACKUP_ROOT/<folder>"
 require_install
-backup=$(cd "$backup" 2>/dev/null && pwd) || die "no such backup folder: $backup"
+given="$backup"
+backup=$(user_dir "$given") || die "no such backup folder: $given"
 
 step "1. Checking the backup"
 if $deep; then "$MAINT_DIR/verify.sh" "$backup" --deep; else "$MAINT_DIR/verify.sh" "$backup"; fi
