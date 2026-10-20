@@ -226,9 +226,9 @@ export async function importAuroraCharacter(
 
   onProgress?.(`${name}: prepared spells…`);
   await importAuroraPreparedSpells(characterId, doc);
-  onProgress?.(`${name}: equipment…`);
-  await importAuroraEquipment(characterId, doc);
 
+  // ability scores before equipment: saving the inventory works the armor's rules out again ("speed -10 unless
+  // Strength 13"), and setting a score does not, so armor put on before the scores kept the default Strength's result
   onProgress?.(`${name}: ability scores…`);
   const scores = await apiClient.get<{ abilityScores: { abilityScoreId: string; name: string }[] }>(`/api/characters/${characterId}/ability-scores`);
   for (const ability of ABILITIES) {
@@ -238,6 +238,9 @@ export async function importAuroraCharacter(
       await apiClient.post(`/api/characters/${characterId}/ability-scores/${target.abilityScoreId}/base`, { value });
     }
   }
+
+  onProgress?.(`${name}: equipment…`);
+  await importAuroraEquipment(characterId, doc);
 
   return report;
 }
