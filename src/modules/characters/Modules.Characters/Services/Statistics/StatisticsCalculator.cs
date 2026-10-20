@@ -104,6 +104,11 @@ public class StatisticsCalculator
             _logger.LogError("[StatisticsCalculator] Circular dependency detected in statistic rules: {CircularDependencyPath}", circularDependencyPath);
         }
 
+        // a rule can refer to a statistic nothing gives this character: a familiar's Perception refers to
+        // companion:proficiency, which only companion features (Beast Master, Battle Smith, the homunculus) set.
+        // Such a group is left out, as before, but that is the content working as written, not an error; groups
+        // that depend on a left-out group are left out the same way
+        var absent = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (var (key, pendingGroup) in pendingGroups)
         {
             var result = ProcessGroupNode(pendingGroup, context);
@@ -111,12 +116,22 @@ public class StatisticsCalculator
             {
                 pendingGroups.Remove(group.GroupName);
             }
+            else if (pendingGroup.Dependencies.Count > 0 && pendingGroup.Dependencies.All(d => absent.Contains(Normalize(d)) || !IsDefined(d)))
+            {
+                absent.Add(key);
+                _logger.LogInformation("[StatisticsCalculator] Statistic group '{GroupName}' left out for Character '{CharacterName}': nothing defines {Dependencies}", key, character.Name, string.Join(", ", pendingGroup.Dependencies));
+            }
             else
             {
                 // add warning to context
-                _logger.LogError("[StatisticsCalculator] Statistic group '{GroupName}' could not be finalized due to unresolved dependencies.", key);
+                _logger.LogError("[StatisticsCalculator] Statistic group '{GroupName}' could not be finalized due to unresolved dependencies: {Dependencies}", key, string.Join(", ", pendingGroup.Dependencies));
             }
         }
+
+        // the statistics collection ignores a leading '-' in a statistic name; match it
+        static string Normalize(string name) => name.StartsWith('-') ? name[1..] : name;
+        bool IsDefined(string name) =>
+            context.Statistics.ContainsGroup(name) || pendingGroups.Keys.Any(k => string.Equals(k, Normalize(name), StringComparison.OrdinalIgnoreCase));
 
         EvaluateIncompleteGroups(context);
 
@@ -226,7 +241,8 @@ public class StatisticsCalculator
         var hasDependencies = group.Dependencies.Count > 0;
         if (hasDependencies)
         {
-            _logger.LogError("[StatisticsCalculator] Statistic rules for '{GroupName}' have unresolved dependencies: {Dependencies}", group.Name, string.Join(", ", group.Dependencies));
+            // the caller decides whether that is an error (Calculate logs it once, the group processors report their own)
+            _logger.LogDebug("[StatisticsCalculator] Statistic rules for '{GroupName}' have unresolved dependencies: {Dependencies}", group.Name, string.Join(", ", group.Dependencies));
 
             // skip processing for now
             // add error to context
