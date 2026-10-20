@@ -2,14 +2,16 @@
 
 ## Current release — 2026-10-20
 
-**v0.11.0** (Starfall Mk2) is live on the homelab (`c69600b`; tag `v0.11.0` = `b409275` on `aurora-server`). Mk2
+**v0.11.1** is released and live on the homelab (live `24fd60b`, the same code as the tag;
+[notes](../releases/v0.11.1.md)). It adds the five fixes of the final completion pass (below) to **v0.11.0**
+(Starfall Mk2, tag `b409275`). Mk2
 fixed append-import safety, missing skills on SQL Server, empty Aurora attack ids and the import order, and added the
 Starfall homepage art, theme ornaments and working CI with branch protection
 ([verification](MK2_VERIFICATION_REPORT.md)).
 
 The final completion pass the same day ([report](MK2_FINAL_COMPLETION_REPORT.md)) checked every area on disposable
-installs and opened six fixes (#13–#18) plus a docs PR; they are green and waiting to be merged. Verdict: partially
-verified until they are merged and deployed; Windows is untested.
+installs and fixed five defects (#13–#18) plus a docs PR (#19); all merged and deployed the same day (live
+`24fd60b`, every character identical before/after, 0 API errors). Verdict: done for Linux; Windows is untested.
 
 ## Existing systems
 Character creation/guided builder, registration progression, multiclassing, 2014/2024 sources, equipment, custom
@@ -27,5 +29,4 @@ None open. Codex's branches are merged; its handoffs (`CODEX_HANDOFF.md`, `CODEX
 Inspect `git worktree list` and open pull requests before starting anything.
 
 ## Next priority
-Owner: run `go.sh` (#13), then merge #14–#18 and the docs PR, then one API + web deploy. After that, maintenance
-mode: one small mission per branch.
+Maintenance mode: one small mission per branch.

@@ -1,7 +1,8 @@
 # Starfall
 
-**v0.10.0 public beta** ([release](https://github.com/CHassapis/starfall/releases/tag/v0.10.0) ·
-[release notes](docs/releases/v0.10.0.md) · [verification report](docs/ai/V0_10_0_VERIFICATION.md)). Development is in
+**v0.11.1** ([release](https://github.com/CHassapis/Starfall/releases/tag/v0.11.1) ·
+[release notes](docs/releases/v0.11.1.md) · [final completion report](docs/ai/MK2_FINAL_COMPLETION_REPORT.md); earlier:
+[v0.11.0](docs/releases/v0.11.0.md), [v0.10.0 public beta](docs/releases/v0.10.0.md)). Development is in
 maintenance mode: bug fixes and live-play reliability only.
 
 > **About this fork (branch `aurora-server`).** Starfall is a self-hosted fork of Project Starlights by C Hassapis, packaged to

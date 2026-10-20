@@ -1,16 +1,15 @@
 # Claude handoff
 
-Updated 2026-10-20 (session 0a6fe6db). Keep under ~80 lines; replace stale lines.
+Updated 2026-10-20 (sessions 0a6fe6db, 540ea579). Keep under ~80 lines; replace stale lines.
 
-## Task (done, waiting on the owner): Mk2 final completion
+## Task (done, merged and live): Mk2 final completion
 Owner's brief "Final completion, verification & release readiness"; report:
-[MK2_FINAL_COMPLETION_REPORT.md](MK2_FINAL_COMPLETION_REPORT.md) (verdict PARTIALLY: fixes not merged yet; Windows
-unverified). Live is v0.11.0 = `c69600b`. Open pull requests, all based on `b409275`, green, none merged:
-#13 companion ERR log (owner-approved: `~/.cache/starlights-test/mk2/companion/go.sh` merges and deploys it; run it
-FIRST, its deploy compares characters strictly), #14 2014 Wizard multiclass slots, #15 a11y labels, #16 npm audit
-fix, #17 maintenance scripts' relative backup folder, #18 portability between independent servers, and the docs PR.
-All merge together without conflicts (merged-set suite in the report). After merging: one API + web deploy, no
-migration, no reprocess. Evidence: `~/.cache/starlights-test/mk2final/` (LEDGER.md).
+[MK2_FINAL_COMPLETION_REPORT.md](MK2_FINAL_COMPLETION_REPORT.md) (verdict: done for Linux; Windows unverified).
+Merged 2026-10-20 by the owner: #13 companion ERR log, #14 2014 Wizard multiclass slots, #15 a11y labels, #16 npm
+audit fix, #17 maintenance scripts' relative backup folder, #18 portability between independent servers, #19 docs.
+Live is `24fd60b` since 12:59 (verified backup, rollback images `rollback-0dea987`, every character identical, 0 API
+errors; report §8). Released as v0.11.1 (tag on the merge of #20; same code as live). Evidence:
+`~/.cache/starlights-test/mk2final/` (LEDGER.md, finish2.log).
 
 ## Earlier work
 Mk2 stabilization, v0.11.0 (2026-10-20, [MK2_VERIFICATION_REPORT.md](MK2_VERIFICATION_REPORT.md)); homebrew workshop
@@ -27,7 +26,7 @@ Mk2 stabilization, v0.11.0 (2026-10-20, [MK2_VERIFICATION_REPORT.md](MK2_VERIFIC
   major. NuGet: transitive System.Security.Cryptography.Pkcs 9.0.4 note still open.
 - `--skip-content` install + manual `./admin.sh import` needs `/api/elements/initialize` first (the Content page /
   content update does it). Custom-monster CR calculator, homebrew Mystic Arcanum/third-casters: not built.
-- Character files exported before #18 can't move between servers; export again after #18 is live.
+- Character files exported before #18 can't move between servers; export again (#18 is live since 2026-10-20).
 
 ## Coordination (shared files touched)
 - #15: `pages/battle/battle-page.tsx` (`UsePips`: `role="img"`), `pages/compendium/Index.tsx` (two `aria-label`s).
@@ -38,7 +37,10 @@ Mk2 stabilization, v0.11.0 (2026-10-20, [MK2_VERIFICATION_REPORT.md](MK2_VERIFIC
 
 ## How to verify things here (reusable)
 - Disposable install of a worktree: `~/.cache/starlights-test/mk2/e2e-setup.sh REPO DB API_PORT WEB_PORT`
-  (SQL container `starfall-mk2-sql`); real characters via `~/.cache/starlights-test/pw/mk2-e2e.mjs` (its
+  (SQL container `starfall-mk2-sql` on network `starfall-mk2-test`, removed 2026-10-20; recreate both first:
+  `docker network create starfall-mk2-test`, then `docker run -d --name starfall-mk2-sql --network starfall-mk2-test
+  -e ACCEPT_EULA=Y -e MSSQL_PID=developer -e MSSQL_SA_PASSWORD="$(cat ~/.cache/starlights-test/mk2/sqlpw)"
+  mcr.microsoft.com/mssql/server:2022-latest`); real characters via `~/.cache/starlights-test/pw/mk2-e2e.mjs` (its
   "errors 0" counts page errors only: read `import-report.txt` for per-file failures).
 - Community kit: `deploy/installer-tests/docker_smoke.py --run` (isolated project, random 127.0.0.1 port).
   For `update.sh`, clone from GitHub and bind 127.0.0.1 with a local test commit (default port 8093 = live).
@@ -50,4 +52,4 @@ Maintenance mode: bug fixes, one mission per branch, merged through pull request
 
 ## Blockers
 None in the code. The session's auto-mode classifier refuses merges and production deploys; the owner runs them
-(`go.sh` for #13, then the rest).
+(prepared scripts with guards, as `go.sh` / `finish2.sh` were).
