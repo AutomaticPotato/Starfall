@@ -77,7 +77,7 @@ export function CompendiumPage() {
           <Input className="pl-8" placeholder="Search by name" value={query} onChange={(e) => update({ q: e.target.value })} />
         </div>
         <Select value={type} onValueChange={(value) => update({ type: value })}>
-          <SelectTrigger className="w-full sm:w-56">
+          <SelectTrigger className="w-full sm:w-56" aria-label="Kind of option">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -90,7 +90,7 @@ export function CompendiumPage() {
           </SelectContent>
         </Select>
         <Select value={source} onValueChange={(value) => update({ source: value })}>
-          <SelectTrigger className="w-full sm:w-64">
+          <SelectTrigger className="w-full sm:w-64" aria-label="Book">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
