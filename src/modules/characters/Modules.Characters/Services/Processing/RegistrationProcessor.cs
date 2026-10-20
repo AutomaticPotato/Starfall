@@ -118,6 +118,9 @@ public class RegistrationProcessor : IRegistrationProcessor
 
         var registrationRepository = _persistence.GetRepository<IRegistrationRepository>();
         var registrations = await registrationRepository.GetRegistrationsAsync(characterId);
+        // in the order they were made (version 7 ids), as a new character's rules include them: SQL Server returns
+        // them in no particular order, and a "Skills" rule handled before the "Abilities" rule found no ability scores
+        registrations.Sort((a, b) => string.CompareOrdinal(a.Id.Value.ToString(), b.Id.Value.ToString()));
 
         _logger.LogInformation("found {RegistrationCount} registrations for character '{CharacterName}'", registrations.Count, character.Name);
 
@@ -143,6 +146,10 @@ public class RegistrationProcessor : IRegistrationProcessor
             await ProcessStatisticRules(context);
             await ProcessSelectionRules(context);
         }
+
+        // what a registration could not get when it came before the one it needs (a skill without its ability score
+        // yet), now that every registration has been handled; this also mends characters saved without such skills
+        await _registrationManager.Repair(character, await registrationRepository.GetRegistrationsAsync(characterId));
 
         _statisticsCalculator.Calculate(character, registrations);
 

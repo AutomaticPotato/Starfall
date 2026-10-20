@@ -6,7 +6,7 @@ import { useSpellIndex, type SpellFigures } from "@/lib/api/magic";
 import { attackModes, generatedNameOf, isActive, isCarried, resolve, type AttackMode, type CharacterFacts, type Inventory, type Resolved } from "@/lib/rules/items";
 import { itemSpells, type ItemSpellRef } from "@/lib/rules/item-spells";
 import { EMPTY_MAGIC, type KnownSpell, type MagicState, type Spellcasting } from "@/lib/rules/magic";
-import { summarizeProficiencies, type Proficiencies } from "@/lib/rules/proficiencies";
+import { proficiencyLevel, summarizeProficiencies, type Proficiencies, type ProficiencyRegistration } from "@/lib/rules/proficiencies";
 import {
   sheetArmor,
   sheetAttackLines,
@@ -298,6 +298,38 @@ export function hitPointsForClasses(classes: { level: number; die: number }[], c
   return dice + level * con + bonus;
 }
 
+/**
+ * Each skill's and saving throw's proficiency: from what the character has and from its proficiency statistics, not
+ * from the size of the whole bonus (a cleric Thaumaturge's Wisdom on Arcana checks is no proficiency). Until the
+ * registrations have loaded, a bonus the statistics do not explain is judged by its size.
+ */
+export function withProficiencies<S extends Bonus, T extends Bonus>(
+  skills: S[],
+  saves: T[],
+  registrations: ProficiencyRegistration[] | undefined,
+  stat: (name: string) => number | undefined,
+  proficiencyBonus: number,
+): { skills: (S & { proficiency: Proficiency })[]; saves: (T & { proficiency: Proficiency })[] } {
+  const owned = summarizeProficiencies(registrations ?? []);
+  const skillOwned = new Map(owned.skills.map((x) => [x.name.toLowerCase(), x]));
+  const saveOwned = new Set(owned.savingThrows.map((x) => x.name.toLowerCase()));
+  const fromStatistic = (b: Bonus) => stat(`${statisticName(b.name)}:proficiency`);
+  const skillProficiency = (b: Bonus): Proficiency => {
+    const level = proficiencyLevel(skillOwned.get(b.name.toLowerCase()), fromStatistic(b), proficiencyBonus);
+    return level !== "none" || registrations ? level : proficiencyOf(b, proficiencyBonus);
+  };
+  const saveProficiency = (b: Bonus): Proficiency => {
+    const ability = ABILITY_NAMES.find((a) => a.slice(0, 3).toUpperCase() === b.abilityScoreAbbreviation) ?? b.name;
+    const level = proficiencyLevel(saveOwned.has(ability.toLowerCase()) ? {} : undefined, fromStatistic(b), proficiencyBonus);
+    // a saving throw has no expertise
+    return level !== "none" ? "proficient" : registrations ? "none" : proficiencyOf(b, proficiencyBonus);
+  };
+  return {
+    skills: skills.map((s) => ({ ...s, proficiency: skillProficiency(s) })),
+    saves: saves.map((s) => ({ ...s, proficiency: saveProficiency(s) })),
+  };
+}
+
 /** Aurora statistic names to the Starfall convention (same as the importer). */
 function statisticName(auroraName: string): string {
   let name = auroraName.trim().toLowerCase();
@@ -502,20 +534,9 @@ export function useSheetData(characterId: string): { data?: SheetData; isLoading
     return false;
   }
 
-  // proficiency and expertise from what the character has, not from the size of a bonus (a cleric Thaumaturge's
-  // Wisdom on Arcana checks is no proficiency)
   const owned = summarizeProficiencies(registrations.data?.registrations ?? []);
-  const skillOwned = new Map(owned.skills.map((x) => [x.name.toLowerCase(), x]));
-  const saveOwned = new Set(owned.savingThrows.map((x) => x.name.toLowerCase()));
-  const skillProficiency = (b: Bonus): Proficiency => {
-    const own = skillOwned.get(b.name.toLowerCase());
-    return own ? (own.expertise ? "expertise" : "proficient") : registrations.data ? "none" : proficiencyOf(b, proficiencyBonus);
-  };
-  const saveProficiency = (b: Bonus): Proficiency => {
-    const ability = ABILITY_NAMES.find((a) => a.slice(0, 3).toUpperCase() === b.abilityScoreAbbreviation) ?? b.name;
-    return saveOwned.has(ability.toLowerCase()) ? "proficient" : registrations.data ? "none" : proficiencyOf(b, proficiencyBonus);
-  };
-  const skillList = skills.data.skills.map((s) => ({ ...s, proficiency: skillProficiency(s) }));
+  const marked = withProficiencies(skills.data.skills, saves.data.savingThrows, registrations.data?.registrations, stat, proficiencyBonus);
+  const skillList = marked.skills;
   const perception = skillList.find((s) => s.name === "Perception")?.calculatedBonus ?? mod("WIS");
 
   const primary = classes.data?.classes.find((c) => c.isPrimary) ?? classes.data?.classes[0];
@@ -638,7 +659,7 @@ export function useSheetData(characterId: string): { data?: SheetData; isLoading
       subclass: subclass ?? "",
       proficiencyBonus,
       abilities: abilities.data.abilityScores,
-      saves: saves.data.savingThrows.map((s) => ({ ...s, proficiency: saveProficiency(s) })),
+      saves: marked.saves,
       skills: skillList,
       passivePerception: 10 + perception,
       initiative: mod("DEX") + (stat("initiative") ?? 0),

@@ -87,6 +87,22 @@ export function sourceOf(registration: ProficiencyRegistration, byId: Map<string
   return detail ? `${levelless(owner.name)} (${levelless(detail.name)})` : levelless(owner.name);
 }
 
+export type ProficiencyLevel = "none" | "proficient" | "expertise";
+
+/**
+ * A skill's or saving throw's proficiency on the sheet: what the character has (see summarizeProficiencies), or what
+ * its "<name>:proficiency" statistic gives, the part of the bonus the engine counts as proficiency. Aurora grants some
+ * only as that statistic: expertise as bonus="double" (the Scout's Survivalist, Blessings of Knowledge, Royal Envoy)
+ * and the 2024 Resilient feat's saving throw, so the bonus is right while no proficiency element says so. The engine
+ * counts each bonus kind once, which keeps the total a multiple of the proficiency bonus; ability modifiers (a
+ * Thaumaturge's Wisdom on Arcana) and half proficiency are other statistics and never count here.
+ */
+export function proficiencyLevel(owned: { expertise?: boolean } | undefined, statistic: number | undefined, proficiencyBonus: number): ProficiencyLevel {
+  const fromStatistic = proficiencyBonus > 0 ? Math.floor((statistic ?? 0) / proficiencyBonus) : 0;
+  if (owned?.expertise || fromStatistic >= 2) return "expertise";
+  return owned || fromStatistic >= 1 ? "proficient" : "none";
+}
+
 /** By name (the builder's card), or in the order the character gained them (Aurora's sheet). */
 export function summarizeProficiencies(registrations: ProficiencyRegistration[], order: "name" | "gained" = "name"): Proficiencies {
   const all = flattenRegistrations(registrations);

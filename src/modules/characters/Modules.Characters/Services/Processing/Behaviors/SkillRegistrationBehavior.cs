@@ -28,33 +28,45 @@ public sealed class SkillRegistrationBehavior : IRegistrationBehavior
         _elements = elements;
     }
 
-    public async Task Registered(Registration newRegistration)
+    public Task Registered(Registration newRegistration) => CreateSkill(newRegistration);
+
+    /// <summary>
+    /// A skill registered before its ability score was (registrations are not always handled in the order they were
+    /// made) got no skill; it gets it once the character's registrations have all been processed.
+    /// </summary>
+    public Task Repair(Character character, Registration existingRegistration) => CreateSkill(existingRegistration, character);
+
+    private async Task CreateSkill(Registration registration, Character? loaded = null)
     {
-        if (newRegistration.AssociatedElementType != "Skill")
+        if (registration.AssociatedElementType != "Skill")
         {
             return;
         }
-        using var _ = CharactersInstrumentation.StartActivity($"{nameof(SkillRegistrationBehavior)} | {newRegistration.AssociatedElementName}");
+        using var _ = CharactersInstrumentation.StartActivity($"{nameof(SkillRegistrationBehavior)} | {registration.AssociatedElementName}");
 
 
         // when a new skill element is registered, we need to create the skill for the character
-        var characters = _persistence.GetRepository<ICharactersRepository>();
-        var character = await characters.GetCharacterAsync(newRegistration.CharacterId) ?? throw new InvalidOperationException($"Character with ID {newRegistration.CharacterId} not found.");
+        var character = loaded ?? await _persistence.GetRepository<ICharactersRepository>().GetCharacterAsync(registration.CharacterId)
+            ?? throw new InvalidOperationException($"Character with ID {registration.CharacterId} not found.");
+        if (character.GetRequiredComponent<SkillsComponent>().Skills.Any(s => s.AssociatedRegistrationId == registration.Id))
+        {
+            return;
+        }
 
         // fetch the associated skill element
-        var associatedElement = await _elements.GetSkillModel(newRegistration.AssociatedElementId) ?? throw new InvalidOperationException($"Skill with ID {newRegistration.AssociatedElementId} not found.");
+        var associatedElement = await _elements.GetSkillModel(registration.AssociatedElementId) ?? throw new InvalidOperationException($"Skill with ID {registration.AssociatedElementId} not found.");
 
         // try to find the primary ability score for this skill
         var primaryScore = await GetPrimaryAbilityScore(character, associatedElement);
         if (primaryScore is null)
         {
-            _logger.LogWarning("Creating skill '{SkillName}' without primary ability score [character='{CharacterId}']", associatedElement.Name, character.Id.Value);
+            _logger.LogInformation("Skill '{SkillName}' waits for its ability score to be registered [character='{CharacterId}']", associatedElement.Name, character.Id.Value);
             return;
         }
 
         // create the skill for the character
         character.UpdateComponent<SkillsComponent>((component, _) =>
-            component.CreateSkill(newRegistration.Id, associatedElement.Name, primaryScore.Id, primaryScore.Abbreviation, associatedElement.SortingOrder));
+            component.CreateSkill(registration.Id, associatedElement.Name, primaryScore.Id, primaryScore.Abbreviation, associatedElement.SortingOrder));
     }
 
     private async Task<AbilityScore?> GetPrimaryAbilityScore(Character character, SkillDataModel skill)

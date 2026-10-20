@@ -27,33 +27,45 @@ public sealed class SavingThrowRegistrationBehavior : IRegistrationBehavior
         _elements = elements;
     }
 
-    public async Task Registered(Registration newRegistration)
+    public Task Registered(Registration newRegistration) => CreateSavingThrow(newRegistration);
+
+    /// <summary>
+    /// A saving throw registered before its ability score was got none; it gets it once the character's registrations
+    /// have all been processed (see <see cref="SkillRegistrationBehavior"/>).
+    /// </summary>
+    public Task Repair(Character character, Registration existingRegistration) => CreateSavingThrow(existingRegistration, character);
+
+    private async Task CreateSavingThrow(Registration registration, Character? loaded = null)
     {
-        if (newRegistration.AssociatedElementType != "Saving Throw")
+        if (registration.AssociatedElementType != "Saving Throw")
         {
             return;
         }
-        using var _ = CharactersInstrumentation.StartActivity($"{nameof(SavingThrowRegistrationBehavior)} | {newRegistration.AssociatedElementName}");
+        using var _ = CharactersInstrumentation.StartActivity($"{nameof(SavingThrowRegistrationBehavior)} | {registration.AssociatedElementName}");
 
         // a new saving throw registration was created, we need to create the saving throw in the character
-        var characters = _persistence.GetRepository<ICharactersRepository>();
-        var character = await characters.GetCharacterAsync(newRegistration.CharacterId) ?? throw new InvalidOperationException($"Character with ID {newRegistration.CharacterId} not found.");
+        var character = loaded ?? await _persistence.GetRepository<ICharactersRepository>().GetCharacterAsync(registration.CharacterId)
+            ?? throw new InvalidOperationException($"Character with ID {registration.CharacterId} not found.");
+        if (character.GetRequiredComponent<SavingThrowsComponent>().SavingThrows.Any(s => s.AssociatedRegistrationId == registration.Id))
+        {
+            return;
+        }
 
         // fetch the associated saving throw element
-        var associatedElement = await _elements.GetSavingThrowModel(newRegistration.AssociatedElementId) ?? throw new InvalidOperationException($"Saving Throw with ID {newRegistration.AssociatedElementId} not found.");
+        var associatedElement = await _elements.GetSavingThrowModel(registration.AssociatedElementId) ?? throw new InvalidOperationException($"Saving Throw with ID {registration.AssociatedElementId} not found.");
 
         // try to find the primary ability score for this saving throw
         var primaryScore = await GetPrimaryAbilityScore(character, new(associatedElement.PrimaryAbilityElementId));
         if (primaryScore is null)
         {
-            _logger.LogError("Could not find primary ability score for saving throw '{SavingThrowName}' [character='{CharacterId}']", associatedElement.Name, character.Id.Value);
+            _logger.LogInformation("Saving throw '{SavingThrowName}' waits for its ability score to be registered [character='{CharacterId}']", associatedElement.Name, character.Id.Value);
             return;
         }
 
         character.UpdateComponent<SavingThrowsComponent>((component, _) =>
         {
             // create the saving throw in the character
-            component.CreateSavingThrow(newRegistration.Id, associatedElement.Name, primaryScore.Id, primaryScore.Abbreviation, associatedElement.SortingOrder);
+            component.CreateSavingThrow(registration.Id, associatedElement.Name, primaryScore.Id, primaryScore.Abbreviation, associatedElement.SortingOrder);
         });
     }
 
