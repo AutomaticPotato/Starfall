@@ -52,7 +52,7 @@ show the exact changes; write live data only after approval. Rules and book look
 ## Known limitations
 - Character files need the same books (and homebrew) on the importing server; a different content version is refused.
 - Saving homebrew errors on an install whose content was never imported (`--skip-content`).
-- GitHub Actions: pushes have not triggered CI (run it with Actions → Run workflow); one backend integration test
+- GitHub Actions: pushes and pull requests now start CI (`.github/workflows/ci.yml`; GitHub ignored every push and pull-request event for the old `development-build.yml` path, though the same file under another name runs; see docs/ai/CI.md); one backend integration test
   (`ReorderElementRulesEndpointTests`) fails intermittently on parallel host start-up.
 - The serializer/startup race remains an investigation lead, not a confirmed diagnosis or fix. No CI runs were
   returned for the verified remote baseline. See the release report before making a release-readiness claim.

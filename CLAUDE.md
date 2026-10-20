@@ -41,8 +41,9 @@ Docker on the homelab server (`~/homelab/compose/starlights`, site :8093, public
 ## Protected
 - Live database (`starlights` in container `starlights-db`), `~/homelab/config/starlights*`, `compose/starlights/.env`,
   backups in the mssql volume `backup/` folder and the off-site backup config in `~/.config/starlights-backup`.
-- No push, merge or deploy without the user's go-ahead in this session. Push only `aurora-server`, after the
-  publish checks (see deployment skill). Book text, character files and secrets never go into git.
+- No push, merge or deploy without the user's go-ahead in this session. Push feature branches after the publish
+  checks and open a pull request to `aurora-server` (rulesets block direct, force and deleting pushes there; CI must
+  pass; see docs/ai/CI.md). Book text, character files and secrets never go into git.
 
 ## Decisions worth knowing (details in the skills)
 - Tokens are signed over the current password; access checks go through `PlayerAccess` (`CanActAsAsync`, `IsDm…`).
