@@ -108,8 +108,9 @@ Finished in this mission (base `b409275`; each merges cleanly alone and all toge
 ## 7. Recommendation
 
 Starfall Mk2 is done for Linux: #13–#18 and this report are merged and live (`24fd60b`). Windows stays "untested"
-until someone runs `setup.ps1` on a real Windows machine. The five fixes are live but not in a release yet (the tag
-`v0.11.0` = `b409275`); a v0.11.1 tag and release need the owner's go-ahead.
+until someone runs `setup.ps1` on a real Windows machine. The five fixes are released as **v0.11.1** (2026-10-20,
+[notes](../releases/v0.11.1.md); the tag is on the merge of the PR that added §8, whose code is identical to live
+`24fd60b`).
 
 ## 8. Live results (2026-10-20, after the merge)
 

@@ -2,8 +2,9 @@
 
 ## Current release — 2026-10-20
 
-**v0.11.0** (Starfall Mk2) is released (tag `v0.11.0` = `b409275` on `aurora-server`); live on the homelab is
-`24fd60b` = v0.11.0 + the five fixes of the final completion pass (below). Mk2
+**v0.11.1** is released and live on the homelab (live `24fd60b`, the same code as the tag;
+[notes](../releases/v0.11.1.md)). It adds the five fixes of the final completion pass (below) to **v0.11.0**
+(Starfall Mk2, tag `b409275`). Mk2
 fixed append-import safety, missing skills on SQL Server, empty Aurora attack ids and the import order, and added the
 Starfall homepage art, theme ornaments and working CI with branch protection
 ([verification](MK2_VERIFICATION_REPORT.md)).
@@ -28,5 +29,4 @@ None open. Codex's branches are merged; its handoffs (`CODEX_HANDOFF.md`, `CODEX
 Inspect `git worktree list` and open pull requests before starting anything.
 
 ## Next priority
-Maintenance mode: one small mission per branch. Owner decision open: tag and release v0.11.1 (the five fixes are
-live but not in a release yet).
+Maintenance mode: one small mission per branch.

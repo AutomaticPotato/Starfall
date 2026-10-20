@@ -8,7 +8,7 @@ Owner's brief "Final completion, verification & release readiness"; report:
 Merged 2026-10-20 by the owner: #13 companion ERR log, #14 2014 Wizard multiclass slots, #15 a11y labels, #16 npm
 audit fix, #17 maintenance scripts' relative backup folder, #18 portability between independent servers, #19 docs.
 Live is `24fd60b` since 12:59 (verified backup, rollback images `rollback-0dea987`, every character identical, 0 API
-errors; report §8). Not released yet: v0.11.1 needs the owner's go-ahead. Evidence:
+errors; report §8). Released as v0.11.1 (tag on the merge of #20; same code as live). Evidence:
 `~/.cache/starlights-test/mk2final/` (LEDGER.md, finish2.log).
 
 ## Earlier work
@@ -37,7 +37,10 @@ Mk2 stabilization, v0.11.0 (2026-10-20, [MK2_VERIFICATION_REPORT.md](MK2_VERIFIC
 
 ## How to verify things here (reusable)
 - Disposable install of a worktree: `~/.cache/starlights-test/mk2/e2e-setup.sh REPO DB API_PORT WEB_PORT`
-  (SQL container `starfall-mk2-sql`); real characters via `~/.cache/starlights-test/pw/mk2-e2e.mjs` (its
+  (SQL container `starfall-mk2-sql` on network `starfall-mk2-test`, removed 2026-10-20; recreate both first:
+  `docker network create starfall-mk2-test`, then `docker run -d --name starfall-mk2-sql --network starfall-mk2-test
+  -e ACCEPT_EULA=Y -e MSSQL_PID=developer -e MSSQL_SA_PASSWORD="$(cat ~/.cache/starlights-test/mk2/sqlpw)"
+  mcr.microsoft.com/mssql/server:2022-latest`); real characters via `~/.cache/starlights-test/pw/mk2-e2e.mjs` (its
   "errors 0" counts page errors only: read `import-report.txt` for per-file failures).
 - Community kit: `deploy/installer-tests/docker_smoke.py --run` (isolated project, random 127.0.0.1 port).
   For `update.sh`, clone from GitHub and bind 127.0.0.1 with a local test commit (default port 8093 = live).
