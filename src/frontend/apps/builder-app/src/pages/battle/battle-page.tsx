@@ -1396,7 +1396,7 @@ function Mini({ label, value, sub }: { label: string; value: ReactNode; sub?: Re
 
 function UsePips({ max, spent }: { max: number; spent: number }) {
   return (
-    <span className="inline-flex gap-0.5" aria-label={`${max - spent} of ${max} left`}>
+    <span className="inline-flex gap-0.5" role="img" aria-label={`${max - spent} of ${max} left`}>
       {Array.from({ length: Math.min(max, 20) }, (_, i) => (
         <span key={i} className={cn("size-2.5 rotate-45 border border-amber-300/60", i < max - spent ? "bg-amber-300" : "bg-transparent")} />
       ))}
