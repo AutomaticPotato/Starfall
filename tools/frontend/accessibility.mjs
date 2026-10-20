@@ -3,7 +3,7 @@ import {pathToFileURL} from 'node:url';
 import {fixture,CHARACTER_ID} from './fixtures.mjs';
 const {chromium}=await import(pathToFileURL(process.env.PLAYWRIGHT_MODULE).href);
 const browser=await chromium.launch();const context=await browser.newContext({viewport:{width:390,height:900},reducedMotion:'reduce'});
-const data=fixture();let failSave=false;const base='http://127.0.0.1:55052';
+const data=fixture();let failSave=false;const base=process.env.FRONTEND_URL??'http://127.0.0.1:55052';
 await context.route(u=>u.pathname.startsWith('/api/'),async r=>{
  const q=r.request();if(failSave&&q.method()==='PUT'&&q.url().endsWith('/combat'))return r.fulfill({status:503,json:{message:'Synthetic save failure'}});
  await r.fulfill({json:data.resolve(q.url(),q.method(),q.postDataJSON())});

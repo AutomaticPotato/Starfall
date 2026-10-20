@@ -1,11 +1,10 @@
 # Starfall — final handoff (maintenance mode)
 
-**v0.10.0 public beta, released 2026-10-16** (tag `v0.10.0` on `aurora-server`; [release notes](../releases/v0.10.0.md)).
-Codex prepared the candidate (`release/v0.10.0`, wrapped-5etools fix `e718fad`) and held it on checks its sandbox
-could not run; Claude ran them on the merged candidate (backend 803 tests, 0 failed; clean `npm ci`, build and 235
-frontend tests with real content; CI on the release commit) and the owner accepted the bundled artwork as it is.
-Evidence: [V0_10_0_VERIFICATION.md](V0_10_0_VERIFICATION.md) (Codex's report, then Claude's addendum). Not rerun on
-this commit: browser journeys on a disposable install.
+**v0.11.0 (Starfall Mk2), released and live 2026-10-20** (tag `v0.11.0` on `aurora-server`; live `c69600b`;
+[release notes](../releases/v0.11.0.md), [Mk2 report](MK2_VERIFICATION_REPORT.md)). The final completion pass the
+same day found and fixed five more defects in pull requests #13–#18, waiting to be merged:
+[MK2_FINAL_COMPLETION_REPORT.md](MK2_FINAL_COMPLETION_REPORT.md). Before that: v0.10.0 public beta (2026-10-16,
+[V0_10_0_VERIFICATION.md](V0_10_0_VERIFICATION.md)).
 
 Development is closed; from here: bug fixes and live-play improvements, one small mission at a time
 (`docs/ai/DEVELOPMENT_DIRECTIVE.md`). Read this, then only the skill for the subject.
@@ -32,7 +31,8 @@ Development is closed; from here: bug fixes and live-play improvements, one smal
   images; web-only `starlights-deploy-web.sh`; full deploy for server changes). Nightly content job and encrypted
   off-site backups run from cron.
 - **Community kit** (`deploy/`): `setup.sh` (Linux, WSL2 via `setup.ps1`), `maintenance/{backup,verify,restore,update,
-  rollback}.sh`; docs `docs/installation.md`, `docs/maintenance.md`. Not used by the homelab. Windows untested.
+  rollback}.sh`; docs `docs/installation.md`, `docs/maintenance.md`. Not used by the homelab. Linux install, content
+  download, update from v0.10.0, backup/verify/restore/rollback verified on disposable installs (2026-10-20); Windows untested.
 
 ## Skills (`.claude/skills/`)
 architecture · database · deployment · dnd-rules · encounters · homebrew · campaign-ops (session notes, NPCs, places,

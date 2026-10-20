@@ -32,6 +32,8 @@ try {
    const spell=choices.find(c=>c.type==='Spell'&&!c.selected);
    assert.ok(spell,'Wizard spell choices');
    await page.goto(`${frontend}/characters/${id}`);
+   // the builder takes its save snapshot once the character is settled; an edit before that is never "unsaved"
+   for(let n=0;n<60&&!(await api(`/characters/${id}/builder/session`)).active;n++)await new Promise(r=>setTimeout(r,500));
    await page.getByRole('tab',{name:/^Magic/}).click();
    const picker=page.locator('section.spell-browser').first();await picker.getByRole('button',{name:'Choose spell',exact:true}).click();
    const learn=picker.getByRole('button',{name:'Learn',exact:true}).first();

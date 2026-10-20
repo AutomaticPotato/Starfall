@@ -1,40 +1,53 @@
 # Claude handoff
 
-Updated 2026-10-19 (session 18ccc2e7). Keep under ~80 lines; replace stale lines.
+Updated 2026-10-20 (session 0a6fe6db). Keep under ~80 lines; replace stale lines.
 
-## Task (done): Starfall Mk2 stabilization — released as v0.11.0 on 2026-10-19
-Owner's brief (15 phases); report: [MK2_VERIFICATION_REPORT.md](MK2_VERIFICATION_REPORT.md) (H = live results).
-Merged into `aurora-server` in this order: #9 F CI renamed to `ci.yml` + SQL Server service + docs, #4 A
-append-import transaction, #5 B skills missing on SQL Server + statistic proficiency, #10 G import sets abilities
-before equipment, #6 C empty Aurora attack ids, #7 D homepage art, #11 E ornaments + Compendium phone overflow,
-#12 this report. Rehearsed on a copy of the live database, deployed, admin `reprocess` run once on live.
-`aurora-server` takes changes only through pull requests with "Build & Test Solution" passing (rulesets
-25414439, 25415668; docs/ai/CI.md); CI runs on pushes and pull requests. Evidence: `~/.cache/starlights-test/mk2/`
-(LEDGER.md; release script and its log in `finish/`).
+## Task (done, waiting on the owner): Mk2 final completion
+Owner's brief "Final completion, verification & release readiness"; report:
+[MK2_FINAL_COMPLETION_REPORT.md](MK2_FINAL_COMPLETION_REPORT.md) (verdict PARTIALLY: fixes not merged yet; Windows
+unverified). Live is v0.11.0 = `c69600b`. Open pull requests, all based on `b409275`, green, none merged:
+#13 companion ERR log (owner-approved: `~/.cache/starlights-test/mk2/companion/go.sh` merges and deploys it; run it
+FIRST, its deploy compares characters strictly), #14 2014 Wizard multiclass slots, #15 a11y labels, #16 npm audit
+fix, #17 maintenance scripts' relative backup folder, #18 portability between independent servers, and the docs PR.
+All merge together without conflicts (merged-set suite in the report). After merging: one API + web deploy, no
+migration, no reprocess. Evidence: `~/.cache/starlights-test/mk2final/` (LEDGER.md).
 
 ## Earlier work
-Homebrew workshop + encounter difficulty (2026-10-15, 4752dfa), API compatibility / custom attacks (2026-10-16,
-ec3b83f), v0.10.0 (b4d3e6b): all merged and live; details in git history and [FINAL_HANDOFF.md](FINAL_HANDOFF.md).
+Mk2 stabilization, v0.11.0 (2026-10-20, [MK2_VERIFICATION_REPORT.md](MK2_VERIFICATION_REPORT.md)); homebrew workshop
++ encounter difficulty, API compatibility / custom attacks, v0.10.0: details in git history and
+[FINAL_HANDOFF.md](FINAL_HANDOFF.md).
 
 ## Not done / known limits
-- Custom-monster CR calculator (DMG "creating a monster" CR from HP/AC/damage): a separate feature, not built.
-- Homebrew classes: no Mystic Arcanum, no third-casters (Eldritch Knight style), no custom resource pools.
-- Simulator charge edits made while a builder tab is open aren't reconciled (pre-existing).
-- Open dependency notes: shadcn in runtime deps; NuGet: transitive System.Security.Cryptography.Pkcs 9.0.4.
-- Mk2 (report G): Lore content, campaign editing, multiclass and export/import not checked in a browser; the
-  pack's Slate ornaments are faint on the light Slate theme.
+- Windows (Docker Desktop, WSL2, `setup.ps1`) never run on real Windows.
+- Builder: an edit made in the first seconds after levelling, while the save snapshot waits for processing, is not
+  undone by Discard (kept, not lost).
+- Resistance order can differ from Aurora's; Slate's destructive chip contrast 4.42:1; Characters cards nest
+  their export/delete buttons in the card's control (axe `nested-interactive`).
+- 9 npm advisories left after #16, all in build tooling, each needing a shadcn CLI or `@tailwindcss/typography`
+  major. NuGet: transitive System.Security.Cryptography.Pkcs 9.0.4 note still open.
+- `--skip-content` install + manual `./admin.sh import` needs `/api/elements/initialize` first (the Content page /
+  content update does it). Custom-monster CR calculator, homebrew Mystic Arcanum/third-casters: not built.
+- Character files exported before #18 can't move between servers; export again after #18 is live.
 
 ## Coordination (shared files touched)
-- PR D: `pages/landing/Index.tsx` hero (artwork from `useTheme().resolvedTheme`, `public/branding/starfall/`).
-- PR E: `styles/ornament.css` (picture URLs per `data-theme`), `components/ornaments.tsx` (`CelestialDivider` one
-  element, new `PageCorners`), `App.tsx` (page corners in the App shell), `pages/compendium/Index.tsx` (`grid-cols-1`),
-  `public/ornaments/<theme>/`. No new theme system; Codex's theme provider untouched.
-- PR B: `lib/api/sheet.ts` (`withProficiencies`), `lib/rules/proficiencies.ts`; PR C: `lib/rules/items.ts`; PR G:
-  `lib/aurora-character-import.ts`.
+- #15: `pages/battle/battle-page.tsx` (`UsePips`: `role="img"`), `pages/compendium/Index.tsx` (two `aria-label`s).
+- Docs PR: `tools/frontend/custom-attacks.mjs` (builder route `/characters/:id`), `workflows.mjs` (waits for the
+  builder session before editing), `accessibility.mjs` (`FRONTEND_URL` override). Codex's other tools unchanged.
+- Earlier (Mk2): `pages/landing/Index.tsx` hero, `styles/ornament.css`, `components/ornaments.tsx`, `App.tsx`,
+  `lib/api/sheet.ts`, `lib/rules/proficiencies.ts`, `lib/rules/items.ts`, `lib/aurora-character-import.ts`.
+
+## How to verify things here (reusable)
+- Disposable install of a worktree: `~/.cache/starlights-test/mk2/e2e-setup.sh REPO DB API_PORT WEB_PORT`
+  (SQL container `starfall-mk2-sql`); real characters via `~/.cache/starlights-test/pw/mk2-e2e.mjs` (its
+  "errors 0" counts page errors only: read `import-report.txt` for per-file failures).
+- Community kit: `deploy/installer-tests/docker_smoke.py --run` (isolated project, random 127.0.0.1 port).
+  For `update.sh`, clone from GitHub and bind 127.0.0.1 with a local test commit (default port 8093 = live).
+- Lore data for a disposable web: run `lore-ingest/ingest.ts` with `--out` in a scratch folder, never
+  `~/homelab/config/starlights-lore`.
 
 ## Next
 Maintenance mode: bug fixes, one mission per branch, merged through pull requests once CI passes.
 
 ## Blockers
-None. The session's auto-mode classifier refuses merges and production deploys; the owner ran the prepared release
-script (`~/.cache/starlights-test/mk2/finish/finish.sh`).
+None in the code. The session's auto-mode classifier refuses merges and production deploys; the owner runs them
+(`go.sh` for #13, then the rest).
