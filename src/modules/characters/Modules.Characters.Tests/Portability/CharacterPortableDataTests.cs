@@ -2,6 +2,8 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using AwesomeAssertions;
 using Starlights.Modules.Characters.Services.Portability;
+using Starlights.Modules.Elements.Integration.Models;
+using Starlights.Modules.Elements.Integration.Models.Rules;
 
 namespace Starlights.Modules.Characters.Tests.Portability;
 
@@ -206,5 +208,83 @@ public class CharacterPortableDataTests
         restored.RemovedAttackIds.Should().Equal("deleted-aurora-attack");
 
         attack.Should().BeEquivalentTo(inventory.CustomAttacks[0] with { Id = map[attackId].ToString("D") });
+    }
+
+    // a built-in element as one server makes it: same name and rules on every server, ids of its own
+    private static ElementDataModel Strength(bool builtIn = true, string max = "20") => new()
+    {
+        Id = Guid.NewGuid(),
+        Name = "Strength",
+        Type = "Ability",
+        Source = "Internal",
+        BuiltIn = builtIn,
+        StatisticRules = [new StatisticRuleDataModel(Guid.NewGuid(), "strength:max", max, "base", 0)],
+    };
+
+    private static ElementDataModel AbilitiesRule() => new()
+    {
+        Id = Guid.NewGuid(),
+        Name = "Abilities",
+        Type = "Rule",
+        Source = "Internal",
+        BuiltIn = true,
+        IncludeRules = [new IncludeRuleDataModel(Guid.NewGuid(), Guid.NewGuid(), 0)],
+        SelectionRules = [new SelectionRuleDataModel(Guid.NewGuid(), "Ability Score Improvement", "Ability Score Improvement", 4)],
+    };
+
+    private static CharacterExportDependency Exported(ElementDataModel element) =>
+        new(element.Id, element.Name, element.Type, element.Source, false) { Rules = CharacterPortableData.RuleKeys(element) };
+
+    [TestMethod]
+    public void MatchBuiltIns_MapsAnotherServersBuiltInElementsAndTheirRules_ToThisServersOwn()
+    {
+        // two servers made Strength and the Abilities rule each with their own ids
+        var (theirStrength, theirRule) = (Strength(), AbilitiesRule());
+        var (ourStrength, ourRule) = (Strength(), AbilitiesRule());
+
+        var map = CharacterPortableData.MatchBuiltIns([Exported(theirStrength), Exported(theirRule)], [ourStrength, ourRule]);
+
+        map.Should().BeEquivalentTo(new Dictionary<Guid, Guid>
+        {
+            [theirStrength.Id] = ourStrength.Id,
+            [theirStrength.StatisticRules[0].RuleId] = ourStrength.StatisticRules[0].RuleId,
+            [theirRule.Id] = ourRule.Id,
+            [theirRule.IncludeRules[0].RuleId] = ourRule.IncludeRules[0].RuleId,
+            [theirRule.SelectionRules[0].RuleId] = ourRule.SelectionRules[0].RuleId,
+        });
+    }
+
+    [TestMethod]
+    public void MatchBuiltIns_LeavesOutWhatIsNotTheSame()
+    {
+        var theirs = Strength();
+
+        // a rule that says something else, two copies here, a book or homebrew element of that name, an old file
+        CharacterPortableData.MatchBuiltIns([Exported(theirs)], [Strength(max: "22")]).Should().BeEmpty();
+        CharacterPortableData.MatchBuiltIns([Exported(theirs)], [Strength(), Strength()]).Should().BeEmpty();
+        CharacterPortableData.MatchBuiltIns([Exported(theirs)], [Strength(builtIn: false)]).Should().BeEmpty();
+        CharacterPortableData.MatchBuiltIns([Exported(theirs) with { Rules = null }], [Strength()]).Should().BeEmpty();
+    }
+
+    [TestMethod]
+    public void AnImportFromAnotherServer_PointsItsBuiltInsAtThisServersOwn()
+    {
+        var (theirs, ours) = (Strength(), Strength());
+        var registration = Guid.Parse("bbbbbbbb-0000-0000-0000-000000000009");
+        var data = $$"""
+            { "character": { "name": "Ilyra" }, "registration": [ { "id": "{{U(registration)}}", "character_id": "{{U(SourceCharacter)}}", "associated_element_id": "{{U(theirs.Id)}}" } ],
+              "registration_statistic_rule": [ { "registration_id": "{{U(registration)}}", "associated_statistic_rule_id": "{{U(theirs.StatisticRules[0].RuleId)}}" } ] }
+            """;
+        var builtIns = CharacterPortableData.MatchBuiltIns([Exported(theirs)], [ours]);
+        var ids = CharacterPortableData.NewIds(data, builtIns.Keys, SourceCharacter, Guid.NewGuid());
+        foreach (var (from, to) in builtIns)
+        {
+            ids[from] = to;
+        }
+
+        var imported = CharacterPortableData.Remap(data, ids);
+
+        imported.Should().Contain(U(ours.Id)).And.Contain(U(ours.StatisticRules[0].RuleId));
+        imported.Should().NotContain(U(theirs.Id)).And.NotContain(U(theirs.StatisticRules[0].RuleId)).And.NotContain(U(registration));
     }
 }

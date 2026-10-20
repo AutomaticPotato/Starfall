@@ -5354,6 +5354,15 @@
           },
           "homebrew": {
             "type": "boolean"
+          },
+          "rules": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/CharacterExportRule"
+            }
           }
         }
       },
@@ -5460,6 +5469,22 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "CharacterExportRule": {
+        "required": [
+          "id",
+          "key"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "key": {
+            "type": "string"
           }
         }
       },
