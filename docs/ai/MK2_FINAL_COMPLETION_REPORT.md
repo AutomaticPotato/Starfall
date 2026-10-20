@@ -51,8 +51,8 @@ Finished in this mission (base `b409275`; each merges cleanly alone and all toge
 | Homepage art, theme switching | PASS | `homepage-branding.mjs` 17/17 (release build and #16 build) |
 | Ornaments, responsive | PASS | `ornaments.mjs` 65/65 (320–1440 px, 3 themes, switching without reload) |
 | Accessibility | PASS for checked aspects | `accessibility.mjs`; axe-core WCAG 2.1 A/AA: 2 findings fixed (#15), 2 left (Slate chip contrast 4.42, nested card controls) |
-| Installer (Linux) | PASS | `docker_smoke.py` (isolated project): install, repeat keeps credentials + data, recovery; a fresh `setup.sh` **with** content download (Aurora + 5etools from GitHub) in 1m40s, then 14 real characters imported |
-| Update / backup / rollback / restore | PASS | GitHub clone at v0.10.0 + real content + 14 characters → `update.sh` → reprocess heals the 8 v0.10.0 skill-less characters → `verify.sh --deep` → `rollback.sh` → `restore.sh` (byte-identical to before) → update again (byte-identical) |
+| Installer (Linux) | PASS | `docker_smoke.py` (isolated project): install, repeat keeps credentials + data, recovery; a fresh `setup.sh` **with** content download (Aurora + 5etools from GitHub) in 1m40s, then 14 real characters imported (from a clone with one test-only commit binding the site to 127.0.0.1, because the default port is live's) |
+| Update / backup / rollback / restore | PASS | GitHub clone at v0.10.0 (+ the same 127.0.0.1 test-only commit) + real content + 14 characters → `update.sh` → reprocess heals the 8 v0.10.0 skill-less characters → `verify.sh --deep` → `rollback.sh` → `restore.sh` (byte-identical to before) → update again (byte-identical) |
 | Windows | NOT VERIFIED | no Windows host |
 | Live | healthy | `c69600b`, 0 5xx, only the 12 companion ERR lines (#13) |
 
@@ -67,7 +67,7 @@ Finished in this mission (base `b409275`; each merges cleanly alone and all toge
 | ESLint | changed files clean; repository 38 errors + 1 warning (pre-existing, unchanged) |
 | Installer unit tests | 39/39 |
 | shellcheck (maintenance scripts) | 2 pre-existing notes, unchanged |
-| CI (pull_request) | #13–#17 green; #18 and this PR: see the PR pages |
+| CI (pull_request, "Build & Test Solution" incl. SQL Server) | #13–#18 green on their heads; this PR green before merging (required check) |
 
 ## 5. Remaining problems
 
@@ -94,10 +94,14 @@ Finished in this mission (base `b409275`; each merges cleanly alone and all toge
 - Production is untouched by this mission; live is `c69600b`.
 
 **Merge and deploy order** (owner's approval per step):
-1. `~/.cache/starlights-test/mk2/companion/go.sh` — merges #13 and deploys the API (already approved; its strict
-   before/after character comparison holds only while nothing else is merged first).
-2. #14 and #18 (API), #15 and #16 (web), #17 (community kit only), this docs PR — then one API + web deploy.
-   #14 changes the sheet's slots for 2014 Wizard multiclass characters only; nothing needs a reprocess.
+1. `bash ~/.cache/starlights-test/mk2/companion/go.sh` — merges #13 and deploys the API (already approved).
+2. `bash ~/.cache/starlights-test/mk2final/finish2.sh` (prepared, not run; needs the owner's approval): refuses unless
+   step 1 is live and nothing else changed; merges #14, #18, #15, #16, #17 and this PR only if each head is the
+   tested commit and CI passed; then a verified backup, rollback images for API and web, one API + web rebuild, and
+   a strict before/after comparison of every live character (`starlights-snapshot.py`: choices, statistics,
+   abilities, saves, skills), rolling back on any difference. #14 changes only the spellcasting slots of 2014
+   Wizard multiclass characters, which that comparison does not read, and the merged-set check showed everything
+   it does read unchanged. No migration, no reprocess.
 
 ## 7. Recommendation
 
