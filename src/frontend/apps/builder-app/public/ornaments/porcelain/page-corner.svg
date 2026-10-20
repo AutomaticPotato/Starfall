@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" fill="none"><defs>
+<linearGradient id="metal" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="256" y2="256"><stop offset="0" stop-color="#776349"/><stop offset=".32" stop-color="#967A5D"/><stop offset=".56" stop-color="#D7B98C"/><stop offset="1" stop-color="#967A5D"/></linearGradient>
+<linearGradient id="blue" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="256" y2="256"><stop offset="0" stop-color="#708A9E"/><stop offset=".58" stop-color="#597187"/><stop offset="1" stop-color="#776349"/></linearGradient>
+<radialGradient id="star"><stop offset="0" stop-color="#D7B98C" stop-opacity="1"/><stop offset=".38" stop-color="#F6E5C5" stop-opacity=".8"/><stop offset="1" stop-color="#708A9E" stop-opacity="0"/></radialGradient>
+</defs><path d="M13 241 L13 44 Q13 13 44 13 L245 13" stroke="url(#metal)" stroke-width="1.9" opacity=".9"/>
+    <path d="M20 222 L20 48 Q20 20 48 20 L228 20" stroke="url(#blue)" stroke-width=".85" opacity=".68"/>
+    <path d="M20 85 Q33 35 81 27 Q124 17 168 26" stroke="url(#metal)" stroke-width="1.4" opacity=".74"/>
+    <path d="M29 139 Q37 92 74 60 Q91 47 134 40" stroke="url(#metal)" stroke-width=".9" opacity=".63"/>
+    <path d="M13 42 L30 24 L42 13" stroke="url(#metal)" stroke-width="1.4"/>
+    <path d="M17 63 Q46 42 69 51 M41 99 Q54 76 80 75" stroke="url(#metal)" stroke-width="1.15" opacity=".62"/>
+    <g transform="translate(40,62) rotate(20) scale(0.8)">
+    <path d="M0 0 Q 10 -15 29 -14 Q 21 2 0 0 Z" fill="url(#blue)" opacity=".85" stroke="url(#metal)" stroke-width="1.05"/>
+    <path d="M1 -1 Q 14 -5 25 -12" stroke="url(#metal)" stroke-width=".85" opacity=".66"/>
+    </g><g transform="translate(68,49) rotate(-20) scale(0.76)">
+    <path d="M0 0 Q 10 -15 29 -14 Q 21 2 0 0 Z" fill="url(#blue)" opacity=".85" stroke="url(#metal)" stroke-width="1.05"/>
+    <path d="M1 -1 Q 14 -5 25 -12" stroke="url(#metal)" stroke-width=".85" opacity=".66"/>
+    </g><g transform="translate(51,95) rotate(54) scale(0.7)">
+    <path d="M0 0 Q 10 -15 29 -14 Q 21 2 0 0 Z" fill="url(#blue)" opacity=".85" stroke="url(#metal)" stroke-width="1.05"/>
+    <path d="M1 -1 Q 14 -5 25 -12" stroke="url(#metal)" stroke-width=".85" opacity=".66"/>
+    </g><g transform="translate(98,41) rotate(-3) scale(0.57)">
+    <path d="M0 0 Q 10 -15 29 -14 Q 21 2 0 0 Z" fill="url(#blue)" opacity=".85" stroke="url(#metal)" stroke-width="1.05"/>
+    <path d="M1 -1 Q 14 -5 25 -12" stroke="url(#metal)" stroke-width=".85" opacity=".66"/>
+    </g><circle cx="77" cy="37" r="4" fill="url(#metal)" opacity=".76"/><circle cx="76" cy="36" r="1" fill="url(#blue)"/><polygon points="170.00,21.00 170.85,25.15 175.00,26.00 170.85,26.85 170.00,31.00 169.15,26.85 165.00,26.00 169.15,25.15" fill="url(#metal)" opacity="1" /><path d="M 13 190 L 17.08 196 L 13 202 L 8.92 196 Z" stroke="url(#metal)" stroke-width="1.3" fill="none"/><path d="M 214 7 L 218.08 13 L 214 19 L 209.92 13 Z" stroke="url(#metal)" stroke-width="1.3" fill="none"/></svg>

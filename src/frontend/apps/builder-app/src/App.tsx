@@ -1,15 +1,19 @@
 import { Link, Outlet } from "react-router-dom";
 import { Header, LandingBackground3 } from "./pages/layouts/default-layout";
+import { PageCorners } from "@/components/ornaments";
 
 function App() {
   return (
     <>
       <Header />
-      <div className="container mx-auto px-4">
-        <LandingBackground3 />
-        <main className="mt-12">
-          <Outlet />
-        </main>
+      <div className="relative">
+        <PageCorners />
+        <div className="container mx-auto px-4">
+          <LandingBackground3 />
+          <main className="mt-12">
+            <Outlet />
+          </main>
+        </div>
       </div>
       <Credits />
     </>

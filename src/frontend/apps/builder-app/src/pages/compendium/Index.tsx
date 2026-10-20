@@ -107,7 +107,7 @@ export function CompendiumPage() {
       {error ? (
         <p className="text-destructive">Could not load the compendium: {error.message}</p>
       ) : (
-        <div className="grid gap-6 md:grid-cols-[minmax(0,20rem)_minmax(0,1fr)]">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-[minmax(0,20rem)_minmax(0,1fr)]">
           <div className={cn(selectedId && "hidden md:block")}>
             <p className="mb-2 text-xs text-muted-foreground">{filtered.length.toLocaleString()} results</p>
             {isLoading ? (
