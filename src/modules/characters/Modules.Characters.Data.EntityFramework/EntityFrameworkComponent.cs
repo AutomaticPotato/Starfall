@@ -28,6 +28,13 @@ internal class EntityFrameworkComponent : IPlatformServiceComponent, IPlatformAp
         {
             if (builder.Environment.IsIntegration())
             {
+                // a test that needs real SQL Server behaviour (transactions, rollback) names a database it prepared
+                if (builder.Configuration["Integration:SqlServer"] is { Length: > 0 } sqlServer)
+                {
+                    options.UseSqlServer(sqlServer);
+                    return;
+                }
+
                 string uniqueIdentifier = Guid.NewGuid().ToString("N");
                 Trace.WriteLine($"running inside an integration scenario, using in-memory db with unique name to avoid conflicts [uniqueIdentifier='{uniqueIdentifier}', context='{nameof(CharactersContext)}']");
                 options.UseInMemoryDatabase($"in-memory-integration-{uniqueIdentifier}");

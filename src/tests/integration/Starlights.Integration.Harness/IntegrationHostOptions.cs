@@ -47,4 +47,11 @@ public class IntegrationHostOptions
     /// Gets or sets the assemblies to scan for domain event handlers. By default, it includes the assembly containing the <see cref="IntegrationHost"/> class.
     /// </summary>
     public Assembly[] EventHandlerAssemblies { get; set; } = [typeof(IntegrationHost).Assembly];
+
+    /// <summary>
+    /// Extra application settings (configuration key and value), e.g. <c>Aurora:ContentPath</c> or
+    /// <c>Integration:SqlServer</c>, the connection string of a prepared SQL Server database to use instead of the
+    /// in-memory one.
+    /// </summary>
+    public Dictionary<string, string> Settings { get; } = [];
 }

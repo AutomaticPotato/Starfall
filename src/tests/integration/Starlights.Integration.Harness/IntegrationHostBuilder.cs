@@ -84,6 +84,10 @@ public class IntegrationHostBuilder
                 builder.UseSetting("Admin:Key", options.AdminKey);
                 builder.UseSetting("Admin:MasterPassword", options.MasterPassword);
                 builder.UseSetting("Players:TokenKey", options.PlayerTokenKey);
+                foreach (var (key, value) in options.Settings)
+                {
+                    builder.UseSetting(key, value);
+                }
 
                 // preserve the execution context to ensure that the test server can handle async operations correctly
                 builder.UseTestServer(testServerOptions => testServerOptions.PreserveExecutionContext = true);
