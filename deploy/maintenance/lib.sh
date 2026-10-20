@@ -20,9 +20,18 @@ USER_FOLDERS=(portraits homebrew art)
 # inside the database container; it is part of the data/mssql bind mount
 CONTAINER_BACKUP_DIR="/var/opt/mssql/backup"
 
+# where the script was run from: a folder named on its command line is relative to that, not to deploy/
+CALLER_DIR="$PWD"
 cd "$DEPLOY_DIR"
 
 say()  { printf '%s\n' "$*"; }
+# a folder named on the command line, as an absolute path: from where the script was run, else from deploy/ (so
+# "data/backups/<folder>" works from the deploy folder as the docs say, and from anywhere else too)
+user_dir() {
+  local dir="$1"
+  case "$dir" in /*) ;; *) [ -d "$CALLER_DIR/$dir" ] && dir="$CALLER_DIR/$dir" ;; esac
+  (cd "$dir" 2>/dev/null && pwd)
+}
 step() { printf '\n== %s\n' "$*"; }
 warn() { printf 'WARNING: %s\n' "$*" >&2; }
 die()  { printf '\nSTOPPED: %s\n' "$1" >&2; [ -n "${2:-}" ] && printf '%s\n' "$2" >&2; exit "${3:-1}"; }
