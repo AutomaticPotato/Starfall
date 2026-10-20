@@ -159,5 +159,25 @@ Server), a rehearsal on a copy of the live database and live before/after charac
 
 ## H. Live deployment
 
-<!-- LIVE-RESULTS -->
+Deployed 2026-10-20 08:12 EEST with the owner-run release script (`~/.cache/starlights-test/mk2/finish/finish.sh`,
+log `finish.log` beside it). Nobody was using the site (requests other than the health check, last 15 minutes).
+
+| Step | Result |
+| --- | --- |
+| Merges into `aurora-server` | #9 `091e740`, #4 `44b124c`, #5 `2d1b276`, #10 `e274f00`, #6 `1fac04e`, #7 `da8ede5`, #11 `c69600b` |
+| CI on the deployed commit `c69600b` | [run 39373071605](https://github.com/CHassapis/Starfall/actions/runs/39373071605): success (push event, with the SQL Server service) |
+| Backup before the rehearsal | `starlights-20261020-080603-pre-v0.11.0-rehearsal.bak`, `RESTORE VERIFYONLY` OK |
+| Rehearsal on a copy (`starlights_copy`, new build on port 8094) | before reprocess: the new build shows all 11 characters exactly as live does; reprocess: 11 characters: 11 unchanged, 0 got skills/saving throws back, 0 speed corrected only, 0 unexpected |
+| Backup before the deploy | `starlights-20261020-081217-pre-v0.11.0.bak`, `RESTORE VERIFYONLY` OK; rollback images `starlights-backend:rollback-8adf858`, `starlights-web:rollback-8adf858` |
+| Deploy (API + web; database container untouched, no migrations) | API reports `STARLIGHTS_COMMIT=c69600b`; characters identical before and after the image swap |
+| Live reprocess (`starlights-admin.sh reprocess`) | 11 characters: 11 unchanged, 0 got skills/saving throws back, 0 speed corrected only, 0 unexpected; every character ends exactly as in the rehearsal |
+| Live checks | home page 200, API 200, ornament `page-corner.svg` 200 (SVG), home art `starfall-midnight.webp` 200 (WebP), background art 200, API log lines at ERR/FTL since start: 12 |
+
+Changes made by the live reprocess, per character:
+
+- (no character changed)
+
+Rollback, if ever needed: `docker tag starlights-backend:rollback-8adf858 starlights-backend && docker tag
+starlights-web:rollback-8adf858 starlights-web && docker compose up -d --force-recreate starlights-api starlights-web`
+in `~/homelab/compose/starlights`; the reprocess itself is undone only by restoring `starlights-20261020-081217-pre-v0.11.0.bak`.
 
