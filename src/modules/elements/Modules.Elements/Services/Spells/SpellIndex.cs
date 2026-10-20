@@ -170,7 +170,8 @@ internal sealed class SpellIndex : ISpellIndex
             .OfType<string>()
             .ToList();
 
-        if (spellcasting is null && grants.Count == 0 && selects.Count == 0 && stats.Count == 0 && conditions.Count == 0)
+        // a class can carry the multiclass grant itself, not its spellcasting feature (the 2014 Wizard, the UA Artificer)
+        if (spellcasting is null && multiclass is null && grants.Count == 0 && selects.Count == 0 && stats.Count == 0 && conditions.Count == 0)
         {
             return null;
         }

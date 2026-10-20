@@ -92,4 +92,23 @@ public class SpellFilteringTests
         magic.Conditions.Should().Equal("ID_INTERNAL_CONDITION_DAMAGE_RESISTANCE_NECROTIC");
         SpellIndex.ReadMagic(id, """<element name="Longsword" type="Item"><rules><stat name="ac" value="1"/></rules></element>""").Should().BeNull();
     }
+
+    [TestMethod]
+    public void AClassWithOnlyTheMulticlassGrant_IsKept()
+    {
+        // Aurora's 2014 Wizard: the grant is on the class element, which has no spellcasting of its own
+        var magic = SpellIndex.ReadMagic(Guid.NewGuid(), """
+            <element name="Wizard" type="Class" source="Player’s Handbook" id="ID_WOTC_PHB_CLASS_WIZARD">
+              <rules>
+                <grant type="Grants" id="ID_INTERNAL_GRANT_MULTICLASS_SPELLCASTING_SLOTS_FULL" requirements="ID_INTERNAL_GRANT_MULTICLASS"/>
+                <grant type="Class Feature" id="ID_WOTC_PHB_CLASS_FEATURE_WIZARD_SPELLCASTING_WIZARD" level="1" />
+              </rules>
+            </element>
+            """);
+
+        magic.Should().NotBeNull();
+        magic!.Multiclass.Should().Be(MulticlassSlots.Full);
+        magic.Spellcasting.Should().BeNull();
+        magic.Grants.Should().BeEmpty();
+    }
 }

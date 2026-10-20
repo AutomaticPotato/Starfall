@@ -199,6 +199,39 @@ public class SpellcastingFactsTests
     }
 
     [TestMethod]
+    public void A2014Wizard_TakesTheMulticlassGrantFromItsClass()
+    {
+        // Aurora's 2014 Wizard grants FULL on the class element, not on its spellcasting feature; without it a Wizard 3 /
+        // Cleric 1 had each class's own slots added up (6 first-level, 2 second-level) instead of the multiclass table
+        var b = new Build();
+        var wizard = b.Add("Class", "Wizard", null, new ElementMagic(Guid.NewGuid(), "Wizard", "Player's Handbook", null, MulticlassSlots.Full, [], [], []));
+        b.Classes.Add(new MagicClass(wizard, "Wizard", 3));
+        b.Add("Class Feature", "Spellcasting", wizard, Casting("Wizard", prepare: true, source: "Player's Handbook"));
+        var cleric = b.Add("Class", "Cleric", null);
+        b.Classes.Add(new MagicClass(cleric, "Cleric", 1));
+        b.Add("Class Feature", "Spellcasting", cleric, Casting("Cleric", prepare: true, wholeList: true, multiclass: MulticlassSlots.Full, source: "Player's Handbook"));
+        b.Statistics["wizard:spellcasting:slots:1"] = 4;
+        b.Statistics["wizard:spellcasting:slots:2"] = 2;
+        b.Statistics["cleric:spellcasting:slots:1"] = 2;
+
+        var casters = b.Facts().Casters;
+
+        casters.Select(c => (c.Name, c.Multiclass, c.Edition)).Should().Equal(("Wizard", "Full", "2014"), ("Cleric", "Full", "2014"));
+        casters[0].Slots.Should().BeEquivalentTo(new Dictionary<int, int> { [1] = 4, [2] = 2 });
+    }
+
+    [TestMethod]
+    public void TheSpellcastingFeaturesOwnGrant_WinsOverTheClasses()
+    {
+        var b = new Build();
+        var klass = b.Add("Class", "Ranger", null, new ElementMagic(Guid.NewGuid(), "Ranger", null, null, MulticlassSlots.Full, [], [], []));
+        b.Classes.Add(new MagicClass(klass, "Ranger", 2));
+        b.Add("Class Feature", "Spellcasting", klass, Casting("Ranger", multiclass: MulticlassSlots.Half));
+
+        b.Facts().Casters.Single().Multiclass.Should().Be("Half");
+    }
+
+    [TestMethod]
     public void AFeatTakenAtAClassLevel_IsNotTheClassesSpell()
     {
         var b = new Build();
