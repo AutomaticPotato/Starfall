@@ -5,13 +5,15 @@ readiness" brief. Baseline: `aurora-server` **b409275** (v0.11.0 = live **c69600
 evidence: [MK2_VERIFICATION_REPORT.md](MK2_VERIFICATION_REPORT.md). Commands and raw results for everything below:
 `~/.cache/starlights-test/mk2final/LEDGER.md` on the homelab (scripts beside it and in `~/.cache/starlights-test/pw/`).
 
-## 1. Verdict: **PARTIALLY — NOT FULLY VERIFIED**
+## 1. Verdict: **DONE FOR LINUX — WINDOWS UNTESTED** (updated 2026-10-20 after the deploy, see §8)
 
 v0.11.0 works for regular live play: every area was exercised on disposable installs with the owner's real Aurora
 characters, and no release-blocking defect was found in what is live. This mission found and fixed **five real
-defects** (pull requests #13–#18, all with green CI, none merged); until they are merged and deployed, the released
-code still has them. Windows (Docker Desktop/WSL2, the PowerShell launcher) cannot be verified here. Hence
-"partially", not "yes".
+defects** (pull requests #13–#18, all with green CI). The owner merged them with this report and deployed them the
+same day: live is **`24fd60b`** (§8). Windows (Docker Desktop/WSL2, the PowerShell launcher) cannot be verified
+here, so that path stays "untested".
+
+When this report was written the fixes were not merged yet, and the verdict was "partially — not fully verified".
 
 ## 2. Work
 
@@ -22,7 +24,7 @@ Finished in this mission (base `b409275`; each merges cleanly alone and all toge
 
 | PR | Branch | What | Severity | Deploy |
 | --- | --- | --- | --- | --- |
-| [#13](https://github.com/CHassapis/Starfall/pull/13) | `fix/companion-proficiency-log` | familiars' `companion:proficiency` no longer logged as an error (12 ERR lines on live) | low (logs) | API; **owner-approved, `go.sh` ready** |
+| [#13](https://github.com/CHassapis/Starfall/pull/13) | `fix/companion-proficiency-log` | familiars' `companion:proficiency` no longer logged as an error (12 ERR lines on live) | low (logs) | API; merged + live (§8) |
 | [#14](https://github.com/CHassapis/Starfall/pull/14) | `fix/multiclass-spellcasting-grant` | 2014 Wizard multiclassed with another caster got each class's slots added (W3/C1: 6+2) instead of the multiclass table (4/3) | medium (wrong sheet/PDF/Magic tab) | API |
 | [#15](https://github.com/CHassapis/Starfall/pull/15) | `fix/a11y-compendium-battle-labels` | axe: Compendium filters had no accessible name (critical), battle use-pips aria misuse (serious) | low | web |
 | [#16](https://github.com/CHassapis/Starfall/pull/16) | `deps/npm-audit-fix` | Dependabot 59 → 9 alerts (0 critical); only runtime change react-router 7.18.1 → 7.18.4 | low (tooling) | web |
@@ -54,7 +56,7 @@ Finished in this mission (base `b409275`; each merges cleanly alone and all toge
 | Installer (Linux) | PASS | `docker_smoke.py` (isolated project): install, repeat keeps credentials + data, recovery; a fresh `setup.sh` **with** content download (Aurora + 5etools from GitHub) in 1m40s, then 14 real characters imported (from a clone with one test-only commit binding the site to 127.0.0.1, because the default port is live's) |
 | Update / backup / rollback / restore | PASS | GitHub clone at v0.10.0 (+ the same 127.0.0.1 test-only commit) + real content + 14 characters → `update.sh` → reprocess heals the 8 v0.10.0 skill-less characters → `verify.sh --deep` → `rollback.sh` → `restore.sh` (byte-identical to before) → update again (byte-identical) |
 | Windows | NOT VERIFIED | no Windows host |
-| Live | healthy | `c69600b`, 0 5xx, only the 12 companion ERR lines (#13) |
+| Live (before the deploy) | healthy | `c69600b`, 0 5xx, only the 12 companion ERR lines (#13); after it see §8 |
 
 ## 4. Tests
 
@@ -73,7 +75,7 @@ Finished in this mission (base `b409275`; each merges cleanly alone and all toge
 
 | Problem | Severity | Blocks release? |
 | --- | --- | --- |
-| #13–#18 not merged/deployed | the defects above stay live until then | yes, for "done" |
+| ~~#13–#18 not merged/deployed~~ | resolved: merged and live `24fd60b` (§8) | — |
 | Windows install path unverified | unknown | no (documented as untested) |
 | Builder: an edit in the first seconds after levelling (while the save snapshot waits for processing) is not undone by Discard | low | no |
 | Resistance order can differ from Aurora's ("Radiant, Necrotic") | cosmetic | no |
@@ -91,11 +93,11 @@ Finished in this mission (base `b409275`; each merges cleanly alone and all toge
   the merged code reads every character byte-identically to the released code (skills, saves, registrations,
   statistics, inventory); the only change is #14's: the four 2014 Wizard/Cleric characters' Wizard spellcasting
   now counts as a full caster (slots 4/3). API error lines on the merged code: 0.
-- Production is untouched by this mission; live is `c69600b`.
+- Production was untouched while verifying (live `c69600b`); the owner then merged and deployed the set (§8).
 
-**Merge and deploy order** (owner's approval per step):
+**Merge and deploy order** (both steps run by the owner on 2026-10-20, results in §8):
 1. `bash ~/.cache/starlights-test/mk2/companion/go.sh` — merges #13 and deploys the API (already approved).
-2. `bash ~/.cache/starlights-test/mk2final/finish2.sh` (prepared, not run; needs the owner's approval): refuses unless
+2. `bash ~/.cache/starlights-test/mk2final/finish2.sh`: refuses unless
    step 1 is live and nothing else changed; merges #14, #18, #15, #16, #17 and this PR only if each head is the
    tested commit and CI passed; then a verified backup, rollback images for API and web, one API + web rebuild, and
    a strict before/after comparison of every live character (`starlights-snapshot.py`: choices, statistics,
@@ -105,5 +107,27 @@ Finished in this mission (base `b409275`; each merges cleanly alone and all toge
 
 ## 7. Recommendation
 
-Not finished yet, but close: merge #13 first (`go.sh`), then #14–#18 and this PR, deploy API + web once, and
-Starfall Mk2 is done for Linux. Windows stays "untested" until someone runs `setup.ps1` on a real Windows machine.
+Starfall Mk2 is done for Linux: #13–#18 and this report are merged and live (`24fd60b`). Windows stays "untested"
+until someone runs `setup.ps1` on a real Windows machine. The five fixes are live but not in a release yet (the tag
+`v0.11.0` = `b409275`); a v0.11.1 tag and release need the owner's go-ahead.
+
+## 8. Live results (2026-10-20, after the merge)
+
+Both steps of §6 were run by the owner; the logs are `~/.cache/starlights-test/mk2final/finish2.log` and the
+before/after snapshots beside it and in `~/.cache/starlights-test/mk2/companion/`.
+
+| Step | Result |
+| --- | --- |
+| `go.sh` (12:31) | #13 merged (`0dea987`), API rebuilt; rollback image `starlights-backend:rollback-c69600b`; every character identical before/after |
+| `finish2.sh` merges (12:33) | #14, #18, #15, #16, #17, #19 merged at their tested heads; `aurora-server` = `24fd60b` |
+| Quiet-site gate | players on the site: waited 25 minutes, then continued |
+| Backup (12:58) | `starlights-20261020-125832-pre-24fd60b.bak`, `RESTORE VERIFYONLY` valid; rollback images `starlights-{backend,web}:rollback-0dea987` |
+| Deploy (12:59) | API + web rebuilt from `24fd60b`, no migration, no reprocess; API reports `24fd60b` |
+| Characters | all 11 live characters identical before/after (`starlights-snapshot.py`: choices, statistics, abilities, saves, skills) |
+| Pages | home, API, Compendium 200; API ERR/FTL lines 0 right after the deploy and still 0 at 20:17 |
+| #14 on live | no live character is a multiclass caster, so it changes nothing there today (read-only check of every character's spellcasting at 20:17; single-class Wizard 6 shows 4/3/3, the correct table). The fix itself is proven on the test copy (§6), not on live |
+| CI on `aurora-server` | the push run for `005be01` (all code: #13–#18) passed; the run for `24fd60b` (adds this report and 3 browser-tool scripts) was cancelled by the workflow's concurrency setting. The pull request that adds this section runs CI on top of `24fd60b` |
+
+Rollback, if ever needed: `docker tag starlights-backend:rollback-0dea987 starlights-backend && docker tag
+starlights-web:rollback-0dea987 starlights-web`, then `docker compose up -d --force-recreate starlights-api
+starlights-web` in `~/homelab/compose/starlights`; the database needs nothing (no migration).

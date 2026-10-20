@@ -1,8 +1,8 @@
 # Starfall — final handoff (maintenance mode)
 
-**v0.11.0 (Starfall Mk2), released and live 2026-10-20** (tag `v0.11.0` on `aurora-server`; live `c69600b`;
+**v0.11.0 (Starfall Mk2), released 2026-10-20** (tag `v0.11.0` on `aurora-server`;
 [release notes](../releases/v0.11.0.md), [Mk2 report](MK2_VERIFICATION_REPORT.md)). The final completion pass the
-same day found and fixed five more defects in pull requests #13–#18, waiting to be merged:
+same day found and fixed five more defects (#13–#18); merged and live as `24fd60b`, not in a release yet:
 [MK2_FINAL_COMPLETION_REPORT.md](MK2_FINAL_COMPLETION_REPORT.md). Before that: v0.10.0 public beta (2026-10-16,
 [V0_10_0_VERIFICATION.md](V0_10_0_VERIFICATION.md)).
 
