@@ -145,8 +145,13 @@ public static partial class SpellcastingFacts
                     slots[level] = n;
                 }
             }
+            // how its levels count for multiclass slots: on the spellcasting feature, or else on the class it hangs under
+            // (Aurora's 2014 Wizard has the grant on the class element)
+            var multiclass = element.Multiclass
+                ?? Ancestors(registration).Select(a => magic.GetValueOrDefault(a.ElementId)?.Multiclass).FirstOrDefault(m => m is not null);
+
             PactSlots? pact = null;
-            if ((element.Multiclass == MulticlassSlots.Solo || character.Statistic($"{slug}:spellcasting:slot") is not null) && slots.Count > 0)
+            if ((multiclass == MulticlassSlots.Solo || character.Statistic($"{slug}:spellcasting:slot") is not null) && slots.Count > 0)
             {
                 var top = slots.Keys.Max();
                 pact = new PactSlots(top, slots[top]);
@@ -173,7 +178,7 @@ public static partial class SpellcastingFacts
                 Lists = lists,
                 ClassName = owningClass?.Name,
                 ClassLevel = classLevel,
-                Multiclass = element.Multiclass?.ToString(),
+                Multiclass = multiclass?.ToString(),
                 Edition = element.Source?.Contains("2024", StringComparison.Ordinal) == true ? "2024" : "2014",
                 Slots = slots,
                 Pact = pact,
