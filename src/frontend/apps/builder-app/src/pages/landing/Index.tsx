@@ -1,9 +1,9 @@
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
+import { BookOpenIcon, ChevronRightIcon, SwordsIcon, UsersIcon } from "lucide-react";
 import { HourlyBackdrop } from "@/components/hourly-backdrop";
 import { BATTLE_BACKGROUND, HOMEBREW_TILE, LORE_BACKGROUND } from "@/lib/art";
-import { CelestialDivider, OrnamentalFrame } from "@/components/ornaments";
-import { useTheme } from "@/components/theme-provider";
+import { OrnamentalCorner } from "@/components/ornaments";
 
 function LandingTile({
   title,
@@ -28,10 +28,10 @@ function LandingTile({
   const isLarge = size === "lg";
 
   return (
-    <>
+    <div className="relative h-full">
       <Link
         to={url}
-        className={`ornament-hover block h-full relative overflow-hidden rounded-xl group border border-[var(--ornament-faint)] bg-[#101827] shadow-sm ${enabled ? "" : "pointer-events-none"} `}
+        className={`ornament-hover block h-full relative overflow-hidden rounded-[0.7rem] group border border-[var(--ornament-line)] bg-[#101827] shadow-sm ${enabled ? "" : "pointer-events-none"} `}
       >
         {image ? (
           <img
@@ -46,7 +46,7 @@ function LandingTile({
           <div className="absolute inset-0 bg-linear-to-br from-muted to-background" />
         )}
 
-        <div className="absolute inset-0 bg-linear-to-tr from-black/80 group-hover:from-black/70 to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-t from-black/85 via-black/35 via-45% group-hover:from-black/75 to-transparent" />
         {/* 
         <div className="absolute rounded-lg rotate-160 w-20 h-20 -top-7 -right-5 bg-accent shadow-2xl"></div>
         <SwordsIcon className="absolute  top-1 right-4 size-6 rotate-0 opacity-20 mt-2.5 ms-2.5" /> */}
@@ -58,16 +58,17 @@ function LandingTile({
         >
           {isLarge ? (
             <>
-              <h3 className="text-lg! sm:text-3xl! text-white mb-0">{title}</h3>
-              <p className="text-sm sm:text-base">{description}</p>
+              <h3 className="text-lg! sm:text-2xl! lg:text-[1.7rem]! uppercase tracking-wide text-white mb-0">{title}</h3>
+              <p className="text-sm sm:text-base text-white/85 mb-0 max-w-xl pe-8">{description}</p>
             </>
           ) : (
             <>
-              <h3 className="text-base sm:text-xl! text-white mb-0 mt-1">{title}</h3>
-              <p className="text-xs sm:text-sm">{description}</p>
+              <h3 className="text-sm sm:text-base! lg:text-lg! uppercase tracking-wide text-white mb-0 mt-1 leading-tight">{title}</h3>
+              <p className="text-xs sm:text-sm text-white/85 mb-0 pe-6">{description}</p>
             </>
           )}
         </div>
+        <ChevronRightIcon aria-hidden className={`absolute text-white/80 transition-transform group-hover:translate-x-0.5 ${isLarge ? "right-3 bottom-3 size-6 sm:right-6 sm:bottom-7" : "right-2 bottom-2 size-5 sm:right-3 sm:bottom-3"}`} />
         <div className={` absolute ${isLarge ? "left-2 right-2 top-2 sm:left-8 sm:right-8 sm:top-8" : "left-2 top-2 sm:left-4 sm:right-4 sm:top-4"}  `}>
           {tag === undefined ? null : (
             <>
@@ -78,7 +79,10 @@ function LandingTile({
           )}
         </div>
       </Link>
-    </>
+      {/* one subtle accent per tile: the feature tile also gets the opposite corner */}
+      <OrnamentalCorner corner="tl" />
+      {isLarge && <OrnamentalCorner corner="br" />}
+    </div>
   );
 }
 
@@ -116,60 +120,57 @@ const tiles = [
   },
 ];
 
+const SUPPORT = [
+  { title: "Characters", icon: UsersIcon, text: "Every Aurora book and Aurora Legacy's newest content; the sheet prints exactly like Aurora's." },
+  { title: "At the table", icon: SwordsIcon, text: "Campaigns with a locked DM side, player notes, and the Battle Action Simulator for each turn." },
+  { title: "Reference", icon: BookOpenIcon, text: "The Compendium of Lore with every rule, monster and book, linked from wherever you are." },
+];
+
 export function LandingPage2() {
-  // the Starfall artwork drawn for the theme in use (512 × 870, shown whole: never cropped or stretched)
-  const { resolvedTheme } = useTheme();
   return (
-    <>
+    <div className="landing-page pb-4 [--ornament-corner-size:3.25rem]">
       <HourlyBackdrop />
-      <header className="mb-8 grid items-center gap-6 sm:grid-cols-[minmax(0,14rem)_1fr]">
-        <h1 data-ornament="restrained" className="mx-auto w-full max-w-[12rem] overflow-hidden rounded-2xl bg-muted shadow-sm sm:max-w-none">
-          <img src={`/branding/starfall/starfall-${resolvedTheme}.webp`} alt="Starfall" width={512} height={870} fetchPriority="high" className="block h-auto w-full" />
+      {/* the brand block (the supplied D20 emblem over the live wordmark) beside the introduction */}
+      <header className="mb-6 grid items-center gap-5 sm:grid-cols-[15rem_1fr] sm:gap-8 lg:mb-7">
+        <h1 className="starfall-brand mx-auto w-full max-w-[15rem]">
+          <span aria-hidden className="starfall-emblem" />
+          <span className="starfall-wordmark">Starfall</span>
         </h1>
-        <div className="max-w-xl">
-          <p className="text-sm font-semibold uppercase tracking-widest text-primary-text">Your table's companion</p>
-          <p className="mt-3 text-lg text-muted-foreground">Build characters, run campaigns, look anything up and play out every turn of a fight, all in one place.</p>
+        <div className="max-w-2xl text-center sm:text-left">
+          <p className="fantasy-eyebrow justify-center sm:justify-start" data-rule>Your table's companion</p>
+          <p className="mt-3 text-base text-muted-foreground sm:text-lg">Build characters, run campaigns, look anything up and play out every turn of a fight, all in one place.</p>
         </div>
       </header>
 
-      <OrnamentalFrame level="decorative" className="p-3 sm:p-4">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-5 sm:grid-rows-2 sm:h-[34rem]">
-        <div className="h-72 sm:col-span-3 sm:row-span-2 sm:h-auto">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:grid-rows-2 lg:h-[31rem]">
+        <div className="h-72 sm:col-span-2 lg:row-span-2 lg:h-auto">
           <LandingTile {...tiles[0]} />
         </div>
-        <div className="grid grid-cols-1 gap-4 sm:col-span-2 sm:grid-cols-2">
-          <div className="h-44 sm:h-auto">
-            <LandingTile {...tiles[1]} size="sm" />
-          </div>
-          <div className="h-44 sm:h-auto">
-            <LandingTile {...tiles[4]} size="sm" />
-          </div>
+        <div className="h-44 lg:h-auto">
+          <LandingTile {...tiles[1]} size="sm" />
         </div>
-        <div className="grid grid-cols-1 gap-4 sm:col-span-2 sm:grid-cols-2">
-          <div className="h-44 sm:h-auto">
-            <LandingTile {...tiles[2]} size="sm" />
-          </div>
-          <div className="h-44 sm:h-auto">
-            <LandingTile {...tiles[3]} size="sm" />
-          </div>
+        <div className="h-44 lg:h-auto">
+          <LandingTile {...tiles[4]} size="sm" />
+        </div>
+        <div className="h-44 lg:h-auto">
+          <LandingTile {...tiles[2]} size="sm" />
+        </div>
+        <div className="h-44 lg:h-auto">
+          <LandingTile {...tiles[3]} size="sm" />
         </div>
       </div>
-      </OrnamentalFrame>
 
-      <CelestialDivider className="mt-12" />
-
-      <section className="mt-8 mb-12 grid gap-6 sm:grid-cols-3">
-        {[
-          ["Characters", "Every Aurora book and Aurora Legacy's newest content; the sheet prints exactly like Aurora's."],
-          ["At the table", "Campaigns with a locked DM side, player notes, and the Battle Action Simulator for each turn."],
-          ["Reference", "The Compendium of Lore with every rule, monster and book, linked from wherever you are."],
-        ].map(([title, text]) => (
-          <div key={title} data-ornament="restrained" className="rounded-xl border border-[var(--ornament-faint)] bg-background/60 p-4 backdrop-blur-sm">
-            <h2 className="font-heading text-lg tracking-wide">{title}</h2>
-            <p className="mt-1 text-sm text-muted-foreground">{text}</p>
+      <section aria-label="What Starfall does" className="mt-4 grid gap-4 sm:grid-cols-3">
+        {SUPPORT.map(({ title, icon: Icon, text }) => (
+          <div key={title} className="flex items-start gap-3 rounded-[0.7rem] border border-[var(--ornament-faint)] bg-card/50 px-4 py-4 lg:gap-4 lg:px-5">
+            <Icon aria-hidden strokeWidth={1.4} className="mt-0.5 size-7 shrink-0 text-[var(--ornament)] lg:size-9" />
+            <div>
+              <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-foreground">{title}</h2>
+              <p className="mt-1.5 text-sm text-muted-foreground">{text}</p>
+            </div>
           </div>
         ))}
       </section>
-    </>
+    </div>
   );
 }

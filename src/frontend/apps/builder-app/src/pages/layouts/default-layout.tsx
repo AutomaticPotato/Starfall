@@ -108,10 +108,9 @@ export function MainNavigation() {
       <nav className="flex items-center justify-between h-16 ">
         <div className="flex min-w-0 items-center justify-start gap-2 ">
           {/* the home button never gives up its room: the links shrink to icons first */}
-          <Link to="/" aria-label="Project Starfall home" className="flex shrink-0 items-center gap-2 font-heading relative">
+          <Link to="/" aria-label="Starfall home" className="flex shrink-0 items-center gap-2.5 font-heading relative">
             <img src="/branding/starlights-emblem.webp" alt="" width={44} height={44} className="size-11 shrink-0 rounded-lg border border-[color-mix(in_srgb,var(--ornament)_45%,var(--border))]" />
-            <span className="hidden 2xl:inline tracking-widest mt-0.5">Project Starfall</span>
-            <span className="hidden xl:inline 2xl:hidden tracking-widest mt-0.5">Starfall</span>
+            <span className="hidden xl:inline text-sm font-semibold uppercase tracking-[0.22em] mt-0.5">Starfall</span>
           </Link>
 
           <MainLinks className="ms-2 hidden lg:flex" />
@@ -222,7 +221,7 @@ function PlayerChip() {
 export function Header() {
   return (
     <div className="app-header sticky top-0 bg-background/80 backdrop-blur-md z-20 border-b print:hidden">
-      <header className="container mx-auto px-4 ">
+      <header className="px-4 md:px-6 xl:px-10">
         <MainNavigation />
       </header>
     </div>

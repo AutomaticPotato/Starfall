@@ -1,9 +1,13 @@
 export type Theme = "porcelain" | "slate" | "midnight" | "system";
 export const THEMES = [
-  { id: "porcelain", name: "Porcelain", description: "Warm white, charcoal and indigo", colors: ["#faf9f6", "#ffffff", "#4338ca"] },
-  { id: "slate", name: "Slate", description: "Cool grey, ink and blue", colors: ["#e8edf3", "#f8fafc", "#1d4ed8"] },
-  { id: "midnight", name: "Midnight", description: "Deep navy and soft silver", colors: ["#101827", "#192438", "#a5b4fc"] },
+  { id: "porcelain", name: "Porcelain", description: "Warm ivory, bronze and slate blue", colors: ["#f4f0e8", "#fffdf9", "#33508a"] },
+  { id: "slate", name: "Slate", description: "Slate blue, charcoal and silver", colors: ["#2d3e51", "#273749", "#b3c9e6"] },
+  { id: "midnight", name: "Midnight", description: "Deep navy and champagne gold", colors: ["#0c1628", "#121e33", "#c4a564"] },
 ] as const;
+/** Midnight and Slate are dark themes: they get the `dark` class (Tailwind's dark: styles) and a dark color scheme. */
+export function isDarkTheme(theme: string) {
+  return theme === "midnight" || theme === "slate";
+}
 export function normalizeTheme(value: string | null, fallback: Theme): Theme {
   if (value === "dark") return "midnight";
   if (value === "light") return "porcelain";

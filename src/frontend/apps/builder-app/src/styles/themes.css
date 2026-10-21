@@ -1,26 +1,28 @@
 /* One semantic palette shared by builder, sheet and simulator. */
 :root, :root[data-theme="porcelain"] {
-  --background: #faf9f6; --foreground: #242830; --card: #ffffff; --card-foreground: #242830;
-  --popover: #ffffff; --popover-foreground: #242830; --primary: #4338ca; --primary-foreground: #ffffff;
-  --primary-text: #4338ca; --secondary: #e9e7f4; --secondary-foreground: #302c66;
-  --muted: #eeede9; --muted-foreground: #555b65; --accent: #e9e7f4; --accent-foreground: #302c66;
-  --border: #d4d3d0; --input: #858995; --ring: #4338ca; --destructive: #b42332; --destructive-foreground: #ffffff;
+  --background: #f4f0e8; --foreground: #242830; --card: #fffdf9; --card-foreground: #242830;
+  --popover: #fffdf9; --popover-foreground: #242830; --primary: #33508a; --primary-foreground: #ffffff;
+  --primary-text: #2f4d86; --secondary: #e8e4f0; --secondary-foreground: #2c3560;
+  --muted: #ece6db; --muted-foreground: #545a64; --accent: #e9e4d9; --accent-foreground: #2c3560;
+  --border: #d8cfc0; --input: #858995; --ring: #33508a; --destructive: #b42332; --destructive-foreground: #ffffff;
   --success: #17643b; --warning: #805000; --info: #185e91;
   --font-heading: var(--font-sans); --font-overpass: var(--font-sans);
 }
+/* Slate: slate blue and charcoal with silver-blue accents (a dark theme, like the Starfall mockups) */
 :root[data-theme="slate"] {
-  --background: #e8edf3; --foreground: #1e293b; --card: #f8fafc; --card-foreground: #1e293b;
-  --popover: #f8fafc; --popover-foreground: #1e293b; --primary: #1d4ed8; --primary-foreground: #ffffff;
-  --primary-text: #1d4ed8; --secondary: #dce5f2; --secondary-foreground: #233d67;
-  --muted: #dce3ec; --muted-foreground: #475569; --accent: #dce5f2; --accent-foreground: #233d67;
-  --border: #b9c5d4; --input: #78879d; --ring: #1d4ed8; --destructive: #b42332; --destructive-foreground: #ffffff;
+  --background: #2d3e51; --foreground: #eaf0f6; --card: #273749; --card-foreground: #eaf0f6;
+  --popover: #273749; --popover-foreground: #eaf0f6; --primary: #b3c9e6; --primary-foreground: #1b2838;
+  --primary-text: #bcd2ee; --secondary: #3a4e66; --secondary-foreground: #eaf0f6;
+  --muted: #34475d; --muted-foreground: #bac6d3; --accent: #3a4e66; --accent-foreground: #eaf0f6;
+  --border: #4c6078; --input: #8091a6; --ring: #b3c9e6; --destructive: #ffa3ac; --destructive-foreground: #1b2838;
+  --success: #8fe0b2; --warning: #f5ce85; --info: #95cefa;
 }
 :root[data-theme="midnight"] {
-  --background: #101827; --foreground: #edf2fa; --card: #192438; --card-foreground: #edf2fa;
-  --popover: #192438; --popover-foreground: #edf2fa; --primary: #a5b4fc; --primary-foreground: #16203b;
-  --primary-text: #b8c5ff; --secondary: #2d3c57; --secondary-foreground: #edf2fa;
-  --muted: #253248; --muted-foreground: #b4c1d5; --accent: #2d3c57; --accent-foreground: #edf2fa;
-  --border: #3e4d65; --input: #74839b; --ring: #a5b4fc; --destructive: #ff9ba5; --destructive-foreground: #16203b;
+  --background: #0c1628; --foreground: #edf2fa; --card: #121e33; --card-foreground: #edf2fa;
+  --popover: #121e33; --popover-foreground: #edf2fa; --primary: #a5b4fc; --primary-foreground: #16203b;
+  --primary-text: #b8c5ff; --secondary: #26354f; --secondary-foreground: #edf2fa;
+  --muted: #1d2a41; --muted-foreground: #b4c1d5; --accent: #26354f; --accent-foreground: #edf2fa;
+  --border: #36455e; --input: #74839b; --ring: #a5b4fc; --destructive: #ff9ba5; --destructive-foreground: #16203b;
   --success: #8fe0b2; --warning: #f5ce85; --info: #95cefa;
 }
 :root { --sidebar: var(--card); --sidebar-foreground: var(--foreground); --sidebar-border: var(--border); }

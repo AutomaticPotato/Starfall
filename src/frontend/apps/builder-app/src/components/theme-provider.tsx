@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 
-import { normalizeTheme as normalize, type Theme } from "@/lib/themes";
+import { isDarkTheme, normalizeTheme as normalize, type Theme } from "@/lib/themes";
 const Context = createContext<{
   theme: Theme;
   resolvedTheme: Exclude<Theme, "system">;
@@ -44,9 +44,9 @@ export function ThemeProvider({
   useEffect(() => {
     const root = document.documentElement;
     root.dataset.theme = resolvedTheme;
-    root.classList.toggle("dark", resolvedTheme === "midnight");
-    root.classList.toggle("light", resolvedTheme !== "midnight");
-    root.style.colorScheme = resolvedTheme === "midnight" ? "dark" : "light";
+    root.classList.toggle("dark", isDarkTheme(resolvedTheme));
+    root.classList.toggle("light", !isDarkTheme(resolvedTheme));
+    root.style.colorScheme = isDarkTheme(resolvedTheme) ? "dark" : "light";
   }, [resolvedTheme]);
   function setTheme(next: Theme) {
     update(next);

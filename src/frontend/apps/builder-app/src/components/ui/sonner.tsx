@@ -1,4 +1,5 @@
 import { useTheme } from "@/components/theme-provider";
+import { isDarkTheme } from "@/lib/themes";
 import { Toaster as Sonner, type ToasterProps } from "sonner";
 
 const Toaster = ({ ...props }: ToasterProps) => {
@@ -6,7 +7,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
 
   return (
     <Sonner
-      theme={resolvedTheme === "midnight" ? "dark" : "light"}
+      theme={isDarkTheme(resolvedTheme) ? "dark" : "light"}
       className="toaster group"
       style={
         {

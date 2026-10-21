@@ -1,3 +1,4 @@
+import { OrnamentalCorner } from "@/components/ornaments";
 import { LockIcon, PlusIcon, ScrollTextIcon, UsersIcon } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -35,33 +36,36 @@ export function CampaignsPage() {
       )}
       <div className="grid gap-4 sm:grid-cols-2">
         {data?.campaigns.map((c) => (
-          <Link key={c.id} to={`/campaigns/${c.id}`} className="overflow-hidden rounded-lg border hover:bg-muted/40">
-            {c.coverUrl ? (
-              <img src={c.coverUrl} alt="" className="h-36 w-full object-cover" />
-            ) : (
-              <div className="flex h-36 items-center justify-center bg-muted">
-                <ScrollTextIcon className="size-8 text-muted-foreground" />
-              </div>
-            )}
-            <div className="space-y-1 p-4">
-              <p className="flex items-center gap-2 font-heading text-lg">
-                {c.name}
-                {c.locked && <LockIcon className="size-4 text-muted-foreground" aria-label="Has a password" />}
-                {c.dm && <span className="ms-auto rounded-full bg-primary/15 px-2 py-0.5 font-sans text-xs text-primary-text">You run this</span>}
-              </p>
-              {c.dmName && <p className="text-xs text-muted-foreground">DM: {c.dmName}</p>}
-              {c.canOpen ? (
-                <>
-                  <p className="line-clamp-2 text-sm text-muted-foreground">{c.description}</p>
-                  <p className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <UsersIcon className="size-3.5" /> {c.party.length} in the party
-                  </p>
-                </>
+          <div key={c.id} className="relative [--ornament-corner-size:2.75rem]">
+            <Link to={`/campaigns/${c.id}`} className="ornament-hover block h-full overflow-hidden rounded-[0.7rem] border border-[var(--ornament-line)] bg-card hover:bg-muted/40">
+              {c.coverUrl ? (
+                <img src={c.coverUrl} alt="" className="h-36 w-full object-cover" />
               ) : (
-                <p className="text-sm text-muted-foreground">Has a password: open it to read it.</p>
+                <div className="flex h-36 items-center justify-center bg-muted">
+                  <ScrollTextIcon className="size-8 text-muted-foreground" />
+                </div>
               )}
-            </div>
-          </Link>
+              <div className="space-y-1 p-4">
+                <p className="flex items-center gap-2 font-heading text-lg">
+                  {c.name}
+                  {c.locked && <LockIcon className="size-4 text-muted-foreground" aria-label="Has a password" />}
+                  {c.dm && <span className="ms-auto rounded-full bg-primary/15 px-2 py-0.5 font-sans text-xs text-primary-text">You run this</span>}
+                </p>
+                {c.dmName && <p className="text-xs text-muted-foreground">DM: {c.dmName}</p>}
+                {c.canOpen ? (
+                  <>
+                    <p className="line-clamp-2 text-sm text-muted-foreground">{c.description}</p>
+                    <p className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <UsersIcon className="size-3.5" /> {c.party.length} in the party
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-sm text-muted-foreground">Has a password: open it to read it.</p>
+                )}
+              </div>
+            </Link>
+            <OrnamentalCorner corner="tl" />
+          </div>
         ))}
       </div>
       {creating && <NewCampaign admin={data?.dm === true} onClose={() => setCreating(false)} />}
