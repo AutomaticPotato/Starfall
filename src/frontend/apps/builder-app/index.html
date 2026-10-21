@@ -7,8 +7,24 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/branding/favicon-16.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/branding/apple-touch-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Project Starfall</title>
-   
+    <title>Starfall</title>
+    <!-- the saved theme before the first paint (mirrors normalizeTheme in src/lib/themes.ts), so a Midnight or
+         Slate page never flashes Porcelain while the app loads -->
+    <script>
+      (function () {
+        var t = null;
+        try { t = localStorage.getItem("starlights-ui-theme"); } catch (e) { /* storage unavailable */ }
+        if (t === "dark") t = "midnight";
+        if (t === "light") t = "porcelain";
+        if (t === "system") t = window.matchMedia("(prefers-color-scheme: dark)").matches ? "midnight" : "porcelain";
+        if (t !== "midnight" && t !== "slate") t = "porcelain";
+        var root = document.documentElement, dark = t !== "porcelain";
+        root.dataset.theme = t;
+        root.classList.add(dark ? "dark" : "light");
+        root.style.colorScheme = dark ? "dark" : "light";
+      })();
+    </script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Overpass:ital,wght@0,100..900;1,100..900&family=Rubik:ital,wght@0,300..900;1,300..900&display=swap" rel="stylesheet">

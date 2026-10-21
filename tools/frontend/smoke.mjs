@@ -44,7 +44,7 @@ try {
         results.push({ page: name, theme, width, overflow: false });
       }
       await page.goto(base);
-      await page.getByRole("img", { name: "Project Starlights", exact: true }).waitFor();
+      await page.getByRole("heading", { name: "Starfall", exact: true }).waitFor();
       await shot("home");
       await page.goto(`${base}/characters/create`);
       await page.getByRole("textbox", { name: "Name", exact: true }).waitFor();
@@ -79,7 +79,7 @@ try {
       await page.getByRole("heading", { name: /^Mira Vale$/i }).waitFor();
       await shot("battle");
       await page.getByRole("button", { name: "Choose theme", exact: true }).click();
-      await page.getByRole("button", { name: /^Slate Cool grey/ }).click();
+      await page.getByRole("button", { name: /^Slate Slate blue/ }).click();
       await page.getByRole("button", { name: "Cancel", exact: true }).click();
       assert.equal(await page.locator("html").getAttribute("data-theme"), theme, "Cancel restores saved theme");
       await page.getByRole("button", { name: "Choose theme", exact: true }).click();

@@ -1,15 +1,17 @@
 # Claude handoff
 
-Updated 2026-10-20 (sessions 0a6fe6db, 540ea579). Keep under ~80 lines; replace stale lines.
+Updated 2026-10-21 (session 5d4ac16e). Keep under ~80 lines; replace stale lines.
 
-## Task (done, merged and live): Mk2 final completion
-Owner's brief "Final completion, verification & release readiness"; report:
-[MK2_FINAL_COMPLETION_REPORT.md](MK2_FINAL_COMPLETION_REPORT.md) (verdict: done for Linux; Windows unverified).
-Merged 2026-10-20 by the owner: #13 companion ERR log, #14 2014 Wizard multiclass slots, #15 a11y labels, #16 npm
-audit fix, #17 maintenance scripts' relative backup folder, #18 portability between independent servers, #19 docs.
-Live is `24fd60b` since 12:59 (verified backup, rollback images `rollback-0dea987`, every character identical, 0 API
-errors; report §8). Released as v0.11.1 (tag on the merge of #20; same code as live). Evidence:
-`~/.cache/starlights-test/mk2final/` (LEDGER.md, finish2.log).
+## Task (done on its branch, not deployed): visual-fidelity correction
+Owner's pack `Starfall_Claude_Visual_Fidelity_Pack.zip` (Copyparty data folder). Branch `feature/visual-fidelity`
+(worktree `~/starfall-visual-fidelity`) from `aurora-server` `79610c3`; report with asset choices, checks and the
+remaining differences: [VISUAL_FIDELITY_REPORT.md](VISUAL_FIDELITY_REPORT.md). One page frame (`StarfallShell`) with
+the supplied corners/edges on its line, homepage rebuilt to the mockup (brand block, not the portrait), Slate now a
+dark theme, theme applied before first paint. Evidence and disposable install: `~/.cache/starlights-test/vf/`
+(README.md, shots/, checks/). Superseded: `feature/celestial-polish` (unpushed `f4d4e85`, same files) — don't merge both.
+
+## Previous task (done, merged and live): Mk2 final completion
+[MK2_FINAL_COMPLETION_REPORT.md](MK2_FINAL_COMPLETION_REPORT.md); live `24fd60b` (2026-10-20 12:59), released v0.11.1.
 
 ## Earlier work
 Mk2 stabilization, v0.11.0 (2026-10-20, [MK2_VERIFICATION_REPORT.md](MK2_VERIFICATION_REPORT.md)); homebrew workshop
@@ -20,7 +22,7 @@ Mk2 stabilization, v0.11.0 (2026-10-20, [MK2_VERIFICATION_REPORT.md](MK2_VERIFIC
 - Windows (Docker Desktop, WSL2, `setup.ps1`) never run on real Windows.
 - Builder: an edit made in the first seconds after levelling, while the save snapshot waits for processing, is not
   undone by Discard (kept, not lost).
-- Resistance order can differ from Aurora's; Slate's destructive chip contrast 4.42:1; Characters cards nest
+- Resistance order can differ from Aurora's; battle page violet chip contrast 3.3–3.9:1; Characters cards nest
   their export/delete buttons in the card's control (axe `nested-interactive`).
 - 9 npm advisories left after #16, all in build tooling, each needing a shadcn CLI or `@tailwindcss/typography`
   major. NuGet: transitive System.Security.Cryptography.Pkcs 9.0.4 note still open.
@@ -32,6 +34,10 @@ Mk2 stabilization, v0.11.0 (2026-10-20, [MK2_VERIFICATION_REPORT.md](MK2_VERIFIC
 - #15: `pages/battle/battle-page.tsx` (`UsePips`: `role="img"`), `pages/compendium/Index.tsx` (two `aria-label`s).
 - Docs PR: `tools/frontend/custom-attacks.mjs` (builder route `/characters/:id`), `workflows.mjs` (waits for the
   builder session before editing), `accessibility.mjs` (`FRONTEND_URL` override). Codex's other tools unchanged.
+- Visual fidelity: `styles/themes.css` (all three palettes; Slate dark), `lib/themes.ts` (`isDarkTheme`),
+  `theme-provider.tsx`, `ui/sonner.tsx`, `index.html` (pre-paint theme), `default-layout.tsx` (header text/padding),
+  `App.tsx`, `ornaments.tsx`, `ornament.css`, landing, `lore-home.tsx` banner, `campaigns-page.tsx` cards,
+  `tools/frontend/ornaments.mjs` + `homepage-branding.mjs` (new contracts).
 - Earlier (Mk2): `pages/landing/Index.tsx` hero, `styles/ornament.css`, `components/ornaments.tsx`, `App.tsx`,
   `lib/api/sheet.ts`, `lib/rules/proficiencies.ts`, `lib/rules/items.ts`, `lib/aurora-character-import.ts`.
 

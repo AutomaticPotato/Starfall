@@ -1,41 +1,38 @@
 import { Link, Outlet } from "react-router-dom";
 import { Header, LandingBackground3 } from "./pages/layouts/default-layout";
-import { PageCorners } from "@/components/ornaments";
+import { StarfallShell } from "@/components/ornaments";
 
 function App() {
   return (
-    <>
+    <StarfallShell>
       <Header />
-      <div className="relative">
-        <PageCorners />
-        <div className="container mx-auto px-4">
-          <LandingBackground3 />
-          <main className="mt-12">
-            <Outlet />
-          </main>
-        </div>
+      <div className="px-4 md:px-6 xl:px-10">
+        <LandingBackground3 />
+        <main className="pt-6 lg:pt-8">
+          <Outlet />
+        </main>
       </div>
       <Credits />
-    </>
+    </StarfallShell>
   );
 }
 
 function AppWide() {
   return (
-    <>
+    <StarfallShell width="wide">
       <Header />
       <main>
         <LandingBackground3 />
         <Outlet />
       </main>
       <Credits />
-    </>
+    </StarfallShell>
   );
 }
 /** The thanks at the foot of every page: what this site is built on (the About page has the rest). */
 function Credits() {
   return (
-    <footer className="relative border-t border-border/50 px-4 pt-4 pb-24 text-center text-xs text-muted-foreground">
+    <footer className="relative border-t border-[var(--ornament-faint)] px-4 pt-4 pb-24 md:pb-12 text-center text-xs text-muted-foreground">
       Built on{" "}
       <a href="https://github.com/swdriessen/starlights" target="_blank" rel="noreferrer" className="underline-offset-2 hover:underline">
         Project Starlights

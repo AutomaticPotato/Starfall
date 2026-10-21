@@ -1,7 +1,7 @@
 /**
  * The Starfall ornament components (styles in styles/ornament.css): theme-coloured, decorative only — they are
- * hidden from assistive technology and never take clicks. Use them by the component's job: decorative on the home
- * page and landing sections, restrained on summary panels, none on dense controls and data.
+ * hidden from assistive technology and never take clicks. Use them by the component's job: the shell frame on every
+ * page, decorative on the home page, restrained on summary panels, none on dense controls and data.
  */
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
@@ -30,15 +30,21 @@ export function CelestialDivider({ align = "center", className }: { align?: "cen
 }
 
 /**
- * Filigree corners in the empty margins beside the page column, top left and right: on wide screens only, where
- * the margin is wider than the corner, so they never reach the content (see .page-corner).
+ * The one page frame around header, page and footer: a thin double rule with the supplied page corners on its four
+ * corners and the edge jewels on its sides, all on the frame's own line (see .starfall-shell). "wide" for the tool
+ * pages (builder, sheet, battle, campaigns, lore), which use more of a large screen. Phones and print show no frame.
  */
-export function PageCorners() {
+export function StarfallShell({ width = "page", children }: { width?: "page" | "wide"; children: ReactNode }) {
   return (
-    <>
-      <span aria-hidden className="page-corner" data-corner="tl" />
-      <span aria-hidden className="page-corner" data-corner="tr" />
-    </>
+    <div className="starfall-shell" data-width={width}>
+      {children}
+      {(["tl", "tr", "bl", "br"] as const).map((c) => (
+        <span key={c} aria-hidden className="shell-ornament shell-corner" data-corner={c} />
+      ))}
+      {(["top", "right", "bottom", "left"] as const).map((e) => (
+        <span key={e} aria-hidden className="shell-ornament shell-edge" data-edge={e} />
+      ))}
+    </div>
   );
 }
 

@@ -1,37 +1,52 @@
 /*
- * Project Starlights ornament layer: one restrained fantasy identity over the shared components, coloured per theme.
- * Structure is the same in every theme; only the ornament colours change. Decoration follows the component's job:
+ * Starfall ornament layer: one restrained fantasy identity over the shared components, coloured per theme.
+ * Structure is the same in every theme; only the ornament colours and pictures change. Decoration follows the job:
+ *   shell       (every page)  one frame around header, page and footer: CSS double rule + the supplied page corners
+ *                             and edge jewels attached to it (StarfallShell); none on phones or in print
  *   minimal     (everywhere)  hairlines, active states, table heads, borders of floating panels
  *   restrained  (opt-in)      small filigree corners: dialogs, [data-ornament] cards, .ornament-frame[data-level=restrained]
- *   decorative  (home page)   framed sections with large corners, celestial dividers, hover glow on feature tiles
- * Lines and frames are drawn with --ornament; the corners, dividers and the active-tab underline are the owner-supplied
- * Starfall pictures for the theme in use (public/ornaments/<theme>/, set below), never stretched over content. None
- * of them takes clicks, and a picture that fails to load leaves nothing behind.
+ *   decorative  (home page)   brand block, feature tiles with single corner accents, celestial dividers
+ * Lines are drawn with --ornament / --shell-line (taken from the pictures' own metal and blue gradients); the corners,
+ * edges, dividers, emblem and active-tab underline are the owner-supplied Starfall Universal UI pictures for the theme
+ * in use (public/ornaments/<theme>/, set below), never stretched over content. None of them takes clicks, and a
+ * picture that fails to load leaves nothing behind.
  */
 
 /* Midnight: antique gold, moonlight ivory, restrained sapphire */
 :root[data-theme="midnight"] {
   --ornament: #c4a564; --ornament-strong: #e2c88c; --ornament-accent: #6f8fe0; --ornament-ivory: #efe6d2;
+  --shell-line: color-mix(in srgb, #cbaa76 78%, transparent); --shell-line-inner: color-mix(in srgb, #739dc0 46%, transparent);
+  --wordmark: linear-gradient(180deg, #f6ecd6 10%, #d9bd86 55%, #b8955c 100%);
   --ornament-page-corner: url("/ornaments/midnight/page-corner.svg"); --ornament-panel-corner: url("/ornaments/midnight/panel-corner.svg");
   --ornament-tile-corner: url("/ornaments/midnight/tile-corner.svg"); --ornament-divider: url("/ornaments/midnight/section-divider.svg");
   --ornament-marker: url("/ornaments/midnight/section-marker.svg"); --ornament-underline: url("/ornaments/midnight/nav-active-underline.svg");
+  --ornament-edge-h: url("/ornaments/midnight/edge-horizontal.svg"); --ornament-edge-v: url("/ornaments/midnight/edge-vertical.svg");
+  --ornament-emblem: url("/ornaments/midnight/home-d20-icon.svg");
 }
-/* Porcelain: champagne gold, desaturated blue */
+/* Porcelain: muted bronze, slate-blue details */
 :root, :root[data-theme="porcelain"] {
-  --ornament: #b0904f; --ornament-strong: #8a6a30; --ornament-accent: #6b84a8; --ornament-ivory: #fffdf8;
+  --ornament: #a8875a; --ornament-strong: #7c6243; --ornament-accent: #5f7a93; --ornament-ivory: #fffdf8;
+  --shell-line: color-mix(in srgb, #967a5d 72%, transparent); --shell-line-inner: color-mix(in srgb, #708a9e 40%, transparent);
+  --wordmark: linear-gradient(180deg, #8d7250 0%, #6c5537 60%, #574329 100%);
 }
-/* the pictures only once the theme is applied (after the first render), so the first paint loads no other theme's */
+/* the pictures only once a theme is applied (index.html does it before the first paint), so no other theme's load */
 :root[data-theme="porcelain"] {
   --ornament-page-corner: url("/ornaments/porcelain/page-corner.svg"); --ornament-panel-corner: url("/ornaments/porcelain/panel-corner.svg");
   --ornament-tile-corner: url("/ornaments/porcelain/tile-corner.svg"); --ornament-divider: url("/ornaments/porcelain/section-divider.svg");
   --ornament-marker: url("/ornaments/porcelain/section-marker.svg"); --ornament-underline: url("/ornaments/porcelain/nav-active-underline.svg");
+  --ornament-edge-h: url("/ornaments/porcelain/edge-horizontal.svg"); --ornament-edge-v: url("/ornaments/porcelain/edge-vertical.svg");
+  --ornament-emblem: url("/ornaments/porcelain/home-d20-icon.svg");
 }
 /* Slate: brushed silver, pale blue */
 :root[data-theme="slate"] {
-  --ornament: #8796ab; --ornament-strong: #5c6c83; --ornament-accent: #7ea2cf; --ornament-ivory: #f4f7fb;
+  --ornament: #b3c2d4; --ornament-strong: #dfe7f0; --ornament-accent: #9ab8dc; --ornament-ivory: #f4f7fb;
+  --shell-line: color-mix(in srgb, #aebed0 72%, transparent); --shell-line-inner: color-mix(in srgb, #92adc9 40%, transparent);
+  --wordmark: linear-gradient(180deg, #ffffff 10%, #d6e0ec 55%, #a9bbcf 100%);
   --ornament-page-corner: url("/ornaments/slate/page-corner.svg"); --ornament-panel-corner: url("/ornaments/slate/panel-corner.svg");
   --ornament-tile-corner: url("/ornaments/slate/tile-corner.svg"); --ornament-divider: url("/ornaments/slate/section-divider.svg");
   --ornament-marker: url("/ornaments/slate/section-marker.svg"); --ornament-underline: url("/ornaments/slate/nav-active-underline.svg");
+  --ornament-edge-h: url("/ornaments/slate/edge-horizontal.svg"); --ornament-edge-v: url("/ornaments/slate/edge-vertical.svg");
+  --ornament-emblem: url("/ornaments/slate/home-d20-icon.svg");
 }
 :root {
   --ornament-line: color-mix(in srgb, var(--ornament) 60%, transparent);
@@ -40,6 +55,63 @@
 }
 
 @layer components {
+  /* ---- shell: the one page frame (StarfallShell) ----
+   * The supplied page corner (256 × 256) draws its outer rule 13 units in, rounded with a 31-unit radius, and its
+   * inner blue rule 7 units further in (radius 28); the edge pictures draw their rule through their middle. The CSS
+   * border and inner rule use those proportions at the corner's drawn size, so every picture sits on the line. */
+  .starfall-shell {
+    --shell-corner: 128px;
+    --shell-radius: calc(var(--shell-corner) * 31 / 256);
+    --shell-edge: 20rem;
+    position: relative;
+    width: min(100% - 2rem, 90rem);
+    margin: 1rem auto;
+    border: 1px solid var(--shell-line);
+    border-radius: var(--shell-radius);
+    /* at least a screen tall, the footer at its foot: a short page still sits in a whole frame */
+    display: flex; flex-direction: column; min-height: calc(100vh - 2rem);
+  }
+  .starfall-shell > footer { margin-top: auto; }
+  .starfall-shell[data-width="wide"] { width: min(100% - 2rem, 120rem); }
+  .starfall-shell::before {
+    content: ""; position: absolute; z-index: 25; pointer-events: none;
+    inset: calc(var(--shell-corner) * 7 / 256);
+    border: 1px solid var(--shell-line-inner);
+    border-radius: calc(var(--shell-corner) * 24 / 256);
+  }
+  /* the header's top corners follow the frame's curve instead of covering it */
+  .starfall-shell .app-header { border-top-left-radius: calc(var(--shell-radius) - 1px); border-top-right-radius: calc(var(--shell-radius) - 1px); }
+  .shell-ornament { position: absolute; z-index: 30; pointer-events: none; background: no-repeat center / contain; }
+  .shell-corner {
+    --at: calc(var(--shell-corner) * -13 / 256 - 0.5px);
+    width: var(--shell-corner); aspect-ratio: 1; background-image: var(--ornament-page-corner);
+  }
+  .shell-corner[data-corner="tl"] { top: var(--at); left: var(--at); }
+  .shell-corner[data-corner="tr"] { top: var(--at); right: var(--at); transform: scaleX(-1); }
+  .shell-corner[data-corner="bl"] { bottom: var(--at); left: var(--at); transform: scaleY(-1); }
+  .shell-corner[data-corner="br"] { bottom: var(--at); right: var(--at); transform: scale(-1); }
+  .shell-edge { --at: calc(var(--shell-edge) / -32 - 0.5px); }
+  .shell-edge[data-edge="top"], .shell-edge[data-edge="bottom"] {
+    left: 50%; width: var(--shell-edge); aspect-ratio: 16; translate: -50% 0; background-image: var(--ornament-edge-h);
+  }
+  .shell-edge[data-edge="top"] { top: var(--at); }
+  .shell-edge[data-edge="bottom"] { bottom: var(--at); }
+  /* the side jewels beside the first screen of the page (mid-height on a short page) */
+  .shell-edge[data-edge="left"], .shell-edge[data-edge="right"] {
+    top: clamp(12rem, 50%, 34rem); height: var(--shell-edge); aspect-ratio: 1 / 16; translate: 0 -50%; background-image: var(--ornament-edge-v);
+  }
+  .shell-edge[data-edge="left"] { left: var(--at); }
+  .shell-edge[data-edge="right"] { right: var(--at); }
+  @media (min-width: 768px) and (max-width: 1279.98px) {
+    .starfall-shell { --shell-corner: 88px; --shell-edge: 15rem; width: min(100% - 1.5rem, 90rem); margin: 0.75rem auto; min-height: calc(100vh - 1.5rem); }
+  }
+  /* phones: the plain page, no frame */
+  @media (max-width: 767.98px) {
+    .starfall-shell, .starfall-shell[data-width="wide"] { width: 100%; margin: 0; border: 0; border-radius: 0; min-height: 100vh; }
+    .starfall-shell::before, .shell-ornament { display: none; }
+    .starfall-shell .app-header { border-radius: 0; }
+  }
+
   /* ---- minimal: shared primitives ---- */
   [data-slot="card"] { border-color: var(--ornament-faint); box-shadow: inset 0 1px 0 var(--ornament-line), 0 1px 2px #0000000a; }
   [data-slot="card-title"] { font-family: var(--font-heading); letter-spacing: 0.02em; }
@@ -74,38 +146,52 @@
   [data-ornament] { position: relative; }
   [data-ornament="decorative"]::before, [data-ornament="decorative"]::after { width: 34px; height: 34px; }
 
-  /* ---- decorative: frames, corners, dividers, feature tiles ---- */
+  /* ---- decorative: frames, corners, dividers, the home page ---- */
   .ornament-frame { position: relative; border: 1px solid var(--ornament-faint); border-radius: 1.1rem; }
   .ornament-frame[data-level="decorative"] { box-shadow: 0 0 0 5px var(--background), 0 0 0 6px var(--ornament-faint); }
+  /* the tile corner (96 × 96) draws its rule 8 units in with a 20-unit radius: placed so the rule lies on the border */
   .ornament-corner {
-    position: absolute; width: var(--ornament-corner-size, 30px); height: var(--ornament-corner-size, 30px); pointer-events: none;
+    --size: var(--ornament-corner-size, 30px); --at: calc(var(--size) * -8 / 96 - 0.5px);
+    position: absolute; width: var(--size); height: var(--size); pointer-events: none;
     background: var(--ornament-tile-corner) no-repeat center / contain;
   }
   .ornament-frame[data-level="decorative"] > .ornament-corner { --ornament-corner-size: 46px; }
-  .ornament-corner[data-corner="tl"] { top: -7px; left: -7px; }
-  .ornament-corner[data-corner="tr"] { top: -7px; right: -7px; transform: scaleX(-1); }
-  .ornament-corner[data-corner="bl"] { bottom: -7px; left: -7px; transform: scaleY(-1); }
-  .ornament-corner[data-corner="br"] { bottom: -7px; right: -7px; transform: scale(-1); }
+  .ornament-corner[data-corner="tl"] { top: var(--at); left: var(--at); }
+  .ornament-corner[data-corner="tr"] { top: var(--at); right: var(--at); transform: scaleX(-1); }
+  .ornament-corner[data-corner="bl"] { bottom: var(--at); left: var(--at); transform: scaleY(-1); }
+  .ornament-corner[data-corner="br"] { bottom: var(--at); right: var(--at); transform: scale(-1); }
   /* the supplied divider (512 × 42) centred, or the section marker (180 × 38) under a heading; drawn at their own proportions */
   .celestial-divider { height: 1.3rem; pointer-events: none; background: var(--ornament-divider) no-repeat center / auto 100%; }
   .celestial-divider[data-align="start"] { height: 1.1rem; background-image: var(--ornament-marker); background-position: left center; }
-  /* in the wide margins beside the page column only: Tailwind's container is 80rem from 1280px and 96rem from 1536px */
-  .page-corner {
-    display: none; position: absolute; top: 1.25rem; aspect-ratio: 1; pointer-events: none; opacity: 0.55;
-    background: var(--ornament-page-corner) no-repeat center / contain;
-  }
-  .page-corner[data-corner="tl"] { left: 0.5rem; }
-  .page-corner[data-corner="tr"] { right: 0.5rem; transform: scaleX(-1); }
-  @media (min-width: 1440px) and (max-width: 1535.98px) { .page-corner { display: block; width: min(7rem, calc((100vw - 80rem) / 2 - 1rem)); } }
-  @media (min-width: 1760px) { .page-corner { display: block; width: min(8rem, calc((100vw - 96rem) / 2 - 1rem)); } }
   .fantasy-eyebrow { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.28em; text-transform: uppercase; color: var(--primary-text); }
+  /* an eyebrow followed by a fine rule fading out to the right */
+  .fantasy-eyebrow[data-rule] { display: flex; align-items: center; gap: 1rem; }
+  .fantasy-eyebrow[data-rule]::after { content: ""; flex: 1; max-width: 28rem; height: 1px; background: linear-gradient(90deg, var(--ornament-line), transparent); }
+  @media (max-width: 639.98px) { .fantasy-eyebrow[data-rule]::after { display: none; } }
   .ornament-hover { transition: box-shadow 200ms ease, border-color 200ms ease, transform 200ms ease; }
   .ornament-hover:hover, .ornament-hover:focus-visible { border-color: var(--ornament); box-shadow: 0 0 0 1px var(--ornament-line), 0 8px 26px var(--ornament-glow); }
+
+  /* home page: the brand block (the supplied D20 emblem over the live STARFALL wordmark) */
+  .starfall-brand {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.35rem;
+    border: 1px solid var(--ornament-line); border-radius: 0.75rem; padding: 0.9rem 1.25rem 1.1rem;
+    background: color-mix(in srgb, var(--card) 70%, transparent);
+    box-shadow: inset 0 1px 0 var(--ornament-glow);
+  }
+  .starfall-emblem { display: block; width: 6.5rem; aspect-ratio: 1; background: var(--ornament-emblem) no-repeat center / contain; }
+  .starfall-wordmark {
+    font-family: var(--font-heading); font-size: 1.85rem; font-weight: 600; line-height: 1; letter-spacing: 0.2em;
+    text-transform: uppercase; margin-right: -0.2em; /* the tracking after the last letter */
+    color: var(--ornament-strong); background: var(--wordmark); background-clip: text; -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  @media (forced-colors: active) { .starfall-wordmark { -webkit-text-fill-color: currentColor; background: none; } }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .ornament-hover { transition: none; }
 }
 @media print {
-  [data-ornament]::before, [data-ornament]::after, .ornament-corner, .celestial-divider, .page-corner { display: none !important; }
+  .starfall-shell, .starfall-shell[data-width="wide"] { display: block; width: auto; min-height: 0; margin: 0; border: 0; border-radius: 0; }
+  .starfall-shell::before, .shell-ornament, [data-ornament]::before, [data-ornament]::after, .ornament-corner, .celestial-divider { display: none !important; }
 }

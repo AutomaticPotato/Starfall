@@ -3,9 +3,10 @@
  * (built app + API with test data); it reads, never writes. Env: FRONTEND_URL, TOKEN (an admin token of that
  * install), SCREENSHOT_DIR; SHOTS_ONLY=1 takes the screenshots without the ornament checks (for a build without them).
  * For each page, theme and width: no horizontal overflow, no page errors, only the current theme's ornaments loaded
- * (all found), decorations hidden from assistive technology and not clickable, page corners clear of the page column,
- * keyboard focus never covered by a decoration. Then: theme switching without reload, print, and every ornament
- * file missing (the pages must look and work the same, minus the pictures).
+ * (all found), decorations hidden from assistive technology and not clickable, the shell frame's four corners and four
+ * edge jewels attached to its border line (none on phones), keyboard focus never covered by a decoration. Then: theme
+ * switching without reload, print, and every ornament file missing (the pages must look and work the same, minus the
+ * pictures).
  */
 import assert from "node:assert/strict";
 import { mkdir, writeFile } from "node:fs/promises";
@@ -43,18 +44,29 @@ async function open(viewport, theme, { missing = false } = {}) {
 // what the page shows of the ornaments, measured in the page
 const inspect = (page) => page.evaluate(() => {
   const vis = (el) => { const s = getComputedStyle(el); const r = el.getBoundingClientRect(); return s.display !== "none" && s.visibility !== "hidden" && r.width > 0 && r.height > 0; };
-  const column = document.querySelector("body .container > main")?.parentElement;
-  const col = column?.getBoundingClientRect();
-  const corners = [...document.querySelectorAll(".page-corner")].filter(vis).map((el) => {
+  // the shell's corners draw their rule 13/256 in from their corner, the edges through their middle: both must lie on
+  // the frame's border line (its centre is half a pixel inside the box)
+  const shell = document.querySelector(".starfall-shell");
+  const frame = shell?.getBoundingClientRect();
+  const framed = !!shell && parseFloat(getComputedStyle(shell).borderTopWidth) > 0;
+  const near = (a, b) => Math.abs(a - b) <= 1.5;
+  const corners = [...document.querySelectorAll(".shell-ornament")].filter(vis).map((el) => {
     const r = el.getBoundingClientRect();
-    return { hidden: el.getAttribute("aria-hidden") === "true", pe: getComputedStyle(el).pointerEvents, left: r.left, right: r.right, clear: !col || r.right <= col.left + parseFloat(getComputedStyle(column).paddingLeft) || r.left >= col.right - parseFloat(getComputedStyle(column).paddingRight) };
+    const k = el.dataset.corner, e = el.dataset.edge, inset = (r.width * 13) / 256;
+    const attached = k
+      ? near(k.includes("l") ? r.left + inset : r.right - inset, k.includes("l") ? frame.left + 0.5 : frame.right - 0.5) &&
+        near(k.startsWith("t") ? r.top + inset : r.bottom - inset, k.startsWith("t") ? frame.top + 0.5 : frame.bottom - 0.5)
+      : e === "top" || e === "bottom" ? near(r.top + r.height / 2, e === "top" ? frame.top + 0.5 : frame.bottom - 0.5)
+      : near(r.left + r.width / 2, e === "left" ? frame.left + 0.5 : frame.right - 0.5);
+    return { kind: k ?? e, hidden: el.getAttribute("aria-hidden") === "true", pe: getComputedStyle(el).pointerEvents, attached };
   });
+  const tiles = [...document.querySelectorAll(".ornament-corner")].filter(vis).map((el) => ({ hidden: el.getAttribute("aria-hidden") === "true", pe: getComputedStyle(el).pointerEvents }));
   const dividers = [...document.querySelectorAll(".celestial-divider")].filter(vis).map((el) => ({ hidden: el.getAttribute("aria-hidden") === "true", pe: getComputedStyle(el).pointerEvents }));
   const pseudo = [...document.querySelectorAll("[data-ornament]")].filter(vis).map((el) => getComputedStyle(el, "::before").pointerEvents);
   const nav = document.querySelector(".nav-active");
   return {
     overflow: document.documentElement.scrollWidth - innerWidth, height: document.documentElement.scrollHeight,
-    corners, dividers, pseudo, navUnderline: nav ? getComputedStyle(nav).backgroundImage : null, theme: document.documentElement.dataset.theme,
+    framed, corners, tiles, dividers, pseudo, navUnderline: nav ? getComputedStyle(nav).backgroundImage : null, theme: document.documentElement.dataset.theme,
   };
 });
 
@@ -81,15 +93,16 @@ const id = process.env.CHARACTER_ID || list.characters?.[0]?.characterId;
 const pages = [
   ["home", "/"], ["characters", "/characters"], ["builder", `/characters/${id}`], ["sheet", `/characters/${id}/play`],
   ["campaigns", "/campaigns"], ["battle", `/battle/${id}`], ["compendium", "/compendium"], ["homebrew", "/homebrew"], ["lore", "/lore"],
+  ["content", "/content"], ["about", "/about"],
 ];
 const heights = {};
 const known = (process.env.KNOWN_OVERFLOW ?? "").split(",").filter(Boolean);
 
 try {
   for (const theme of ["porcelain", "slate", "midnight"])
-    for (const width of [390, 1440, 1920]) {
+    for (const width of [390, 768, 1440, 1920]) {
       for (const [name, path] of pages) {
-        if (width === 1920 && !["home", "compendium", "homebrew"].includes(name)) continue;
+        if ((width === 1920 || width === 768) && !["home", "compendium", "homebrew", "campaigns"].includes(name)) continue;
         const { context, page, errors, ornaments } = await open({ width, height: 900 }, theme);
         await page.goto(base + path);
         await page.waitForLoadState("networkidle");
@@ -105,15 +118,17 @@ try {
           assert.equal(m.theme, theme, `${label}: theme`);
           assert.ok(ornaments.every((o) => o.path.startsWith(`/ornaments/${theme}/`)), `${label}: other themes' ornaments loaded ${ornaments.map((o) => o.path)}`);
           assert.ok(ornaments.every((o) => o.status === 200 || o.status === 304), `${label}: ornament missing ${JSON.stringify(ornaments)}`);
-          assert.ok(m.corners.every((c) => c.hidden && c.pe === "none" && c.clear), `${label}: page corner ${JSON.stringify(m.corners)}`);
-          if (width < 1440) assert.equal(m.corners.length, 0, `${label}: page corners on a narrow screen`);
+          assert.ok(m.corners.every((c) => c.hidden && c.pe === "none" && c.attached), `${label}: shell ornament ${JSON.stringify(m.corners)}`);
+          assert.equal(m.framed, width >= 768, `${label}: shell frame ${m.framed ? "on a phone" : "missing"}`);
+          assert.equal(m.corners.length, width >= 768 ? 8 : 0, `${label}: ${m.corners.length} shell corners and edges`);
+          assert.ok(m.tiles.every((t) => t.hidden && t.pe === "none"), `${label}: tile corner ${JSON.stringify(m.tiles)}`);
           assert.ok(m.dividers.every((d) => d.hidden && d.pe === "none"), `${label}: divider ${JSON.stringify(m.dividers)}`);
           assert.ok(m.pseudo.every((pe) => pe === "none"), `${label}: corner takes clicks`);
           if (m.navUnderline) assert.ok(m.navUnderline.includes(`/ornaments/${theme}/nav-active-underline.svg`), `${label}: nav underline ${m.navUnderline}`);
           const covered = await focusClear(page);
           assert.deepEqual(covered, [], `${label}: focus covered: ${covered.join("; ")}`);
         }
-        results.push({ page: name, theme, width, overflow: m.overflow, corners: m.corners.length, dividers: m.dividers.length, ornaments: [...new Set(ornaments.map((o) => o.path.split("/").pop()))] });
+        results.push({ page: name, theme, width, overflow: m.overflow, shell: m.corners.length, tiles: m.tiles.length, dividers: m.dividers.length, ornaments: [...new Set(ornaments.map((o) => o.path.split("/").pop()))] });
         await context.close();
       }
     }
@@ -139,8 +154,10 @@ try {
     // printing hides them
     await page.goto(base + "/");
     await page.emulateMedia({ media: "print" });
-    const printed = await page.evaluate(() => [...document.querySelectorAll(".page-corner, .celestial-divider")].filter((el) => getComputedStyle(el).display !== "none").length);
+    const printed = await page.evaluate(() => [...document.querySelectorAll(".shell-ornament, .ornament-corner, .celestial-divider")].filter((el) => getComputedStyle(el).display !== "none").length);
     assert.equal(printed, 0, "ornaments in print");
+    const printFrame = await page.evaluate(() => getComputedStyle(document.querySelector(".starfall-shell")).borderTopWidth);
+    assert.equal(printFrame, "0px", "shell frame in print");
     await context.close();
 
     // every ornament file missing: same layout, no errors
