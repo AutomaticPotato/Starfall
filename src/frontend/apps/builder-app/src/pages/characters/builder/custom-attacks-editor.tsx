@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useSaveInventory } from "@/lib/api/inventory";
+import { newId } from "@/lib/id";
 import type { CustomAttack, Inventory } from "@/lib/rules/items";
 import { moveCustomAttack, orderedCustomAttacks, removeCustomAttack, saveCustomAttack } from "@/lib/rules/custom-attacks";
 
@@ -23,7 +24,7 @@ export function CustomAttacksEditor({ characterId, inventory }: { characterId: s
     <section className="space-y-3 rounded-lg border p-3" aria-label="Custom attacks">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="font-heading">Custom Attacks</h3>
-        <Button size="sm" disabled={save.isPending || attacks.length >= 100} onClick={() => { setCreating(true); setError(""); setDraft({ id: crypto.randomUUID(), name: "" }); }}><PlusIcon /> Add attack</Button>
+        <Button size="sm" disabled={save.isPending || attacks.length >= 100} onClick={() => { setCreating(true); setError(""); setDraft({ id: newId(), name: "" }); }}><PlusIcon /> Add attack</Button>
       </div>
       <p className="text-xs text-muted-foreground">Write attacks for features, natural weapons or other abilities, including attacks imported from Aurora. Figures are used as written on your sheet, PDF and in battle. Changes save to equipment; use the builder’s Save or Discard to keep or revert the build.</p>
       {attacks.length === 0 && <p className="text-sm text-muted-foreground">No custom attacks yet.</p>}

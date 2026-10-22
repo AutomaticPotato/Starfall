@@ -9,11 +9,11 @@ import { useInventory, useSaveInventory } from "@/lib/api/inventory";
 import { useItemCatalog } from "@/lib/api/items";
 import { useCategoryIndex, useLoreEntry, useLoreMeta } from "@/lib/lore/data";
 import type { IndexRow } from "@/lib/lore/types";
+import { newId } from "@/lib/id";
 import type { InventoryEntry, ItemInfo } from "@/lib/rules/items";
 import { coinsOf, goldAlternative, itemsOfKind, matchItem, startingGroups, type StartGroup, type StartItem } from "@/lib/rules/starting-equipment";
 import { cn } from "@/lib/utils";
 
-const newId = () => crypto.randomUUID?.() ?? `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
 const revisedSource = (source: string | null | undefined) => /\((2024|2025)\)/.test(source ?? "");
 
 /**

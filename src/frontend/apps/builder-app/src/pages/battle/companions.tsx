@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useLoreEntry, useLoreMeta } from "@/lib/lore/data";
 import { useLoreLookup } from "@/lib/lore/lookup";
+import { newId } from "@/lib/id";
 import { familiarForms, hurtCompanion, type Companion, type CombatState } from "@/lib/rules/battle";
 import { cn } from "@/lib/utils";
 
@@ -67,7 +68,7 @@ export function Companions({
   ];
 
   const add = (name: string, key: string | null) =>
-    update((c) => ({ ...c, companions: [...(c.companions ?? []), { id: crypto.randomUUID().slice(0, 12), name, key, maxHitPoints: 0, damage: 0, temporaryHitPoints: 0, notes: null }] }));
+    update((c) => ({ ...c, companions: [...(c.companions ?? []), { id: newId().slice(0, 12), name, key, maxHitPoints: 0, damage: 0, temporaryHitPoints: 0, notes: null }] }));
   const change = (id: string, fn: (c: Companion) => Companion) => update((c) => ({ ...c, companions: (c.companions ?? []).map((x) => (x.id === id ? fn(x) : x)) }));
   const remove = (id: string) => update((c) => ({ ...c, companions: (c.companions ?? []).filter((x) => x.id !== id) }));
   const quick = (name: string) => {

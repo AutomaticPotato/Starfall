@@ -33,6 +33,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { useCharacterFacts, useInventory, useSaveInventory } from "@/lib/api/inventory";
 import { useBaseCandidates, useItemCatalog } from "@/lib/api/items";
 import { useCharacterSources } from "@/lib/api/sources";
+import { newId } from "@/lib/id";
 import {
   COINS,
   COIN_NAMES,
@@ -55,8 +56,6 @@ import { cn } from "@/lib/utils";
 import { TradeDialog, type TradeItem } from "./trade-dialog";
 
 import { CustomAttacksEditor } from "./custom-attacks-editor";
-
-const newId = () => crypto.randomUUID?.() ?? `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
 
 /**
  * What the character has on them, like Aurora's Equipment tab but grouped the way things are: equipped, carried,
