@@ -213,7 +213,7 @@ function CategoryList({ meta, category, openKey }: { meta: LoreMeta; category: s
 
         <section className={cn("min-w-0", !openKey && "hidden md:block")} aria-label="Entry">
           {openKey ? (
-            <EntryPane meta={meta} category={category} k={openKey} backTo={`/lore/${category}${queryString(params)}`} />
+            <EntryPane key={openKey} meta={meta} category={category} k={openKey} backTo={`/lore/${category}${queryString(params)}`} />
           ) : (
             <Empty className="border">
               <EmptyHeader>
@@ -323,6 +323,7 @@ function EntryPane({ meta, category, k, backTo }: { meta: LoreMeta; category: st
   const navigate = useNavigate();
   const entry = loaded.data?.entry;
   const pinned = isPinned(usePins(), category, k);
+  const [statBlockOnly, setStatBlockOnly] = useState(false);
 
   // a key that was renamed or reprinted goes to its current page
   useEffect(() => {
@@ -362,6 +363,21 @@ function EntryPane({ meta, category, k, backTo }: { meta: LoreMeta; category: st
             {pinned ? <PinOffIcon /> : <PinIcon />} <span className="hidden sm:inline">{pinned ? "Pinned" : "Pin"}</span>
           </Button>
         )}
+        {entry && category === "bestiary" && (
+          <label
+            className="inline-flex cursor-pointer items-center gap-1.5 text-sm text-muted-foreground print:hidden"
+            title="Keep the creature heading and source; hide lore and other notes when printing."
+          >
+            <input
+              type="checkbox"
+              aria-label="Print stat block only"
+              checked={statBlockOnly}
+              onChange={(event) => setStatBlockOnly(event.target.checked)}
+              className="size-4 accent-primary"
+            />
+            <span>Stat block only</span>
+          </label>
+        )}
         {entry && (
           <Button variant="ghost" size="sm" onClick={() => window.print()} aria-label="Print">
             <PrinterIcon /> <span className="hidden sm:inline">Print</span>
@@ -373,7 +389,7 @@ function EntryPane({ meta, category, k, backTo }: { meta: LoreMeta; category: st
       ) : loaded.error ? (
         <p className="text-sm text-destructive">This entry could not be loaded: {loaded.error.message}</p>
       ) : entry ? (
-        <EntryView meta={meta} category={category} entry={entry} />
+        <EntryView meta={meta} category={category} entry={entry} printStatBlockOnly={statBlockOnly} />
       ) : (
         <p className="text-sm text-muted-foreground">This entry is not in the compendium.</p>
       )}

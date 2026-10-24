@@ -93,7 +93,7 @@ function subtitle(category: string, entry: LoreEntry): string | null {
   return null;
 }
 
-function Body({ meta, category, entry }: { meta: LoreMeta; category: string; entry: LoreEntry }) {
+function Body({ meta, category, entry, printStatBlockOnly }: { meta: LoreMeta; category: string; entry: LoreEntry; printStatBlockOnly: boolean }) {
   switch (category) {
     case "spells":
       return <SpellBlock entry={entry} />;
@@ -104,13 +104,13 @@ function Body({ meta, category, entry }: { meta: LoreMeta; category: string; ent
       return (
         <>
           {versionOf && (
-            <p className="text-sm text-muted-foreground">
+            <p className={cn("text-sm text-muted-foreground", printStatBlockOnly && "print:hidden")}>
               A version of <RichText text={`{@creature ${versionOf.name}|${versionOf.source}}`} />.
             </p>
           )}
           <StatBlock meta={meta} m={entry} />
           {Array.isArray(entry.environment) && (
-            <p className="text-xs text-muted-foreground">Found in: {(entry.environment as string[]).join(", ")}</p>
+            <p className={cn("text-xs text-muted-foreground", printStatBlockOnly && "print:hidden")}>Found in: {(entry.environment as string[]).join(", ")}</p>
           )}
         </>
       );
@@ -120,13 +120,13 @@ function Body({ meta, category, entry }: { meta: LoreMeta; category: string; ent
   }
 }
 
-function Lore({ entry, compact }: { entry: LoreEntry; compact: boolean }) {
+function Lore({ entry, compact, printStatBlockOnly }: { entry: LoreEntry; compact: boolean; printStatBlockOnly: boolean }) {
   const fluff = entry._fluff;
   if (!fluff?.entries?.length && !fluff?.images?.length) return null;
   const [cover, ...images] = (fluff.images ?? []) as Obj[];
   if (compact) return cover ? <Picture image={cover} small /> : null;
   return (
-    <section className="space-y-2 border-t pt-4">
+    <section className={cn("space-y-2 border-t pt-4", printStatBlockOnly && "print:hidden")}>
       <h3 className="font-heading text-lg tracking-wide">Lore</h3>
       {cover && <Picture image={cover} />}
       <div className="text-[0.95rem]">
@@ -144,7 +144,19 @@ function Lore({ entry, compact }: { entry: LoreEntry; compact: boolean }) {
 }
 
 /** An entry in full (its page) or compact (a preview card). */
-export function EntryView({ meta, category, entry, compact = false }: { meta: LoreMeta; category: string; entry: LoreEntry; compact?: boolean }) {
+export function EntryView({
+  meta,
+  category,
+  entry,
+  compact = false,
+  printStatBlockOnly = false,
+}: {
+  meta: LoreMeta;
+  category: string;
+  entry: LoreEntry;
+  compact?: boolean;
+  printStatBlockOnly?: boolean;
+}) {
   const sub = subtitle(category, entry);
   return (
     <LoreRenderProvider value={{ meta }}>
@@ -154,9 +166,9 @@ export function EntryView({ meta, category, entry, compact = false }: { meta: Lo
           {sub && <p className="text-sm italic text-muted-foreground">{sub}</p>}
           <SourceLine meta={meta} entry={entry} />
         </header>
-        {compact && <Lore entry={entry} compact />}
-        <Body meta={meta} category={category} entry={entry} />
-        {!compact && <Lore entry={entry} compact={false} />}
+        {compact && <Lore entry={entry} compact printStatBlockOnly={printStatBlockOnly} />}
+        <Body meta={meta} category={category} entry={entry} printStatBlockOnly={printStatBlockOnly} />
+        {!compact && <Lore entry={entry} compact={false} printStatBlockOnly={printStatBlockOnly} />}
       </article>
     </LoreRenderProvider>
   );
