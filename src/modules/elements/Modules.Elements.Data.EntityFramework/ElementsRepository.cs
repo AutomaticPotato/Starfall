@@ -113,12 +113,13 @@ internal class ElementsRepository : RepositoryBase<Element>, IElementsRepository
         return rows.GroupBy(r => r.AuroraId).ToDictionary(g => g.Key, g => g.First().Name);
     }
 
-    public async Task<List<string>> GetRuleRequirementsAsync()
+    public async Task<List<string>> GetAllRequirementsAsync()
     {
         var includes = await Context.Set<IncludeRuleComponent>().AsNoTracking().Where(r => r.Requirements != null).Select(r => r.Requirements!).ToListAsync();
         var stats = await Context.Set<StatisticRuleComponent>().AsNoTracking().Where(r => r.Requirements != null).Select(r => r.Requirements!).ToListAsync();
         var selects = await Context.Set<SelectionRuleComponent>().AsNoTracking().Where(r => r.Requirements != null).Select(r => r.Requirements!).ToListAsync();
-        return [.. includes, .. stats, .. selects];
+        var prerequisites = await Context.Set<PrerequisitesComponent>().AsNoTracking().Where(r => r.Requirements != null).Select(r => r.Requirements!).ToListAsync();
+        return [.. prerequisites, .. includes, .. stats, .. selects];
     }
 
     public async Task<Dictionary<string, Guid>> GetElementIdsByAuroraIdsAsync(IReadOnlyCollection<string> auroraIds)

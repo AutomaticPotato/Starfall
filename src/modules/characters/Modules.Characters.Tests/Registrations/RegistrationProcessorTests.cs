@@ -413,6 +413,8 @@ public sealed class RegistrationProcessorTests
 
         _elements.Setup(m => m.GetElementWithRules(baseElementId))
                  .ReturnsAsync(CreateBaseElementWithIncludeRule(baseElementId, includeRuleId, includedElementId));
+        _elements.Setup(m => m.GetElementWithRules(includedElementId))
+                 .ReturnsAsync(CreateIncludedElement(includedElementId));
 
         // Act
         var result = await processor.ProcessRegistration(registration.Id);
@@ -450,6 +452,8 @@ public sealed class RegistrationProcessorTests
 
         _elements.Setup(m => m.GetElementWithRules(baseElementId))
                  .ReturnsAsync(CreateBaseElementWithIncludeRule(baseElementId, includeRuleId, includedElementId));
+        _elements.Setup(m => m.GetElementWithRules(includedElementId))
+                 .ReturnsAsync(CreateIncludedElement(includedElementId));
 
         // Act
         _ = await processor.ProcessRegistration(registration.Id);
@@ -460,7 +464,7 @@ public sealed class RegistrationProcessorTests
     }
 
     [TestMethod]
-    public async Task ProcessRegistration_DoesNotFetchIncludedElement_WhenRuleAlreadyAssociated()
+    public async Task ProcessRegistration_FetchesIncludedElementToCheckPrerequisites_WhenRuleAlreadyAssociated()
     {
         // Arrange
         var behavior = new Mock<IRegistrationBehavior>();
@@ -487,13 +491,77 @@ public sealed class RegistrationProcessorTests
 
         _elements.Setup(m => m.GetElementWithRules(baseElementId))
                  .ReturnsAsync(CreateBaseElementWithIncludeRule(baseElementId, includeRuleId, includedElementId));
+        _elements.Setup(m => m.GetElementWithRules(includedElementId))
+                 .ReturnsAsync(CreateIncludedElement(includedElementId));
 
         // Act
         _ = await processor.ProcessRegistration(registration.Id);
 
         // Assert
-        _elements.Verify(m => m.GetElementWithRules(includedElementId), Times.Never);
+        _elements.Verify(m => m.GetElementWithRules(includedElementId), Times.Once);
         _persistence.Verify(p => p.SaveChangesAsync(), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task ProcessRegistration_DoesNotIncludeElement_WhenItsPrerequisiteIsNotMet()
+    {
+        var processor = CreateProcessor();
+        var character = Character.Create("Test");
+        var characterId = character.Id;
+        var parentElementId = Guid.NewGuid();
+        var includeRuleId = Guid.NewGuid();
+        var includedElementId = Guid.NewGuid();
+        var replacementElementId = Guid.NewGuid();
+        var registration = Registration.Create(characterId, new(parentElementId), "Druid", "Class");
+        var replacement = Registration.Create(characterId, new(replacementElementId), "Wild Shape Replacement", "Grants");
+        var registrations = new List<Registration> { registration, replacement };
+
+        _registrations.Setup(r => r.GetRegistrationAsync(registration.Id)).ReturnsAsync(registration);
+        _registrations.Setup(r => r.GetRegistrationsAsync(characterId)).ReturnsAsync(registrations);
+        _characters.Setup(c => c.GetCharacterAsync(characterId.Value)).ReturnsAsync(character);
+        _elements.Setup(e => e.GetElementWithRules(parentElementId))
+            .ReturnsAsync(CreateBaseElementWithIncludeRule(parentElementId, includeRuleId, includedElementId));
+        _elements.Setup(e => e.GetElementWithRules(includedElementId))
+            .ReturnsAsync(CreateIncludedElement(includedElementId) with { PrerequisiteRequirements = $"!{replacementElementId}" });
+
+        await processor.ProcessRegistration(registration.Id);
+
+        registration.IncludeRules.Should().BeEmpty();
+        _registrations.Verify(r => r.Add(It.IsAny<Registration>()), Times.Never);
+    }
+
+    [TestMethod]
+    public async Task ProcessRegistration_RemovesIncludedElement_WhenItsPrerequisiteStopsBeingMet()
+    {
+        var processor = CreateProcessor();
+        var character = Character.Create("Test");
+        var characterId = character.Id;
+        var parentElementId = Guid.NewGuid();
+        var includeRuleId = Guid.NewGuid();
+        var includedElementId = Guid.NewGuid();
+        var replacementElementId = Guid.NewGuid();
+        var registration = Registration.Create(characterId, new(parentElementId), "Druid", "Class");
+        var includeRule = registration.CreateIncludeRule(new(includeRuleId), new(includedElementId), "Wild Shape");
+        var includedRegistration = Registration.Create(characterId, new(includedElementId), "Wild Shape", "Class Feature");
+        includedRegistration.SetParentRegistration(registration);
+        includedRegistration.SetOriginatingRule(includeRule.Id);
+        var replacement = Registration.Create(characterId, new(replacementElementId), "Wild Shape Replacement", "Grants");
+        var registrations = new List<Registration> { registration, includedRegistration, replacement };
+
+        _registrations.Setup(r => r.GetRegistrationAsync(registration.Id)).ReturnsAsync(registration);
+        _registrations.Setup(r => r.GetRegistrationsAsync(characterId)).ReturnsAsync(registrations);
+        _registrations.Setup(r => r.GetRegistrationByOriginatingRuleAsync(includeRule.Id)).ReturnsAsync(includedRegistration);
+        _registrations.Setup(r => r.DeleteRegistrationAsync(includedRegistration.Id)).ReturnsAsync(true);
+        _characters.Setup(c => c.GetCharacterAsync(characterId.Value)).ReturnsAsync(character);
+        _elements.Setup(e => e.GetElementWithRules(parentElementId))
+            .ReturnsAsync(CreateBaseElementWithIncludeRule(parentElementId, includeRuleId, includedElementId));
+        _elements.Setup(e => e.GetElementWithRules(includedElementId))
+            .ReturnsAsync(CreateIncludedElement(includedElementId) with { PrerequisiteRequirements = $"!{replacementElementId}" });
+
+        await processor.ProcessRegistration(registration.Id);
+
+        registration.IncludeRules.Should().BeEmpty();
+        _registrations.Verify(r => r.DeleteRegistrationAsync(includedRegistration.Id), Times.Once);
     }
 
     private static ElementDataModel CreateBaseElementWithIncludeRule(Guid baseElementId, Guid includeRuleId, Guid includedElementId, string name = "Base", string type = "Type", int levelRequirement = 0)

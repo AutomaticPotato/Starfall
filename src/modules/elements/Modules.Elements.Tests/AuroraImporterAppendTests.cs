@@ -39,6 +39,10 @@ public class AuroraImporterAppendTests
             <requirements>[level:artificer:6]</requirements>
             <prerequisites>Artificer Level 6+</prerequisites>
           </element>
+          <element name="Replacement" type="Grants" source="Test" id="ID_TEST_REPLACEMENT" />
+          <element name="Wild Shape" type="Class Feature" source="Test" id="ID_TEST_WILD_SHAPE">
+            <requirements>!ID_TEST_REPLACEMENT</requirements>
+          </element>
           <element name="Other" type="Grants" source="Test" id="ID_TEST_OTHER" />
         </elements>
         """;
@@ -136,6 +140,8 @@ public class AuroraImporterAppendTests
         var plan = elements["ID_TEST_PLAN"].GetRequiredComponent<PrerequisitesComponent>();
         plan.Prerequisites.Should().Be("Artificer Level 6+");
         plan.Requirements.Should().Be("[level:artificer:6]");
+        var wildShape = elements["ID_TEST_WILD_SHAPE"].GetRequiredComponent<PrerequisitesComponent>();
+        wildShape.Requirements.Should().Be($"!{elements["ID_TEST_REPLACEMENT"].Id.Value}");
         elements["ID_TEST_OTHER"].GetComponent<PrerequisitesComponent>().Should().BeNull();
     }
 

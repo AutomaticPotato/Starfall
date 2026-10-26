@@ -221,6 +221,25 @@ public class RegistrationProcessor : IRegistrationProcessor
                     await _registrationManager.Unregister(includedRegistation);
                 }
             }
+
+            if (context.Registration.IncludeRules.Contains(existingRule))
+            {
+                var includedElement = await _elements.GetElementWithRules(ruleDefinition.IncludedElementId)
+                    ?? throw new RegistrationProcessingException($"The included element '{ruleDefinition.IncludedElementId}' for the include rule '{ruleDefinition.RuleId}' was not found.");
+
+                if (!await RequirementsMet(context, includedElement.PrerequisiteRequirements))
+                {
+                    _logger.LogInformation("removing include rule '{RuleId}' from registration {ElementName} ({ElementType}): included element prerequisites no longer met",
+                        existingRule.Id, context.Registration.AssociatedElementName, context.Registration.AssociatedElementType);
+
+                    context.Registration.RemoveIncludeRule(existingRule);
+                    var includedRegistration = await registrationRepository.GetRegistrationByOriginatingRuleAsync(existingRule.Id);
+                    if (includedRegistration is not null)
+                    {
+                        await _registrationManager.Unregister(includedRegistration);
+                    }
+                }
+            }
         }
     }
 
@@ -254,6 +273,11 @@ public class RegistrationProcessor : IRegistrationProcessor
             // get the element to be included according to the rule
             var newElement = await _elements.GetElementWithRules(ruleDefinition.IncludedElementId)
                 ?? throw new RegistrationProcessingException($"The included element '{ruleDefinition.IncludedElementId}' for the include rule '{ruleDefinition.RuleId}' was not found.");
+
+            if (!await RequirementsMet(context, newElement.PrerequisiteRequirements))
+            {
+                continue;
+            }
 
             // create the new registration include rule, this is to keep track of the rules applied
             var newIncludeRule = context.Registration.CreateIncludeRule(new(ruleDefinition.RuleId), new(newElement.Id), newElement.Name);

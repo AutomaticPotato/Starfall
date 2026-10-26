@@ -99,7 +99,7 @@ internal class ElementsModuleQueries : IElementsModuleQueries
             return cached.Ids;
         }
 
-        var requirements = await _persistence.GetRepository<IElementsRepository>().GetRuleRequirementsAsync();
+        var requirements = await _persistence.GetRepository<IElementsRepository>().GetAllRequirementsAsync();
         var ids = requirements
             .SelectMany(r => r.Split([',', '|', '!', '(', ')', ' '], StringSplitOptions.RemoveEmptyEntries))
             .Select(term => Guid.TryParse(term, out var id) ? id : Guid.Empty)
@@ -125,7 +125,7 @@ internal class ElementsModuleQueries : IElementsModuleQueries
             return cached.Names;
         }
 
-        var requirements = await _persistence.GetRepository<IElementsRepository>().GetRuleRequirementsAsync();
+        var requirements = await _persistence.GetRepository<IElementsRepository>().GetAllRequirementsAsync();
         var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (System.Text.RegularExpressions.Match m in System.Text.RegularExpressions.Regex.Matches(string.Join(" ", requirements), @"\[([^\]:]+(?::[^\]:]+)*):\d+\]"))
         {

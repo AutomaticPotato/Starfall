@@ -114,4 +114,16 @@ public class ElementsModuleQueriesTests
         // Assert
         result.Should().BeEquivalentTo(new CharacterCreationDataModel(element.Id, element.Name, element.Type));
     }
+
+    [TestMethod]
+    public async Task GetElementsReferencedByRequirements_IncludesElementPrerequisiteIds()
+    {
+        var replacementId = Guid.NewGuid();
+        _elementsRepositoryMock.Setup(x => x.GetAllRequirementsAsync())
+            .ReturnsAsync(new List<string> { $"!{replacementId}" });
+
+        var result = await _queries.GetElementsReferencedByRequirements();
+
+        result.Should().Contain(replacementId);
+    }
 }

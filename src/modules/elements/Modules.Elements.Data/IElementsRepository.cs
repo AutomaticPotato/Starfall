@@ -80,9 +80,9 @@ public interface IElementsRepository : IRepository
     Task<Dictionary<string, Guid>> GetElementIdsByAuroraIdsAsync(IReadOnlyCollection<string> auroraIds);
 
     /// <summary>
-    /// The requirement expressions of all include, statistic and selection rules that have one.
+    /// The requirement expressions of elements and their include, statistic and selection rules.
     /// </summary>
-    Task<List<string>> GetRuleRequirementsAsync();
+    Task<List<string>> GetAllRequirementsAsync();
 }
 
 public sealed record ElementSummary(Guid Id, string Name, string Type, string? Source);
